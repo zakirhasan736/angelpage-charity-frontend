@@ -8,6 +8,7 @@ import { ArrowRight, CalendarPlus, Megaphone, Play, Search, X } from 'lucide-rea
 import type { CommunityEventRecord } from '@/lib/server-api';
 import { useGetEventsQuery } from '@/store/api/angelpageApi';
 import { formatMoney } from '@/lib/money';
+import { getAccountPathForRole } from '@/utils/navigationPaths';
 import { type DisplayEventType, getDisplayEventType, getDonationProgress, getEventTiming } from './eventUtils';
 import {
   DateBlock,
@@ -123,8 +124,9 @@ export default function EventsPageClient({ initialEvents = [] }: { initialEvents
     .sort(sortByStart)
     .slice(0, 6);
 
-  const isCharity = session?.user?.role === 'charity';
-  const runHref = isCharity ? '/charity/account?tab=community' : '/contact';
+  const role = session?.user?.role;
+  const isCharity = role === 'CHARITY' || role === 'CHARITY_STAFF';
+  const runHref = isCharity ? `${getAccountPathForRole(role, session?.user?.id, session?.user?.charityId)}?tab=community` : '/contact';
 
   return (
     <div className="bg-white">
