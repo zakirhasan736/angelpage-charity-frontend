@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { shopHref } from '@/lib/shopUrls';
-import { Button } from '../elements';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { shopHref } from '@/lib/shopUrls';
 import { categoriesData } from '@/libs/categoriesData';
 import { fetchCategories, type Category } from '@/lib/categories';
 
@@ -47,45 +47,44 @@ const OurPlatformSection = () => {
   }, []);
 
   return (
-    <section className="our-platform-section bg-[#FCF2FF] py-20">
+    <section className="our-platform-section ap-section bg-[#FCF7FE]">
       <div className="custom-container">
-        <div className="grid grid-cols-12 items-start gap-10 sm:grid-cols-1 sm:gap-8">
-          <div className="sticky top-28 col-span-4 self-start sm:static sm:col-span-full">
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#611192]">
-              Shop
-            </p>
-            <h2 className="font-primary mt-2 text-[2.6rem] leading-none text-[#0B0112]">
-              Our platform
-            </h2>
-            <p className="mt-4 max-w-sm text-sm leading-7 text-[#5C5560]">
-              Every department opens the live listings, and every purchase can support a charity.
-            </p>
-            <Link href="/auth/register" className="mt-8 inline-block">
-              <Button variant="primary">Become a donor</Button>
+        <div className="mb-8 flex items-end justify-between gap-6 sm:mb-5">
+          <div>
+            <p className="ap-eyebrow">Shop by department</p>
+            <h2 className="ap-display mt-2 text-[36px] leading-tight md:text-[30px] sm:text-[26px]">Everything pre-loved, all for good</h2>
+            <p className="mt-2 max-w-[520px] text-[15px] text-[#6B686E] sm:text-[13px]">Every department opens the live listings, and every purchase supports a charity.</p>
+          </div>
+          <Link href="/product" className="group inline-flex shrink-0 items-center gap-1.5 text-[14px] font-medium text-[#611192]">
+            Browse everything <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+          </Link>
+        </div>
+        <div className="grid auto-rows-[190px] grid-cols-4 gap-4 md:grid-cols-3 sm:auto-rows-[150px] sm:grid-cols-2 sm:gap-3">
+          {categories.map((category, i) => (
+            <Link
+              key={category.id}
+              href={shopHref(category.id)}
+              className={`group relative block overflow-hidden rounded-[24px] bg-[#F2E8F8] sm:rounded-[20px] ${i === 0 ? 'col-span-2 row-span-2' : ''}`}
+            >
+              <Image
+                src={TOPIC_IMAGES[category.id] || TOPIC_IMAGES.clothing}
+                alt=""
+                fill
+                className="object-cover transition duration-700 group-hover:scale-105"
+                sizes={i === 0 ? '(max-width: 767px) 100vw, 50vw' : '(max-width: 767px) 50vw, 25vw'}
+              />
+              <span className="absolute inset-0 bg-gradient-to-t from-[#0B0112]/80 via-[#0B0112]/15 to-transparent" />
+              <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5 sm:p-3.5">
+                <span className="min-w-0">
+                  <span className={`block font-primary leading-tight text-white ${i === 0 ? 'text-[32px] sm:text-[24px]' : 'text-[22px] sm:text-[17px]'}`}>{category.name}</span>
+                  {i === 0 ? <span className="mt-1 block max-w-xs text-[13px] text-white/80">{categoryBlurb(category)}</span> : null}
+                </span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#611192] transition group-hover:bg-white sm:h-8 sm:w-8">
+                  <ArrowUpRight className="h-4 w-4" aria-hidden />
+                </span>
+              </span>
             </Link>
-          </div>
-          <div className="col-span-8 grid grid-cols-2 gap-5 sm:col-span-full sm:grid-cols-1">
-            {categories.map(category => (
-              <Link
-                key={category.id}
-                href={shopHref(category.id)}
-                className="group relative block h-[280px] overflow-hidden rounded-3xl"
-              >
-                <Image
-                  src={TOPIC_IMAGES[category.id] || TOPIC_IMAGES.clothing}
-                  alt={category.name}
-                  fill
-                  className="object-cover transition duration-500 group-hover:scale-105"
-                  sizes="(max-width: 767px) 100vw, 40vw"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-[#0B0112] via-[#0B0112]/55 to-[#0B0112]/10" />
-                <div className="absolute inset-x-0 bottom-0 p-5">
-                  <p className="font-primary text-3xl text-white!">{category.name}</p>
-                  <p className="mt-1 max-w-xs text-sm text-white!">{categoryBlurb(category)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </section>
