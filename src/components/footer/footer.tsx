@@ -101,27 +101,20 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="footer-section border-t-0! bg-white pt-16 pb-10 max-[767px]:pt-8 max-[767px]:pb-[120px]">
+    <footer className="footer-section border-t-0! bg-white pt-16 pb-10 sm:pt-8 sm:pb-[120px]">
       <div className="custom-container">
         {/* newsletter band */}
-        <div className="relative overflow-hidden rounded-[32px] bg-[#0B0112] px-14 py-12 max-[1280px]:px-10 max-[767px]:rounded-[24px] max-[767px]:px-5 max-[767px]:py-8">
-          <div
-            className="pointer-events-none absolute -right-32 -top-32 h-[380px] w-[380px] rounded-full bg-[#611192]/50 blur-[100px]"
-            aria-hidden
-          />
-          <div className="relative grid grid-cols-12 items-center gap-10 max-[991px]:grid-cols-1 max-[991px]:gap-6">
-            <div className="col-span-6 max-[991px]:col-span-full">
+        <div className="relative overflow-hidden rounded-[32px] bg-[#0B0112] px-14 py-12 laptop-m:px-10 sm:rounded-[24px] sm:px-5 sm:py-8">
+          <div className="pointer-events-none absolute -right-32 -top-32 h-[380px] w-[380px] rounded-full bg-[#611192]/50 blur-[100px]" aria-hidden />
+          <div className="relative grid grid-cols-12 items-center gap-10 md:grid-cols-1 md:gap-6">
+            <div className="col-span-6 md:col-span-full">
               <p className="ap-eyebrow text-[#D9B8EE]!">Newsletter</p>
-              <h2 className="ap-display mt-4 text-[36px] text-white! max-[767px]:text-[26px]">
-                {t('footer.joinTitle')}
-              </h2>
-              <p className="mt-3 max-w-[460px] text-sm leading-6 text-white/70!">
-                {t('footer.joinBody')}
-              </p>
+              <h2 className="ap-display mt-4 text-[36px] text-white! sm:text-[26px]">{t('footer.joinTitle')}</h2>
+              <p className="mt-3 max-w-[460px] text-sm leading-6 text-white/70!">{t('footer.joinBody')}</p>
             </div>
-            <div className="col-span-6 max-[991px]:col-span-full">
+            <div className="col-span-6 md:col-span-full">
               <form className="subscription-form w-full" onSubmit={handleSubmit}>
-                <div className="flex items-center gap-2 rounded-full bg-white p-1.5 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:rounded-[20px]">
+                <div className="flex items-center gap-2 rounded-full bg-white p-1.5 sm:flex-col sm:items-stretch sm:rounded-[20px]">
                   <label htmlFor="footer-email" className="sr-only">
                     {t('footer.emailPlaceholder')}
                   </label>
@@ -132,11 +125,11 @@ const Footer = () => {
                     value={email}
                     placeholder={t('footer.emailPlaceholder')}
                     onChange={e => setEmail(e.target.value)}
-                    className="h-12 min-w-0 flex-1 rounded-full! border-0! bg-transparent px-5 text-sm text-mono-100 outline-none! focus:ring-0"
+                    className="h-12 min-w-0 flex-1 rounded-full! border-0! bg-transparent px-5 text-sm text-mono-100 outline-none! focus:ring-0 sm:text-[16px]"
                   />
                   <Button
                     variant="primary"
-                    className="h-12! px-7! inline-flex items-center gap-2"
+                    className="inline-flex h-12! items-center gap-2 px-7!"
                     type="submit"
                     disabled={loading || isSubscribed}
                   >
@@ -152,28 +145,19 @@ const Footer = () => {
                   </Button>
                 </div>
               </form>
-              <p className="mt-3 pl-5 text-xs text-white/50! max-[767px]:pl-1">
-                No spam. Unsubscribe at any time.
-              </p>
+              <p className="mt-3 pl-5 text-xs text-white/50! sm:pl-1">No spam. Unsubscribe at any time.</p>
             </div>
           </div>
         </div>
 
         {/* link columns */}
-        <div className="grid grid-cols-12 gap-8 pt-16 pb-12 max-[991px]:grid-cols-6 max-[767px]:grid-cols-2 max-[767px]:gap-y-10 max-[767px]:pt-10">
-          <div className="col-span-4 max-[991px]:col-span-full max-[767px]:col-span-2">
+        <div className="grid grid-cols-12 gap-8 pt-16 pb-12 md:grid-cols-6 sm:grid-cols-2 sm:gap-y-10 sm:pt-10">
+          <div className="col-span-4 md:col-span-full sm:col-span-2">
             <Link href={homePath} aria-label="Angelpage home">
-              <Image
-                src="/images/brand-logo-black.svg"
-                alt="Angelpage"
-                width={132}
-                height={40}
-                className="h-auto w-[132px]"
-              />
+              <Image src="/images/brand-logo-black.svg" alt="Angelpage" width={132} height={40} className="h-auto w-[132px]" />
             </Link>
             <p className="mt-5 max-w-[320px] text-sm leading-6 text-[#5C5560]">
-              The charity marketplace. Buy and sell pre-loved goods and send most of each sale to a
-              cause you believe in.
+              The charity marketplace. Buy and sell pre-loved goods and send most of each sale to a cause you believe in.
             </p>
             <ul className="mt-6 flex items-center gap-2">
               {socials.map(({ label, Icon }) => (
@@ -191,17 +175,12 @@ const Footer = () => {
           </div>
 
           {columns.map(col => (
-            <div key={col.title} className="col-span-2 max-[767px]:col-span-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A888C]">
-                {col.title}
-              </p>
+            <div key={col.title} className="col-span-2 sm:col-span-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A888C]">{col.title}</p>
               <ul className="mt-5 flex flex-col gap-3">
                 {col.links.map(link => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-[#0B0112] transition hover:text-[#611192]"
-                    >
+                    <Link href={link.href} className="text-sm text-[#0B0112] transition hover:text-[#611192]">
                       {link.label}
                     </Link>
                   </li>
@@ -210,11 +189,9 @@ const Footer = () => {
             </div>
           ))}
 
-          <div className="col-span-2 max-[991px]:col-span-full max-[767px]:col-span-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A888C]">
-              Get the app
-            </p>
-            <div className="mt-5 flex flex-col gap-2.5 max-[991px]:flex-row max-[767px]:flex-col">
+          <div className="col-span-2 md:col-span-full sm:col-span-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A888C]">Get the app</p>
+            <div className="mt-5 flex flex-col gap-2.5 md:flex-row sm:flex-col">
               <button
                 type="button"
                 onClick={() => handleStoreClick('Google Play')}
@@ -239,7 +216,7 @@ const Footer = () => {
                 aria-label="App Store, coming soon"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white" aria-hidden>
-                  <path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.5.8s-1.9-0.8-3.1-.8c-1.6 0-3.1 1-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.7 2.5 3 2.4 1.2 0 1.6-.7 3-.7s1.8.7 3.1.7 2-.1 2.9-2.4c.7-1 1.2-2.1 1.5-3.2-3.9-1.5-3.8-5.4-1.8-6.5z" />
+                  <path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.5.8s-1.9-.8-3.1-.8c-1.6 0-3.1 1-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.7 2.5 3 2.4 1.2 0 1.6-.7 3-.7s1.8.7 3.1.7 2-.1 2.9-2.4c.7-1 1.2-2.1 1.5-3.2-3.9-1.5-3.8-5.4-1.8-6.5z" />
                   <path d="M14.2 6.2c.6-.8 1.1-1.9.9-3-1 .1-2.1.6-2.8 1.4-.6.7-1.2 1.8-.9 2.9 1.1.1 2.1-.5 2.8-1.3z" />
                 </svg>
                 <span className="leading-tight">
@@ -248,14 +225,11 @@ const Footer = () => {
                 </span>
               </button>
             </div>
-            {storeNotice ? (
-              <p className="mt-3 text-xs text-[#611192]">{storeNotice}</p>
-            ) : null}
+            {storeNotice ? <p className="mt-3 text-xs text-[#611192]">{storeNotice}</p> : null}
           </div>
         </div>
 
-        {/* bottom bar */}
-        <div className="flex items-center justify-between gap-4 border-t border-[#ECE8EE] pt-6 text-xs text-[#8A888C] max-[767px]:flex-col max-[767px]:text-center">
+        <div className="flex items-center justify-between gap-4 border-t border-[#ECE8EE] pt-6 text-xs text-[#8A888C] sm:flex-col sm:text-center">
           <p>© {year} Angelpage. All rights reserved.</p>
           <p>
             {t('footer.support')}:{' '}

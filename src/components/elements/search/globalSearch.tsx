@@ -236,7 +236,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className }) => {
   return (
     <>
       <div
-        className={`global-search-bar relative w-full ${className?.includes("w-full") ? "" : "max-w-[300px]"} ${className}`}
+        className={`global-search-bar relative w-full ${className?.includes('w-full') ? '' : 'max-w-[300px]'} ${className}`}
       >
         <form className="global-search-form w-full" onSubmit={e => e.preventDefault()}>
           <div className="global-search-group-field relative w-full">
