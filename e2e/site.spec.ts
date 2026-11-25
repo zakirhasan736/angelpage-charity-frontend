@@ -22,3 +22,16 @@ test('faq page publishes its canonical URL and a real answer', async ({
     page.getByRole('heading', { name: 'What is Angelpage?' })
   ).toBeVisible();
 });
+
+test('public homepage includes its main heading before JavaScript runs', async ({
+  browser,
+}) => {
+  const page = await browser.newPage({ javaScriptEnabled: false });
+  try {
+    await page.goto('/');
+    await expect(page.locator('main h1')).toHaveCount(1);
+    await expect(page.locator('main h1')).toContainText('choose the split');
+  } finally {
+    await page.close();
+  }
+});
