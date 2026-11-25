@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, PenLine, Search, X } from 'lucide-react';
+import { ArrowRight, Mail, Search, X } from 'lucide-react';
 import { BlogCard, BlogFeatureCard, tagLabel } from '@/components/common/cards/blog/blogCards';
 import { mapBlogToCard, type BlogPostRecord } from '@/lib/server-api';
 import { blogPosts as staticPosts } from '@/libs/blogs';
@@ -82,11 +82,11 @@ export default function BlogListClient({ initialPosts = [] }: BlogListClientProp
                   role="tab"
                   aria-selected={active}
                   onClick={() => setTopic(key)}
-                  className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[14px] font-medium transition ${
-                    active ? 'bg-[#611192] text-white' : 'bg-[#F6F3F7] text-[#474648] hover:bg-[#F2E8F8] hover:text-[#611192]'
+                  className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13px] font-medium transition ${
+                    active ? 'bg-[#0B0112] text-white' : 'bg-[#F4F1F6] text-[#474648] hover:bg-[#F2E8F8] hover:text-[#611192]'
                   }`}
                 >
-                  {key === 'all' ? 'All stories' : TOPIC_LABEL[key] || tagLabel(key)}
+                  {key === 'all' ? 'All Stories' : TOPIC_LABEL[key] || tagLabel(key)}
                   <span className={`rounded-full px-1.5 text-[11px] ${active ? 'bg-white/20 text-white' : 'bg-white text-[#8A888C]'}`}>{count}</span>
                 </button>
               );
@@ -100,7 +100,7 @@ export default function BlogListClient({ initialPosts = [] }: BlogListClientProp
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search stories"
-              className="h-10 w-full rounded-full bg-[#F6F3F7] pr-10 pl-10 text-[14px] text-[#0B0112] outline-none placeholder:text-[#8A888C] focus:bg-white focus:ring-2 focus:ring-[#611192]/30"
+              className="h-10 w-full rounded-full bg-white pr-10 pl-10 text-[14px] text-[#0B0112] ring-1 ring-[#ECE8EE] outline-none placeholder:text-[#8A888C] focus:ring-2 focus:ring-[#611192]/30"
             />
             {query ? (
               <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="absolute top-1/2 right-3 -translate-y-1/2 text-[#8A888C]">
@@ -122,10 +122,11 @@ export default function BlogListClient({ initialPosts = [] }: BlogListClientProp
           <>
             <div className="mb-6 flex items-baseline justify-between sm:mb-4">
               <h2 className="ap-display text-[28px] sm:text-[22px]">{browsing ? 'Latest stories' : `${filtered.length} result${filtered.length === 1 ? '' : 's'}`}</h2>
+              {browsing ? <span className="text-[13px] text-[#8A888C]">{rest.filter(Boolean).length} more</span> : null}
             </div>
-            <div className="grid grid-cols-3 gap-x-6 gap-y-12 md:grid-cols-2 sm:grid-cols-1 sm:gap-y-0 sm:divide-y sm:divide-[#F0EBF2]">
+            <div className="grid grid-cols-3 gap-5 md:grid-cols-2 sm:grid-cols-1 sm:gap-4">
               {rest.filter(Boolean).map(b => (
-                <div key={b!.id} className="sm:py-4">
+                <div key={b!.id}>
                   <BlogCard blog={b!} />
                 </div>
               ))}
@@ -148,24 +149,32 @@ export default function BlogListClient({ initialPosts = [] }: BlogListClientProp
           </div>
         ) : null}
 
-        {/* contribute */}
-        <section className="mt-20 grid grid-cols-[auto_1fr_auto] items-center gap-6 rounded-[28px] border border-[#ECE8EE] p-8 md:grid-cols-[auto_1fr] sm:mt-12 sm:grid-cols-1 sm:p-5">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F2E8F8] text-[#611192]">
-            <PenLine className="h-6 w-6" aria-hidden />
-          </span>
-          <div>
-            <h2 className="font-primary text-[24px] text-[#0B0112] sm:text-[20px]">Have a story to share?</h2>
-            <p className="mt-1 text-[14px] leading-relaxed text-[#6B686E]">
-              Charities can post updates from the Community tab in their dashboard. Tell supporters what their purchases made possible.
+        {/* closing cards */}
+        <div className="mt-16 grid grid-cols-2 gap-5 md:grid-cols-1 sm:mt-10">
+          <section className="relative isolate overflow-hidden rounded-[24px] bg-[#14021F] p-7 text-white sm:p-5">
+            <div className="pointer-events-none absolute -right-16 -bottom-24 -z-10 h-64 w-64 rounded-full bg-[#611192] opacity-60 blur-3xl" />
+            <Mail className="h-6 w-6 text-[#D9B8F0]" aria-hidden />
+            <h2 className="mt-4 font-primary text-[24px] text-white">New stories, straight to your inbox</h2>
+            <p className="mt-2 text-[14px] text-white/65">Sign up at the bottom of any page for impact updates and tips.</p>
+            <button
+              type="button"
+              onClick={() => document.querySelector('footer input[type="email"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              className="mt-5 inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-semibold text-[#0B0112]"
+            >
+              Go to sign-up <ArrowRight className="h-4 w-4" aria-hidden />
+            </button>
+          </section>
+          <section className="rounded-[24px] bg-[#FBF4FE] p-7 sm:p-5">
+            <p className="ap-eyebrow">For charities</p>
+            <h2 className="mt-3 font-primary text-[24px] text-[#0B0112]">Have a story to share?</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-[#6B686E]">
+              Charities with blogging access can write posts from the Community tab of their dashboard. Our team reviews every post before it goes live.
             </p>
-          </div>
-          <Link
-            href="/contact"
-            className="inline-flex h-11 items-center gap-2 justify-self-end rounded-full bg-[#611192] px-5 text-[14px] font-medium text-white transition hover:bg-[#4C0D73] md:col-span-2 md:justify-self-start sm:col-span-1"
-          >
-            Get in touch <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </section>
+            <Link href="/contact" className="mt-5 inline-flex h-10 items-center gap-1.5 rounded-full bg-[#611192] px-4 text-[13px] font-semibold text-white transition hover:bg-[#4C0D73]">
+              Get in touch <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </section>
+        </div>
       </div>
     </div>
   );

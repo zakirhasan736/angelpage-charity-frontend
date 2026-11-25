@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BarChart3, CalendarClock, HeartHandshake, type LucideIcon, Radio, Users } from 'lucide-react';
+import { ArrowUpRight, BarChart3, CalendarClock, HandHeart, type LucideIcon, Radio, Users } from 'lucide-react';
 import type { CommunityEventRecord } from '@/lib/server-api';
 import { formatMoney } from '@/lib/money';
 import { type DisplayEventType, type EventTiming, getDisplayEventType, getDonationProgress, getEventTiming } from './eventUtils';
@@ -15,11 +15,14 @@ export const EVENT_FALLBACK_IMAGES: Record<DisplayEventType, string> = {
   general: '/images/events/charity_event_hero.jpg',
 };
 
-export const TYPE_META: Record<DisplayEventType, { label: string; plural: string; verb: string; icon: LucideIcon; tint: string; ink: string; dot: string }> = {
-  donation: { label: 'Appeal', plural: 'Appeals', verb: 'Give', icon: HeartHandshake, tint: '#E6F6F2', ink: '#00775F', dot: '#00977A' },
-  poll: { label: 'Poll', plural: 'Polls', verb: 'Vote', icon: BarChart3, tint: '#F2E8F8', ink: '#611192', dot: '#8A3FC7' },
-  live: { label: 'Live', plural: 'Live sessions', verb: 'Join', icon: Radio, tint: '#FDECEF', ink: '#B80030', dot: '#E50035' },
-  general: { label: 'Community', plural: 'Community', verb: 'View', icon: Users, tint: '#EEF1F8', ink: '#1B264F', dot: '#1B264F' },
+export const TYPE_META: Record<
+  DisplayEventType,
+  { label: string; filter: string; counter: string; verb: string; icon: LucideIcon; tint: string; ink: string; dot: string }
+> = {
+  donation: { label: 'Appeal', filter: 'Appeals', counter: 'Appeals open', verb: 'Give', icon: HandHeart, tint: '#F2E8F8', ink: '#611192', dot: '#8A3FC7' },
+  poll: { label: 'Community vote', filter: 'Votes', counter: 'Votes open', verb: 'Vote', icon: BarChart3, tint: '#E6F6F2', ink: '#00775F', dot: '#00977A' },
+  live: { label: 'Live session', filter: 'Live', counter: 'Live open', verb: 'Join', icon: Radio, tint: '#FDECEF', ink: '#B80030', dot: '#E50035' },
+  general: { label: 'Community', filter: 'Community', counter: 'Community', verb: 'View', icon: Users, tint: '#EEF1F8', ink: '#1B264F', dot: '#1B264F' },
 };
 
 export const eventImage = (e: CommunityEventRecord) => e.coverImage || EVENT_FALLBACK_IMAGES[getDisplayEventType(e)];
@@ -63,10 +66,10 @@ export function TypeChip({ type, glass = false }: { type: DisplayEventType; glas
   const Icon = m.icon;
   return (
     <span
-      className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold ${glass ? 'bg-white/90 backdrop-blur' : ''}`}
-      style={{ background: glass ? undefined : m.tint, color: m.ink }}
+      className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold text-[#0B0112] ${glass ? 'bg-white shadow-sm' : ''}`}
+      style={glass ? undefined : { background: m.tint, color: m.ink }}
     >
-      <Icon className="h-3.5 w-3.5" aria-hidden />
+      <Icon className="h-3.5 w-3.5" style={{ color: m.dot }} aria-hidden />
       {m.label}
     </span>
   );
@@ -77,7 +80,7 @@ export function EventStatus({ event, timing, dark = false }: { event: CommunityE
   const type = getDisplayEventType(event);
   if (timing === 'live' && type === 'live') {
     return (
-      <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#E50035] px-2.5 text-[12px] font-semibold text-white">
+      <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#E50035] px-2.5 text-[11px] font-semibold tracking-[0.04em] text-white uppercase">
         <span className="ap-live-dot" aria-hidden /> Live now
       </span>
     );
@@ -111,14 +114,14 @@ export function formatDateBlock(iso?: string) {
 }
 
 /** Tear-off calendar block. */
-export function DateBlock({ iso, size = 'md' }: { iso?: string; size?: 'sm' | 'md' }) {
+export function DateBlock({ iso, size = 'md', weekday = false }: { iso?: string; size?: 'sm' | 'md'; weekday?: boolean }) {
   const b = formatDateBlock(iso);
   if (!b) return null;
   const sm = size === 'sm';
   return (
-    <span className={`flex shrink-0 flex-col overflow-hidden rounded-2xl bg-white text-center shadow-[0_6px_18px_rgba(11,1,18,0.12)] ${sm ? 'w-12' : 'w-14'}`}>
-      <span className={`bg-[#611192] font-semibold tracking-[0.12em] text-white ${sm ? 'py-0.5 text-[9px]' : 'py-1 text-[10px]'}`}>{b.month}</span>
-      <span className={`font-primary leading-none text-[#0B0112] ${sm ? 'py-1.5 text-[20px]' : 'py-2 text-[24px]'}`}>{b.day}</span>
+    <span className={`flex shrink-0 flex-col items-center justify-center rounded-xl bg-white text-center shadow-[0_4px_14px_rgba(11,1,18,0.12)] ring-1 ring-[#ECE8EE] ${sm ? 'h-11 w-11' : 'h-12 w-12'}`}>
+      <span className="text-[9px] leading-none font-semibold tracking-[0.1em] text-[#611192] uppercase">{weekday ? b.weekday : b.month}</span>
+      <span className={`mt-0.5 font-primary leading-none text-[#0B0112] ${sm ? 'text-[18px]' : 'text-[21px]'}`}>{b.day}</span>
     </span>
   );
 }
@@ -163,8 +166,19 @@ export function ProgressRing({ percent, size = 76, dark = false }: { percent: nu
   );
 }
 
-/** One-line context for a card footer: progress, votes, start time. */
-export function EventMeta({ event, timing, dark = false }: { event: CommunityEventRecord; timing: EventTiming; dark?: boolean }) {
+/** Short "starts in" label, e.g. "Starts in 6d 1h". */
+export function startsInLabel(iso?: string) {
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  if (diff <= 0) return null;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return d > 0 ? `Starts in ${d}d ${h}h` : h > 0 ? `Starts in ${h}h ${m}m` : `Starts in ${m}m`;
+}
+
+/** Card body context: progress, votes, host and time. */
+export function EventMeta({ event, dark = false }: { event: CommunityEventRecord; timing?: EventTiming; dark?: boolean }) {
   const type = getDisplayEventType(event);
   const muted = dark ? 'text-white/65' : 'text-[#6B686E]';
   const strong = dark ? 'text-white' : 'text-[#0B0112]';
@@ -173,11 +187,12 @@ export function EventMeta({ event, timing, dark = false }: { event: CommunityEve
     return (
       <div>
         <ProgressBar percent={d.percent} dark={dark} />
-        <p className={`mt-2 flex justify-between text-[13px] ${muted}`}>
+        <p className={`mt-2 flex justify-between text-[12px] ${muted}`}>
           <span>
-            <strong className={`font-semibold ${strong}`}>{formatMoney(d.raised, { compact: true })}</strong> raised
+            <strong className={`font-semibold ${strong}`}>{formatMoney(d.raised).replace(/\.00$/, '')}</strong>
+            {d.goal ? ` of ${formatMoney(d.goal).replace(/\.00$/, '')}` : ' raised'}
           </span>
-          {d.goal ? <span>of {formatMoney(d.goal, { compact: true })}</span> : null}
+          {d.goal ? <strong className="font-semibold text-[#611192]">{d.percent}%</strong> : null}
         </p>
       </div>
     );
@@ -185,56 +200,75 @@ export function EventMeta({ event, timing, dark = false }: { event: CommunityEve
   if (type === 'poll') {
     const total = pollTotal(event);
     return (
-      <p className={`flex items-center gap-2 text-[13px] ${muted}`}>
-        <BarChart3 className="h-4 w-4" aria-hidden />
-        <strong className={`font-semibold ${strong}`}>{total.toLocaleString()}</strong> vote{total === 1 ? '' : 's'} · {(event.pollOptions || []).length} options
+      <p className={`text-[12px] ${muted}`}>
+        <strong className={`font-semibold ${strong}`}>{(event.pollOptions || []).length}</strong> options · <strong className={`font-semibold ${strong}`}>{total.toLocaleString()}</strong> votes so far
       </p>
     );
   }
   const b = formatDateBlock(event.startAt);
   return (
-    <p className={`flex items-center gap-2 text-[13px] ${muted}`}>
-      <CalendarClock className="h-4 w-4" aria-hidden />
-      {timing === 'live' && type === 'live' ? 'Streaming now' : b ? `${b.weekday} ${b.day} ${b.month.toLowerCase()} · ${b.time}` : 'Date to be announced'}
+    <p className={`text-[12px] ${muted}`}>
+      Hosted by <strong className={`font-semibold ${strong}`}>{event.authorName || 'Angelpage'}</strong>
+      {b ? ` · ${b.weekday} ${b.time}` : ''}
     </p>
   );
 }
 
-/** Standard event card. */
-export function EventTile({ event, priority = false }: { event: CommunityEventRecord; priority?: boolean }) {
+/** Standard event card (list, detail "More events"). */
+export function EventTile({ event, priority = false, onShare }: { event: CommunityEventRecord; priority?: boolean; onShare?: (e: CommunityEventRecord) => void }) {
   const type = getDisplayEventType(event);
   const timing = useTiming(event);
+  const [startsIn, setStartsIn] = useState<string | null>(null);
+  useEffect(() => setStartsIn(startsInLabel(event.startAt)), [event.startAt]);
+  const m = TYPE_META[type];
   return (
-    <article className="ap-card ap-card--hover group relative flex h-full flex-col overflow-hidden">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-[22px] bg-white ring-1 ring-[#ECE8EE] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(59,5,92,0.10)]">
       <div className="relative aspect-[16/10] overflow-hidden bg-[#F2E8F8]">
         <Image
           src={eventImage(event)}
           alt=""
           fill
           priority={priority}
-          sizes="(max-width: 767px) 90vw, (max-width: 1170px) 45vw, 380px"
+          sizes="(max-width: 767px) 92vw, (max-width: 1170px) 45vw, 380px"
           className={`object-cover transition duration-700 group-hover:scale-[1.04] ${timing === 'ended' ? 'grayscale-[60%]' : ''}`}
         />
-        <div className="absolute top-3 left-3 flex gap-1.5">
+        <span className="absolute top-3 left-3">
           <TypeChip type={type} glass />
-          <EventStatus event={event} timing={timing} />
-        </div>
-        {event.startAt && type !== 'donation' && type !== 'poll' ? (
-          <span className="absolute bottom-3 left-3">
+        </span>
+        <span className="absolute bottom-3 left-3">
+          {timing === 'upcoming' && startsIn ? (
+            <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#0B0112]/55 px-2.5 text-[11px] font-medium text-white backdrop-blur">
+              <CalendarClock className="h-3.5 w-3.5" aria-hidden /> {startsIn}
+            </span>
+          ) : (
+            <EventStatus event={event} timing={timing} />
+          )}
+        </span>
+        {event.startAt ? (
+          <span className="absolute right-3 bottom-3">
             <DateBlock iso={event.startAt} size="sm" />
           </span>
         ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5 sm:p-4">
-        <p className="text-[12px] font-medium text-[#8A888C]">{event.authorName || 'Angelpage'}</p>
-        <h3 className="mt-1 line-clamp-2 font-primary text-[20px] leading-snug text-[#0B0112] transition group-hover:text-[#611192] sm:text-[18px]">
+        <h3 className="line-clamp-2 font-primary text-[19px] leading-snug text-[#0B0112] transition group-hover:text-[#611192]">
           <Link href={eventHref(event)} className="after:absolute after:inset-0">
             {event.title}
           </Link>
         </h3>
-        {event.excerpt ? <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-[#6B686E]">{event.excerpt}</p> : null}
-        <div className="mt-auto pt-5">
-          <EventMeta event={event} timing={timing} />
+        {event.excerpt ? <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#6B686E]">{event.excerpt}</p> : null}
+        <div className="mt-auto pt-4">
+          <EventMeta event={event} />
+        </div>
+        <div className="mt-4 flex items-center justify-between border-t border-[#F0EBF2] pt-3.5">
+          <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#611192]">
+            {timing === 'ended' ? 'View' : m.verb} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+          </span>
+          {onShare ? (
+            <button type="button" onClick={() => onShare(event)} className="relative z-10 text-[12px] font-medium text-[#8A888C] hover:text-[#611192]">
+              Share
+            </button>
+          ) : null}
         </div>
       </div>
     </article>
