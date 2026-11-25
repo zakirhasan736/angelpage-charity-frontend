@@ -729,6 +729,10 @@
 }
 .ap-prose img { border-radius: 20px; width: 100%; height: auto; margin: 2em 0; }
 .ap-prose hr { border: 0; height: 1px; background: var(--ap-line); margin: 2.5em 0; }
+/* Shorter text blocks (event descriptions) */
+.ap-prose--compact { font-size: 16px; line-height: 1.75; }
+.ap-prose--compact > p:first-child::first-letter { float: none; font-size: inherit; margin: 0; color: inherit; font-family: inherit; }
+
 /* Content blocks (backend blog posts) */
 .ap-prose h2 { scroll-margin-top: 24px; }
 .ap-prose .lead {

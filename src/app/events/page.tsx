@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import React from 'react';
-import EventsConsoleListClient from '@/components/features/events/EventsConsoleListClient';
+import EventsPageClient from '@/components/features/events/EventsPageClient';
 import { fetchEvents } from '@/lib/server-api';
 import SeoTrail from '@/components/seo/SeoTrail';
 import { pageMetadata } from '@/lib/siteSeo';
@@ -37,7 +37,7 @@ export default async function EventsPage() {
           },
         ]}
       />
-      <EventsConsoleListClient initialEvents={initialEvents} />
+      <EventsPageClient initialEvents={initialEvents} />
     </>
   );
 }
