@@ -1,7 +1,7 @@
 {
   "name": "Angelpage",
   "short_name": "Angelpage",
-  "description": "Charity marketplace starting in the United States, also selling in Canada and the United Kingdom.",
+  "description": "Shop pre-loved, give to charity. The charity marketplace for the USA, Canada and the UK.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,10 +10,22 @@
   "lang": "en",
   "icons": [
     {
-      "src": "/images/favicon.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

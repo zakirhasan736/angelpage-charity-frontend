@@ -15,7 +15,7 @@ interface Charity {
 }
 const CharityDetails = () => {
   const params = useParams(); // Retrieve parameters from the route
-  const charityid = params?.charityid; // Ensure `charityid` is correctly retrieved
+  const charityid = (params?.charityId || params?.charityid) as string | undefined;
   const [charity, setCharity] = useState<Charity | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +82,7 @@ const CharityDetails = () => {
 
         {/* Right Text Section */}
         <div className="w-2/3 md:w-full md:p-6 pl-[50px] pt-[121px] pb-[145px]">
-          <h3 className="text-[#0B0112] capitalize">{charity.charityName}</h3>
+          <h1 className="ap-display text-[30px] capitalize text-[#0B0112]">{charity.charityName}</h1>
           <p className="text-[10px] text-[#611192] font-semibold">
             CHARITY NUMBER: {charity.charityNumber || 'N/A'}
           </p>

@@ -10,31 +10,31 @@ const homewareCategories = [
   {
     productImageSrc: '/images/products/homeware-cat-img1.png',
     productImageAlt: 'Cutlery',
-    productCategory: '/product?category=homeware&subcategory=cutlery',
+    productCategory: '/shop/homeware/cutlery',
     productTitle: 'Cutlery',
   },
   {
     productImageSrc: '/images/products/homeware-cat-img2.png',
     productImageAlt: 'Bedding',
-    productCategory: '/product?category=homeware&subcategory=bedding',
+    productCategory: '/shop/homeware/bedding',
     productTitle: 'Bedding',
   },
   {
     productImageSrc: '/images/products/homeware-cat-img3.png',
     productImageAlt: 'Crockery',
-    productCategory: '/product?category=homeware&subcategory=crockery',
+    productCategory: '/shop/homeware/crockery',
     productTitle: 'Crockery',
   },
   {
     productImageSrc: '/images/products/homeware-cat-img4.png',
     productImageAlt: 'Decor',
-    productCategory: '/product?category=homeware&subcategory=decor',
+    productCategory: '/shop/homeware/decor',
     productTitle: 'Decor',
   },
   {
     productImageSrc: '/images/products/homeware-cat-img5.png',
     productImageAlt: 'Curtains',
-    productCategory: '/product?category=homeware&subcategory=curtains',
+    productCategory: '/shop/homeware/curtains',
     productTitle: 'Curtains',
   },
 ];
@@ -47,7 +47,7 @@ const HomewareTopCategoryProducts: React.FC<Props> = ({ secClassName }) => (
     title="Homeware favourites"
     description="Brand new, in the original packaging."
     tiles={tiles}
-    viewAllHref="/product?category=homeware"
+    viewAllHref="/shop/homeware"
     className={secClassName || 'bg-[#FAF8FB]'}
   />
 );

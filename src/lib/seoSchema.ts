@@ -1,4 +1,5 @@
 import { categoriesData } from '@/libs/categoriesData';
+import { shopHref } from '@/lib/shopUrls';
 import {
   absoluteUrl,
   DEFAULT_DESCRIPTION,
@@ -63,7 +64,7 @@ export const SITE_SECTIONS: Crumb[] = [
   { name: 'Contact', path: '/contact' },
 ];
 
-export function shopCrumbs(category?: string, subcategory?: string): Crumb[] {
+export function shopCrumbs(category?: string, subcategory?: string, categoryName?: string, subcategoryName?: string): Crumb[] {
   const crumbs: Crumb[] = [
     { name: 'Home', path: '/' },
     { name: 'Shop', path: '/product' },
@@ -71,16 +72,11 @@ export function shopCrumbs(category?: string, subcategory?: string): Crumb[] {
   if (!category) return crumbs;
 
   const cat = categoriesData.categories.find(item => item.id === category);
-  const catName = cat?.name || category;
-  const catPath = `/product?category=${encodeURIComponent(category)}`;
-  crumbs.push({ name: catName, path: catPath });
+  crumbs.push({ name: categoryName || cat?.name || category, path: shopHref(category) });
 
   if (subcategory) {
     const sub = cat?.subCategories.find(item => item.id === subcategory);
-    crumbs.push({
-      name: sub?.name || subcategory,
-      path: `${catPath}&subcategory=${encodeURIComponent(subcategory)}`,
-    });
+    crumbs.push({ name: subcategoryName || sub?.name || subcategory, path: shopHref(category, subcategory) });
   }
   return crumbs;
 }

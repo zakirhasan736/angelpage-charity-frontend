@@ -1,3 +1,4 @@
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import type { Metadata } from 'next';
 import ReelsFeedClient, {
   type ReelItem,
@@ -6,11 +7,11 @@ import SeoTrail from '@/components/seo/SeoTrail';
 import { pageMetadata } from '@/lib/siteSeo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Reels',
+  title: 'Charity Impact Reels and Stories',
   description:
-    'Watch short reels from the Angelpage community. Sellers, buyers, and charities share pre-loved goods.',
+    'Short videos from charities and sellers showing what pre-loved sales on Angelpage pay for, from coats for families to seabird rescue.',
   path: '/reels',
-  keywords: ['Angelpage reels', 'charity videos', 'pre-loved'],
+  keywords: [...TOPIC_KEYWORDS.reels, 'Angelpage'],
 });
 import type { ReelsFilterParams } from '@/lib/slugs';
 import { serverFetch } from '@/lib/server-api';
@@ -55,6 +56,8 @@ export default async function ReelsPage({ searchParams }: PageProps) {
         title="Reels"
         description="Watch short reels from the Angelpage community. Sellers, buyers, and charities share pre-loved goods."
       />
+      {/* the feed is full-screen video, so the page heading is for screen readers and crawlers */}
+      <h1 className="sr-only">Charity impact reels from Angelpage</h1>
       <Suspense fallback={<ReelsLoading />}>
         <ReelsFeedClient initialItems={items} initialFilters={filters} />
       </Suspense>

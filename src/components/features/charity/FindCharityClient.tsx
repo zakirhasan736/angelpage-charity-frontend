@@ -89,7 +89,7 @@ export default function FindCharityClient({ initialData }: FindCharityClientProp
         </div>
       </div>
       <div className="pt-[79px] pb-12">
-        <h4 className="text-center text-black">Find a Charity</h4>
+        <h1 className="ap-display text-center text-[34px] text-[#0B0112] sm:text-[26px]">Find a charity to support</h1>
         <p className="text-center text-[#0B0112] text-[14px] mt-2 mb-[37px]">
           Search for a charity to support
         </p>

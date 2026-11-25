@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { shopHref } from '@/lib/shopUrls';
 import { useParams } from 'next/navigation';
 import { Checkmark } from '@/icons';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import RelatedCategoryProducts from './RelatedProductCategory';
 import { ToastService } from '@/components/elements/notifications/ToastService';
@@ -142,7 +143,7 @@ const ProductSinglepage = ({ productSlug: productSlugProp, initialProduct } = {}
     ? product.images.filter(image => image?.url)
     : [];
   const categoryHref = product.category
-    ? `/product?category=${encodeURIComponent(String(product.category).toLowerCase())}`
+    ? shopHref(String(product.category), product.subcategory)
     : '/product';
   const charityName =
     product.charity?.charityName ||
@@ -182,7 +183,14 @@ const ProductSinglepage = ({ productSlug: productSlugProp, initialProduct } = {}
           ? `Local delivery${sellAreas.length ? `: ${sellAreas.slice(0, 3).join(', ')}` : ''}`
           : 'Tracked shipping, usually 5–7 business days';
 
-  const buyButton = isOwnListing ? (
+  const isSold = Boolean(product.isArchived) || (typeof product.stockRemaining === 'number' && product.stockRemaining <= 0);
+
+  const buyButton = isSold ? (
+    <div className="rounded-2xl bg-[#F6F3F7] px-4 py-3 text-center">
+      <p className="text-[14px] font-semibold text-[#0B0112]">This item has sold</p>
+      <p className="mt-0.5 text-[12px] text-[#6B686E]">Thank you for supporting charity. Similar finds are below.</p>
+    </div>
+  ) : isOwnListing ? (
     <div className="rounded-2xl bg-[#F6F3F7] px-4 py-3 text-center">
       <p className="text-[14px] font-medium text-[#0B0112]">This is your listing</p>
       <p className="mt-0.5 text-[12px] text-[#6B686E]">You can&apos;t buy your own item.</p>

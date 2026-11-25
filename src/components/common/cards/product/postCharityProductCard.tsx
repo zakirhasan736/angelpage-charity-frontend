@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import { LocationIcon } from '@/icons';
 import FavoriteButton from '@/components/elements/button/FavoriteButton';
 import { Archive, Pencil, RotateCcw, Trash2 } from 'lucide-react';

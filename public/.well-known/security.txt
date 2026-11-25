@@ -1,0 +1,4 @@
+Contact: https://www.angelpage.shop/contact
+Expires: 2027-11-25T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://www.angelpage.shop/.well-known/security.txt

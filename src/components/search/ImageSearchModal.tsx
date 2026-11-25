@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { shopHref } from '@/lib/shopUrls';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -134,7 +135,7 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   const browseCategory = () => {
     onClose();
     if (categoryId) {
-      router.push(`/product?category=${encodeURIComponent(categoryId)}`);
+      router.push(shopHref(categoryId));
       return;
     }
     router.push('/product');

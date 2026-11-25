@@ -182,6 +182,16 @@ export async function fetchBlogPosts(limit?: number) {
   return data?.posts ?? [];
 }
 
+export async function fetchBlogBySlugResult(slug: string) {
+  const { data, status } = await serverFetchStatus<BlogDetailResponse>(`/blog/slug/${slug}`, { revalidate: REVALIDATE.CATALOG, tags: [`blog-${slug}`] });
+  return { post: data?.post ?? null, status };
+}
+
+export async function fetchEventBySlugResult(slug: string) {
+  const { data, status } = await serverFetchStatus<EventDetailResponse>(`/events/slug/${slug}`, { revalidate: REVALIDATE.EVENTS, tags: [`event-${slug}`] });
+  return { event: data?.event ?? null, status };
+}
+
 export async function fetchBlogBySlug(slug: string) {
   const data = await serverFetch<BlogDetailResponse>(`/blog/slug/${slug}`, {
     revalidate: REVALIDATE.CATALOG,
@@ -215,6 +225,37 @@ export async function fetchCharitiesPage(page = 1, limit = 12, search = '') {
   });
 }
 
+/** Like serverFetch, but reports the HTTP status so pages can tell 404 from an outage. */
+export async function serverFetchStatus<T>(path: string, { revalidate = REVALIDATE.CATALOG, tags, params }: FetchOptions = {}): Promise<{ data: T | null; status: number }> {
+  if (!API_URL) return { data: null, status: 0 };
+  try {
+    const response = await fetch(buildUrl(path, params), { next: { revalidate, tags } });
+    if (!response.ok) return { data: null, status: response.status };
+    return { data: (await response.json()) as T, status: response.status };
+  } catch {
+    return { data: null, status: 0 };
+  }
+}
+
+/** Product + status: 404 means gone, 0/5xx means the API is down (never a 404 page). */
+export async function fetchProductDetailsResult(slugOrId: string) {
+  const { data, status } = await serverFetchStatus<ProductDetailResponse>(`/products/details/${slugOrId}`, {
+    revalidate: REVALIDATE.CATALOG,
+    tags: [`product-${slugOrId}`],
+    params: { isArchived: false },
+  });
+  return { product: data?.product ?? null, status };
+}
+
+/** Whether a product should be indexed: live, not archived, still in stock. */
+export function productIndexState(product?: Partial<ProductRecord> & { status?: string; isArchived?: boolean; stockRemaining?: number } | null) {
+  if (!product) return 'missing' as const;
+  if (product.status === 'REMOVED') return 'removed' as const;
+  if (product.status && product.status !== 'LIVE') return 'unlisted' as const;
+  if (product.isArchived || (typeof product.stockRemaining === 'number' && product.stockRemaining <= 0)) return 'sold' as const;
+  return 'live' as const;
+}
+
 export async function fetchProductDetails(slugOrId: string) {
   const data = await serverFetch<ProductDetailResponse>(
     `/products/details/${slugOrId}`,
@@ -225,4 +266,15 @@ export async function fetchProductDetails(slugOrId: string) {
     }
   );
   return data?.product ?? null;
+}
+
+/** Shop taxonomy for server pages: API first, static list as fallback. */
+export async function fetchShopCategories() {
+  const { categoriesData } = await import('@/libs/categoriesData');
+  const data = await serverFetch<{ categories?: { id: string; name: string; subCategories?: { id: string; name: string }[] }[] }>('/categories', {
+    revalidate: 3600,
+    tags: ['categories'],
+  });
+  const list = data?.categories?.length ? data.categories : categoriesData.categories;
+  return list.map(c => ({ id: c.id, name: c.name, subCategories: c.subCategories || [] }));
 }

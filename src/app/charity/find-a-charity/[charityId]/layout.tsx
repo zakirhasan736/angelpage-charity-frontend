@@ -1,17 +1,24 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import JsonLd from '@/components/seo/JsonLd';
-import { serverFetch, type CharityRecord } from '@/lib/server-api';
-import { absoluteUrl, pageMetadata, SITE_URL } from '@/lib/siteSeo';
+import { notFound } from 'next/navigation';
+import { serverFetchStatus, type CharityRecord } from '@/lib/server-api';
+import { absoluteImage, absoluteUrl, pageMetadata } from '@/lib/siteSeo';
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import { breadcrumbNode, graph, webPageNode } from '@/lib/seoSchema';
 
 async function loadCharity(charityId: string) {
-  const data = await serverFetch<{ charity?: CharityRecord }>(
-    `/charity/charities/${charityId}`,
-    { revalidate: 300, tags: [`charity-${charityId}`] }
-  );
+  const { data, status } = await serverFetchStatus<{ charity?: CharityRecord }>(`/charity/charities/${charityId}`, {
+    revalidate: 300,
+    tags: [`charity-${charityId}`],
+  });
+  if (status === 404) notFound();
   return data?.charity ?? null;
 }
+
+/** The storefront is the richer page; the directory profile defers to it. */
+const canonicalPath = (charityId: string, charity: CharityRecord | null) =>
+  charity?.storefrontId ? `/charity/store/${charity.storefrontId}` : `/charity/find-a-charity/${charityId}`;
 
 export async function generateMetadata({
   params,
@@ -25,11 +32,12 @@ export async function generateMetadata({
   return pageMetadata({
     title: name,
     description:
-      charity?.description ||
-      `${name} on Angelpage. Shop pre-loved goods and support this charity.`,
-    path: `/charity/find-a-charity/${charityId}`,
+      charity?.description && charity.description.length >= 70
+        ? charity.description
+        : `${name} on Angelpage: shop pre-loved items listed for ${name} and see how much of each sale reaches the charity.`,
+    path: canonicalPath(charityId, charity),
     image: charity?.profileImage,
-    keywords: [name, 'charity', 'Angelpage'],
+    keywords: [name, `${name} charity shop`, `support ${name}`, ...TOPIC_KEYWORDS.charities.slice(0, 3), 'Angelpage'],
   });
 }
 
@@ -69,10 +77,9 @@ export default async function CharityDetailLayout({
             '@type': 'NGO',
             name,
             description: charity?.description,
-            image: charity?.profileImage,
-            url: absoluteUrl(`/charity/find-a-charity/${charityId}`),
+            image: charity?.profileImage ? absoluteImage(charity.profileImage) : undefined,
+            url: absoluteUrl(canonicalPath(charityId, charity)),
             identifier: charity?.charityNumber,
-            parentOrganization: { '@id': `${SITE_URL}/#organization` },
           },
         ])}
       />

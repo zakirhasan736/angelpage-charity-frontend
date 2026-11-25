@@ -7,15 +7,16 @@ import StoreFrontBanner from './banner';
 import AboutInfoComponent from './about';
 import CharityStoreListing from './listing';
 import FavoriteButton from '@/components/elements/button/FavoriteButton';
-import Loading from '@/app/loading';
+import Loading from '@/components/common/loading/FullScreenLoader';
 
-const CharityStorefront = () => {
+/** @param {{ initialCharity?: any }} props  initialCharity comes from the server so the page renders before client fetches */
+const CharityStorefront = ({ initialCharity = null }) => {
   const params = useParams();
   const storefrontid = Array.isArray(params?.storefrontid)
     ? params.storefrontid[0]
     : params?.storefrontid;
 
-  const [charityData, setCharityData] = useState(null);
+  const [charityData, setCharityData] = useState(initialCharity);
   const [activeTab, setActiveTab] = useState(0);
   const [productCount, setProductCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -87,7 +88,7 @@ const CharityStorefront = () => {
     );
   }
 
-  if (loading && !charityData && !notFound) {
+  if (!charityData && loading && !notFound) {
     return <Loading />;
   }
 

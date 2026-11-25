@@ -2,69 +2,38 @@ import type { Metadata } from 'next';
 import ProductsPage from '@/components/product/ProductsPage';
 import SeoTrail from '@/components/seo/SeoTrail';
 import { shopCrumbs } from '@/lib/seoSchema';
-import { pageMetadata } from '@/lib/siteSeo';
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
+import { hasFacets, pageMetadata } from '@/lib/siteSeo';
 
-type ShopParams = {
-  category?: string;
-  subcategory?: string;
-};
+type ShopParams = Record<string, string | string[] | undefined>;
 
-function shopCopy(category?: string, subcategory?: string) {
-  const crumbs = shopCrumbs(category, subcategory);
-  const current = crumbs[crumbs.length - 1];
-  const parent = crumbs.length > 2 ? crumbs[crumbs.length - 2] : null;
-  const title =
-    crumbs.length === 2
-      ? 'Shop'
-      : parent && current.name !== 'Shop'
-        ? `${current.name}`
-        : current.name;
-  const subject =
-    crumbs.length === 2 ? 'pre-loved goods' : current.name.toLowerCase();
-  const description = `Shop ${subject} on Angelpage. Sellers list pre-loved items and choose how much of each sale goes to a charity in the USA, Canada, or the UK.`;
-  const path = current.path;
-  const keywords = [
-    current.name,
-    'Angelpage shop',
-    'pre-loved',
-    'charity marketplace',
-    'USA',
-    'Canada',
-    'United Kingdom',
-  ];
-  return { crumbs, title, description, path, keywords };
-}
+const TITLE = 'Shop Pre-loved Fashion, Homeware and More';
+const DESCRIPTION =
+  'Thrift pre-loved clothes, shoes, bags, homeware and electronics on Angelpage. Up to 90% of every sale goes to a verified charity in the USA, Canada or UK.';
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<ShopParams>;
-}): Promise<Metadata> {
-  const { category, subcategory } = await searchParams;
-  const copy = shopCopy(category, subcategory);
+/**
+ * /product is the all-products hub. Category views live on /shop/… (the proxy
+ * redirects old ?category= links). Any sort/filter/search variant is noindex,
+ * follow and canonicalises here, so Search Console never sees thin duplicates.
+ */
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ShopParams> }): Promise<Metadata> {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const facet = hasFacets(params);
   return pageMetadata({
-    title: copy.title,
-    description: copy.description,
-    path: copy.path,
-    keywords: copy.keywords,
+    title: page > 1 ? `${TITLE} (page ${page})` : TITLE,
+    description: DESCRIPTION,
+    path: page > 1 && !facet ? `/product?page=${page}` : '/product',
+    keywords: [...TOPIC_KEYWORDS.shop],
+    noindex: facet,
+    follow: true,
   });
 }
 
-export default async function ProductsLists({
-  searchParams,
-}: {
-  searchParams: Promise<ShopParams>;
-}) {
-  const { category, subcategory } = await searchParams;
-  const copy = shopCopy(category, subcategory);
-
+export default function ProductsLists() {
   return (
     <>
-      <SeoTrail
-        crumbs={copy.crumbs}
-        title={copy.title}
-        description={copy.description}
-      />
+      <SeoTrail crumbs={shopCrumbs()} title={TITLE} description={DESCRIPTION} hideNav />
       <div className="products-page-main-wrapper">
         <ProductsPage />
       </div>

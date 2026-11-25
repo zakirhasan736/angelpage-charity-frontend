@@ -1,14 +1,15 @@
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import SeoTrail from '@/components/seo/SeoTrail';
 import { pageMetadata } from '@/lib/siteSeo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'About',
+  title: 'About Angelpage, the Charity Marketplace',
   description:
-    'Angelpage is where sellers are donors and buyers are givers. Every sale of pre-loved goods sends most of the money to a charity.',
+    'Angelpage turns everyday buying and selling into giving: sellers are donors, buyers are givers, and verified charities receive most of every sale.',
   path: '/about',
-  keywords: ['about Angelpage', 'charity marketplace', 'sellers are donors'],
+  keywords: [...TOPIC_KEYWORDS.about, 'Angelpage'],
 });
 
 const description =

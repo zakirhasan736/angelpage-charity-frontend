@@ -1,3 +1,4 @@
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import type { Metadata } from 'next';
 import React from 'react';
 import EventsPageClient from '@/components/features/events/EventsPageClient';
@@ -7,11 +8,11 @@ import { pageMetadata } from '@/lib/siteSeo';
 import HydrateQuery from '@/store/HydrateQuery';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Events',
+  title: 'Charity Appeals, Votes and Live Events',
   description:
-    'Give beside the shop. Angelpage events include charity appeals, community votes, and live moments.',
+    'Back a charity appeal, vote on what a charity funds next, or watch the work live. Angelpage events from verified charities in the USA, Canada and UK.',
   path: '/events',
-  keywords: ['Angelpage events', 'charity appeal', 'community vote'],
+  keywords: [...TOPIC_KEYWORDS.events, 'Angelpage'],
 });
 
 export const revalidate = 120;

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CalendarDays, CalendarPlus, Check, Clock3, Copy, Loader2, MapPin, Play, Share2, ShieldCheck, UserRound } from 'lucide-react';

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import JsonLd from '@/components/seo/JsonLd';
-import { fetchProductDetails, serverFetch } from '@/lib/server-api';
+import { fetchProductDetails, productIndexState, serverFetch } from '@/lib/server-api';
+import { shopHref } from '@/lib/shopUrls';
+import { categoryKeywords } from '@/lib/seoKeywords';
 import { absoluteUrl, pageMetadata } from '@/lib/siteSeo';
 import {
   breadcrumbNode,
@@ -50,19 +51,22 @@ export async function generateMetadata({
     category: product.category,
   });
 
+  const state = productIndexState(product);
   return pageMetadata({
-    title: product.name,
+    title: product.brand && !product.name.toLowerCase().includes(String(product.brand).toLowerCase()) ? `${product.name} by ${product.brand}` : product.name,
     description,
     path: `/product/${canonicalSlug}`,
+    // Sold, draft and pending items stay reachable for buyers but drop out of the index.
+    noindex: state !== 'live',
+    follow: true,
     image: product.images?.[0]?.url,
     keywords: [
       product.name,
       product.brand,
       product.category,
       product.charity?.charityName || product.selectCharityName,
-      'pre-loved',
+      ...(product.category ? categoryKeywords(String(product.category).toLowerCase()).slice(0, 4) : ['pre-loved']),
       'Angelpage',
-      'charity marketplace',
     ].filter((item): item is string => Boolean(item)),
   });
 }
@@ -93,7 +97,7 @@ export default async function ProductLayout({
   if (product.category) {
     crumbs.push({
       name: product.category,
-      path: `/product?category=${encodeURIComponent(String(product.category))}`,
+      path: shopHref(String(product.category)),
     });
   }
   crumbs.push({ name: product.name, path });
@@ -155,7 +159,7 @@ export default async function ProductLayout({
       url,
       priceCurrency: 'USD',
       price: Number(product.price || 0).toFixed(2),
-      availability: 'https://schema.org/InStock',
+      availability: productIndexState(product) === 'live' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
       itemCondition: condition,
       seller: { '@type': 'Organization', name: 'Angelpage' },
     },
@@ -180,28 +184,6 @@ export default async function ProductLayout({
           productSchema,
         ])}
       />
-      <nav aria-label="Breadcrumb" className="custom-container pt-8">
-        <ol className="flex flex-wrap items-center gap-2 font-secondary text-sm text-[#3B055C]">
-          {crumbs.map((crumb, index) => {
-            const last = index === crumbs.length - 1;
-            return (
-              <li
-                key={`${crumb.path}-${crumb.name}`}
-                className="flex items-center gap-2"
-              >
-                {index > 0 ? <span aria-hidden="true">/</span> : null}
-                {last ? (
-                  <span className="text-[#0B0112]">{crumb.name}</span>
-                ) : (
-                  <Link href={crumb.path} className="text-[#611192] underline">
-                    {crumb.name}
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
       {children}
     </>
   );

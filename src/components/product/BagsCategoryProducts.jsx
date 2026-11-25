@@ -15,7 +15,7 @@ const BagsCategoryProducts = ({ secClassName }) => {
       products={data}
       loading={isLoading}
       error={isError ? 'We could not load these items right now.' : null}
-      viewAllHref="/product?category=bags"
+      viewAllHref="/shop/bags"
       className={secClassName || 'bg-white'}
     />
   );

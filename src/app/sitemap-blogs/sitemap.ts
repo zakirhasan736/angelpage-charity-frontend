@@ -8,7 +8,7 @@ import { serverFetch } from '@/lib/server-api';
 
 export const revalidate = 3600;
 
-type BlogSitemapRow = { slug?: string; publishedAt?: string };
+type BlogSitemapRow = { slug?: string; publishedAt?: string; updatedAt?: string; coverImage?: string };
 
 /** Published blog URLs. /sitemap-blogs/sitemap/0.xml */
 export async function generateSitemaps() {
@@ -35,7 +35,8 @@ export default async function sitemap(props: {
       `/blog/${encodeURIComponent(post.slug!)}`,
       'weekly',
       0.6,
-      post.publishedAt
+      post.updatedAt || post.publishedAt,
+      [post.coverImage || '']
     )
   );
 }

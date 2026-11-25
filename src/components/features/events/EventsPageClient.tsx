@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { ArrowRight, CalendarDays, Clock3, Search, X } from 'lucide-react';

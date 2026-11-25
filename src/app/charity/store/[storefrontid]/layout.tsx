@@ -1,15 +1,20 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import JsonLd from '@/components/seo/JsonLd';
-import { fetchCharitiesPage } from '@/lib/server-api';
-import { absoluteUrl, pageMetadata } from '@/lib/siteSeo';
+import { notFound } from 'next/navigation';
+import { serverFetchStatus, type CharityRecord } from '@/lib/server-api';
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
+import { absoluteImage, absoluteUrl, pageMetadata } from '@/lib/siteSeo';
 import { breadcrumbNode, graph, webPageNode } from '@/lib/seoSchema';
 
+/** Direct lookup (scales past any page size); unknown storefronts are a real 404. */
 async function loadStore(storefrontId: string) {
-  const data = await fetchCharitiesPage(1, 100, '');
-  return (
-    data?.charities?.find(item => item.storefrontId === storefrontId) ?? null
-  );
+  const { data, status } = await serverFetchStatus<{ charity?: CharityRecord }>(`/storefront/${storefrontId}`, {
+    revalidate: 300,
+    tags: [`storefront-${storefrontId}`],
+  });
+  if (status === 404) notFound();
+  return data?.charity ?? null;
 }
 
 export async function generateMetadata({
@@ -24,11 +29,11 @@ export async function generateMetadata({
   return pageMetadata({
     title: name,
     description:
-      charity?.description ||
-      `${name} on Angelpage. Shop pre-loved goods and send most of each sale to this charity.`,
+      (charity?.description && charity.description.length >= 70 ? charity.description : '') ||
+      `Shop the ${name} charity storefront on Angelpage: pre-loved finds where most of every sale goes straight to ${name}.`,
     path: `/charity/store/${storefrontid}`,
     image: charity?.profileImage,
-    keywords: [name, 'charity store', 'Angelpage', 'pre-loved'],
+    keywords: [name, `${name} charity shop`, `shop ${name}`, `support ${name}`, ...TOPIC_KEYWORDS.charities.slice(0, 3), 'pre-loved', 'Angelpage'],
   });
 }
 
@@ -51,7 +56,7 @@ export default async function StorefrontLayout({
             title: name,
             description:
               charity?.description ||
-              `${name} on Angelpage. Shop pre-loved goods and send most of each sale to this charity.`,
+              `Shop the ${name} charity storefront on Angelpage: pre-loved finds where most of every sale goes straight to ${name}.`,
             path: `/charity/store/${storefrontid}`,
             crumbs: [
               { name: 'Home', path: '/' },
@@ -65,10 +70,11 @@ export default async function StorefrontLayout({
             { name, path: `/charity/store/${storefrontid}` },
           ]),
           {
-            '@type': 'Store',
+            '@type': ['Store', 'NGO'],
             name,
+            identifier: charity?.charityNumber,
             description: charity?.description,
-            image: charity?.profileImage,
+            image: charity?.profileImage ? absoluteImage(charity.profileImage) : undefined,
             url: absoluteUrl(`/charity/store/${storefrontid}`),
           },
         ])}
