@@ -1,22 +1,12 @@
 'use client';
 import React from 'react';
-import ProfileImageSection from '@/components/user-account/account/ProfileImageSection';
-import ProfileInfoForm from '@/components/user-account/account/ProfileInfoForm';
-import AddressForm from '@/components/user-account/account/AddressForm';
-import PaymentInfoForm from '@/components/user-account/account/PaymentInfoForm';
-import AccountInfoForm from '@/components/user-account/account/AccountInfoForm';
-import LogoutButton from '@/components/elements/button/LogoutButton';
+import { useRouter } from 'next/navigation';
+import AccountSettings from '@/components/account/AccountSettings';
+
+/** Account tab: profile, sign-in, addresses and billing in one place. */
 const UsersAccountInfoMain = () => {
-  return (
-    <div className="Users-account-info-wrapper max-w-[551px] w-full">
-      <ProfileImageSection />
-      <ProfileInfoForm />
-      <AccountInfoForm />
-      <AddressForm />
-      <PaymentInfoForm />
-      <LogoutButton />
-    </div>
-  );
+  const router = useRouter();
+  return <AccountSettings role="user" onDeleteTab={() => router.replace('?tab=delete', { scroll: false })} />;
 };
 
 export default UsersAccountInfoMain;

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { ArrowUpRight, Landmark, Loader2 } from 'lucide-react';
+import { ArrowUpRight, BadgeCheck, Landmark, Loader2 } from 'lucide-react';
 
 /** Starts (or resumes) Stripe Connect onboarding and sends the charity straight to Stripe. */
 const StripeOnboarding = ({ compact = false }) => {
@@ -10,17 +10,23 @@ const StripeOnboarding = ({ compact = false }) => {
   const [onboardingUrl, setOnboardingUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [connected, setConnected] = useState(false);
 
   const handleOnboard = async () => {
     setLoading(true);
     setError('');
     try {
+      const charityId = session?.user?.charityId || session?.user?.id;
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/charity/stripe/onboard`,
-        {},
+        `${process.env.NEXT_PUBLIC_API_URL}/charity/onboard`,
+        { charityId },
         { headers: { Authorization: `Bearer ${session?.token}` } }
       );
       const url = response.data?.onboardingUrl;
+      if (!url && response.data?.stripeAccountId) {
+        setConnected(true);
+        return;
+      }
       if (!url) throw new Error('No onboarding link returned');
       setOnboardingUrl(url);
       window.location.assign(url);
@@ -55,6 +61,11 @@ const StripeOnboarding = ({ compact = false }) => {
         {loading ? 'Opening Stripe…' : 'Connect with Stripe'}
         {!loading && <ArrowUpRight className="h-4 w-4" aria-hidden />}
       </button>
+      {connected && (
+        <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#00754F]">
+          <BadgeCheck className="h-4 w-4" aria-hidden /> Stripe is already connected to this charity.
+        </p>
+      )}
       {error && <p className="mt-2 text-[13px] text-[#C0143C]" role="alert">{error}</p>}
       {onboardingUrl && (
         <p className="mt-2 text-[12.5px] text-[#6B686E]">

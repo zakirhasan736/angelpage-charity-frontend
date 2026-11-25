@@ -5,7 +5,6 @@ import Image from 'next/image';
 import axios from 'axios';
 import { fetchCharityData, fetchCharityProfileData } from '@utils/api';
 import { useRouter } from 'next/navigation';
-import FullScreenLoader from '@/components/common/loading/FullScreenLoader';
 import { Button, ProgressBar } from '@/components/elements';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 
@@ -148,12 +147,15 @@ const BannerSection = () => {
     fetchProfile();
   }, [session, status, router]);
 
-  if (loading) {
-    return <FullScreenLoader />;
-  }
-
   if (!profileData) {
-    return <p>Failed to load profile data.</p>;
+    if (!loading) return null;
+    return (
+      <section className="bg-white pt-6 max-[767px]:pt-4" aria-busy="true">
+        <div className="custom-container">
+          <div className="h-[300px] animate-pulse rounded-[28px] bg-[#F4F1F6] max-[767px]:h-[200px] max-[767px]:rounded-[22px]" />
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -225,7 +227,14 @@ const BannerSection = () => {
                 </h1>
               </div>
             </div>
-            <ul className="list-info flex items-center gap-2">
+            <ul className="list-info flex flex-wrap items-center gap-2">
+              {userData?.storefrontId ? (
+                <li>
+                  <a href={`/charity/store/${userData.storefrontId}`} className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-[#3B055C]">
+                    View storefront
+                  </a>
+                </li>
+              ) : null}
               <li className="rounded-full bg-white/15 px-4 py-2 text-[13px] text-white! backdrop-blur">
                 <strong className="font-semibold text-white!">{userData?.listedProducts?.length || 0}</strong> for sale
               </li>
