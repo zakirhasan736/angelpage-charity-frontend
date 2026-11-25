@@ -29,21 +29,11 @@ import DashboardLayout from '@/components/account/DashboardLayout';
 import { getCharityTabsForSession } from '@/constants/charityPanels';
 
 const CHARITY_TAB_GROUP_DEFS: AccountTabGroup[] = [
-  {
-    id: 'products',
-    label: 'Products',
-    tabIds: ['listings', 'product-sync', 'affiliate'],
-  },
-  {
-    id: 'content',
-    label: 'Content',
-    tabIds: ['gallery', 'social', 'community'],
-  },
-  {
-    id: 'inbox',
-    label: 'Inbox',
-    tabIds: ['messages', 'notifications'],
-  },
+  { id: 'shop', label: 'Shop', tabIds: ['listings', 'sold', 'product-sync', 'affiliate'] },
+  { id: 'money', label: 'Money', tabIds: ['payouts'] },
+  { id: 'community', label: 'Community', tabIds: ['community', 'gallery', 'social'] },
+  { id: 'inbox', label: 'Inbox', tabIds: ['messages', 'notifications'] },
+  { id: 'organisation', label: 'Organisation', tabIds: ['team'] },
 ];
 
 interface ProductResponse {
@@ -58,7 +48,8 @@ const CharityAccount = () => {
   const visibleTabs = getCharityTabsForSession(role, permissions);
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams?.get('tab');
-  const [activeTabId, setActiveTabId] = useState<string>(tabFromUrl || 'listings');
+  const defaultTab = visibleTabs.some(t => t.id === 'analytics') ? 'analytics' : visibleTabs[0]?.id || 'listings';
+  const [activeTabId, setActiveTabId] = useState<string>(tabFromUrl || defaultTab);
 
   useEffect(() => {
     if (tabFromUrl) setActiveTabId(tabFromUrl);
@@ -67,10 +58,11 @@ const CharityAccount = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (visibleTabs.length && !visibleTabs.some(t => t.id === activeTabId)) {
-      setActiveTabId(visibleTabs[0].id);
+    const allowed = activeTabId === 'delete' ? role === 'CHARITY' : visibleTabs.some(t => t.id === activeTabId);
+    if (visibleTabs.length && !allowed) {
+      setActiveTabId(defaultTab);
     }
-  }, [role, permissions, visibleTabs, activeTabId]);
+  }, [role, permissions, visibleTabs, activeTabId, defaultTab]);
 
   const fetchUserProducts = async () => {
     try {
