@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
-import { ArrowUpRight, Clock } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 export interface BlogCardData {
   id: string;
@@ -28,84 +28,62 @@ export function formatBlogDate(value?: string, month: 'short' | 'long' = 'short'
 }
 
 const TAG_LABEL: Record<string, string> = { guides: 'Guide', stories: 'Story', news: 'News' };
+export const TOPIC_LABEL: Record<string, string> = { guides: 'Guides', stories: 'Stories', news: 'News' };
 export const tagLabel = (tag?: string) => (tag ? TAG_LABEL[tag.toLowerCase()] || tag : 'Story');
 
-/** Standard story card. On phones it becomes a compact row (thumb + text). */
+/** Standard story card. */
 export function BlogCard({ blog }: { blog: BlogCardData }) {
   const date = formatBlogDate(blog.date);
   return (
-    <article className="group relative flex h-full flex-col sm:flex-row sm:items-center sm:gap-4">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-[22px] bg-[#F2E8F8] sm:aspect-square sm:w-[108px] sm:shrink-0 sm:rounded-2xl">
-        <Image
-          src={blog.image}
-          alt=""
-          fill
-          sizes="(max-width: 767px) 108px, (max-width: 991px) 50vw, 33vw"
-          className="object-cover transition duration-700 group-hover:scale-[1.05]"
-        />
-        <span className="ap-chip ap-chip--glass absolute top-3 left-3 sm:hidden">{tagLabel(blog.tag)}</span>
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-[22px] bg-white ring-1 ring-[#ECE8EE] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(59,5,92,0.10)]">
+      <div className="relative aspect-[16/10] overflow-hidden bg-[#F2E8F8]">
+        <Image src={blog.image} alt="" fill sizes="(max-width: 767px) 92vw, (max-width: 991px) 45vw, 380px" className="object-cover transition duration-700 group-hover:scale-[1.05]" />
+        <span className="absolute top-3 left-3 inline-flex h-7 items-center rounded-full bg-white px-2.5 text-[12px] font-semibold text-[#0B0112] capitalize shadow-sm">
+          {TOPIC_LABEL[(blog.tag || '').toLowerCase()] || blog.tag}
+        </span>
       </div>
-      <div className="flex flex-1 flex-col pt-5 sm:min-w-0 sm:pt-0">
-        <p className="flex items-center gap-2 text-[12px] text-[#8A888C]">
-          <span className="hidden font-medium text-[#611192] sm:inline">{tagLabel(blog.tag)}</span>
-          <span className="hidden sm:inline" aria-hidden>·</span>
-          {date ? <span>{date}</span> : null}
-          {blog.readMins ? (
-            <>
-              <span aria-hidden>·</span>
-              <span>{blog.readMins} min read</span>
-            </>
-          ) : null}
+      <div className="flex flex-1 flex-col p-5 sm:p-4">
+        <p className="text-[12px] text-[#8A888C]">
+          {date}
+          {blog.readMins ? ` · ${blog.readMins} min read` : ''}
         </p>
-        <h3 className="mt-2 font-primary text-[22px] leading-[1.25] text-[#0B0112] transition group-hover:text-[#611192] sm:mt-1 sm:line-clamp-2 sm:text-[16px]">
+        <h3 className="mt-2 line-clamp-2 font-primary text-[20px] leading-snug text-[#0B0112] transition group-hover:text-[#611192] sm:text-[18px]">
           <Link href={`/blog/${blog.id}`} className="after:absolute after:inset-0">
             {blog.title}
           </Link>
         </h3>
-        <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-[#6B686E] sm:hidden">{blog.description}</p>
+        <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#6B686E]">{blog.description}</p>
+        <span className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-[#611192]">
+          Read story <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+        </span>
       </div>
     </article>
   );
 }
 
-/** Large lead story: image with text panel overlapping. */
+/** Lead story: photo with the text laid over it. */
 export function BlogFeatureCard({ blog }: { blog: BlogCardData }) {
-  const date = formatBlogDate(blog.date, 'long');
+  const date = formatBlogDate(blog.date);
   return (
-    <article className="group relative grid grid-cols-[1.25fr_1fr] overflow-hidden rounded-[32px] bg-[#1A0329] md:grid-cols-1 sm:rounded-[24px]">
-      <div className="relative min-h-[420px] md:min-h-[300px] sm:min-h-[220px]">
-        <Image
-          src={blog.image}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 991px) 100vw, 60vw"
-          className="object-cover transition duration-700 group-hover:scale-[1.03]"
-        />
-      </div>
-      <div className="relative flex flex-col justify-center p-10 md:p-8 sm:p-5">
-        <div className="pointer-events-none absolute -top-24 -right-20 h-64 w-64 rounded-full bg-[#611192] opacity-50 blur-3xl" />
-        <span className="ap-chip ap-chip--glass relative w-fit">Featured · {tagLabel(blog.tag)}</span>
-        <h2 className="relative mt-5 font-primary text-[36px] leading-[1.15] text-white md:text-[30px] sm:mt-4 sm:text-[24px]">
-          <Link href={`/blog/${blog.id}`} className="after:absolute after:inset-0">
-            {blog.title}
-          </Link>
-        </h2>
-        <p className="relative mt-4 line-clamp-3 text-[15px] leading-relaxed text-white/70 sm:text-[14px]">{blog.description}</p>
-        <div className="relative mt-8 flex items-center justify-between gap-4 sm:mt-6">
-          <p className="flex items-center gap-2 text-[13px] text-white/60">
-            {date}
-            {blog.readMins ? (
-              <>
-                <span aria-hidden>·</span>
-                <Clock className="h-3.5 w-3.5" aria-hidden /> {blog.readMins} min
-              </>
-            ) : null}
-          </p>
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#611192] transition group-hover:rotate-45" aria-hidden>
-            <ArrowUpRight className="h-5 w-5" />
-          </span>
+    <article className="group relative isolate flex min-h-[440px] flex-col justify-end overflow-hidden rounded-[28px] bg-[#14021F] md:min-h-[380px] sm:min-h-[400px] sm:rounded-[24px]">
+      <Image src={blog.image} alt="" fill priority sizes="(max-width: 1240px) 100vw, 1200px" className="-z-10 object-cover transition duration-1000 group-hover:scale-[1.03]" />
+      <span className="absolute inset-0 -z-10 bg-gradient-to-t from-[#14021F] via-[#14021F]/55 to-transparent" />
+      <div className="flex items-end justify-between gap-6 p-8 md:flex-col md:items-start sm:p-5">
+        <div className="max-w-[640px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex h-7 items-center rounded-full bg-white px-2.5 text-[12px] font-semibold text-[#611192]">Featured · {TOPIC_LABEL[(blog.tag || '').toLowerCase()] || blog.tag}</span>
+            {date ? <span className="text-[12px] text-white/70">{date}</span> : null}
+          </div>
+          <h2 className="mt-4 font-primary text-[36px] leading-[1.15] text-white md:text-[30px] sm:text-[24px]">
+            <Link href={`/blog/${blog.id}`} className="after:absolute after:inset-0">
+              {blog.title}
+            </Link>
+          </h2>
+          <p className="mt-3 line-clamp-2 text-[15px] leading-relaxed text-white/75 sm:text-[14px]">{blog.description}</p>
         </div>
+        <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-white px-5 text-[14px] font-semibold text-[#0B0112] transition group-hover:bg-[#F2E8F8]">
+          Read the story <ArrowUpRight className="h-4 w-4" aria-hidden />
+        </span>
       </div>
     </article>
   );
@@ -116,7 +94,7 @@ const BlogList: React.FC<BlogListProps> = ({ blogData = [], featured = false }) 
   const [lead, ...rest] = blogData;
   if (!lead) return null;
   const grid = (items: BlogCardData[]) => (
-    <div className="grid grid-cols-3 gap-x-6 gap-y-10 md:grid-cols-2 sm:grid-cols-1 sm:gap-y-4">
+    <div className="grid grid-cols-3 gap-5 md:grid-cols-2 sm:grid-cols-1">
       {items.map(b => (
         <BlogCard key={b.id} blog={b} />
       ))}

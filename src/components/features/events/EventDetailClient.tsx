@@ -1,24 +1,11 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarPlus,
-  Check,
-  Clock,
-  HeartHandshake,
-  Link as LinkIcon,
-  MapPin,
-  PartyPopper,
-  Play,
-  Share2,
-  UserRound,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, CalendarDays, CalendarPlus, Check, Clock3, Copy, Loader2, MapPin, Play, Share2, ShieldCheck, UserRound } from 'lucide-react';
 import FullScreenLoader from '@/components/common/loading/FullScreenLoader';
 import { Button } from '@/components/elements';
 import { ToastService } from '@/components/elements/notifications/ToastService';
@@ -27,28 +14,24 @@ import { formatMoney } from '@/lib/money';
 import type { CommunityEventRecord } from '@/lib/server-api';
 import { buildDonationCheckoutUrl } from '@/lib/eventDonationFlow';
 import { useGetEventBySlugQuery, useGetEventsQuery } from '@/store/api/angelpageApi';
-import EventAttendanceTicket from './EventAttendanceTicket';
 import EventConfetti from './EventConfetti';
 import EventShareModal, { type EventSharePayload } from './EventShareModal';
-import InlinePoll from './InlinePoll';
-import {
-  formatEventDate,
-  getAppleCalendarUrl,
-  getDisplayEventType,
-  getDonationProgress,
-  getGoogleCalendarUrl,
-  resolveEventFunds,
-  toIcsDate,
-} from './eventUtils';
-import { DateBlock, EventStatus, EventTile, ProgressBar, TYPE_META, TypeChip, eventImage, formatDateBlock, pollTotal, useCountdown, useTiming } from './eventUi';
+import { voteStorageKey } from './InlinePoll';
+import { CountdownCells } from './EventsPageClient';
+import { getAppleCalendarUrl, getDisplayEventType, getDonationProgress, getGoogleCalendarUrl, resolveEventFunds, toIcsDate } from './eventUtils';
+import { EventStatus, EventTile, ProgressBar, TYPE_META, TypeChip, eventImage, formatDateBlock, useTiming } from './eventUi';
 
 type EventDetailClientProps = {
   slug: string;
   initialEvent?: CommunityEventRecord | null;
 };
 
-const AMOUNTS = [10, 25, 50, 100];
+type Option = { text: string; votes?: number };
+
+const AMOUNTS = [20, 50, 100, 250];
 const FUND_COLORS = ['#8A3FC7', '#00977A', '#C2771A', '#1B6FC2'];
+const money0 = (n: number) => formatMoney(n).replace(/\.00$/, '');
+const titleMonth = (m: string) => `${m.charAt(0)}${m.slice(1).toLowerCase()}`;
 
 export default function EventDetailClient({ slug, initialEvent }: EventDetailClientProps) {
   const { data: fetchedEvent, isLoading } = useGetEventBySlugQuery(slug, { skip: !slug });
@@ -69,25 +52,17 @@ export default function EventDetailClient({ slug, initialEvent }: EventDetailCli
   return <EventView event={event} slug={slug} />;
 }
 
-function CountdownCells({ to }: { to?: string }) {
-  const c = useCountdown(to);
-  if (!c || c.done) return null;
+function ShareCard({ onClick }: { onClick: () => void }) {
   return (
-    <div className="grid grid-cols-4 gap-2" aria-label="Starts in">
-      {(
-        [
-          ['days', c.d],
-          ['hrs', c.h],
-          ['min', c.m],
-          ['sec', c.s],
-        ] as const
-      ).map(([k, v]) => (
-        <span key={k} className="flex flex-col items-center rounded-xl bg-[#F6F3F7] py-2.5">
-          <span className="text-[22px] font-semibold text-[#0B0112] tabular-nums">{String(v).padStart(2, '0')}</span>
-          <span className="text-[10px] tracking-[0.14em] text-[#8A888C] uppercase">{k}</span>
-        </span>
-      ))}
-    </div>
+    <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl bg-[#FBF4FE] p-4 text-left transition hover:bg-[#F6EEFA]">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#611192]">
+        <Share2 className="h-4 w-4" aria-hidden />
+      </span>
+      <span>
+        <span className="block text-[14px] font-semibold text-[#0B0112]">Spread the word</span>
+        <span className="block text-[12px] text-[#8A888C]">Share on social or messaging apps</span>
+      </span>
+    </button>
   );
 }
 
@@ -100,23 +75,31 @@ function EventView({ event, slug }: { event: CommunityEventRecord; slug: string 
   const d = getDonationProgress(event);
   const funds = resolveEventFunds(event);
   const ended = timing === 'ended';
+  const liveNow = type === 'live' && timing === 'live';
 
-  const [amount, setAmount] = useState<number>(25);
+  const [amount, setAmount] = useState(50);
   const [custom, setCustom] = useState('');
-  const [fund, setFund] = useState<string>('');
-  const [shareOpen, setShareOpen] = useState(false);
+  const [share, setShare] = useState<EventSharePayload | null>(null);
   const [copied, setCopied] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
   const [confetti, setConfetti] = useState(false);
-  const [ticketOpen, setTicketOpen] = useState(false);
-  const [ticketId, setTicketId] = useState('');
   const [url, setUrl] = useState(`/events/${slug}`);
+  const [options, setOptions] = useState<Option[]>(event.pollOptions || []);
+  const [choice, setChoice] = useState<number | null>(null);
+  const [voted, setVoted] = useState<number | null>(null);
+  const [voting, setVoting] = useState(false);
   const calRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setUrl(`${window.location.origin}/events/${event.slug || slug}`);
-    setTicketId(`AP-${event._id.slice(-6).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`);
-  }, [event._id, event.slug, slug]);
+    setOptions(event.pollOptions || []);
+    try {
+      const stored = localStorage.getItem(voteStorageKey(event._id));
+      setVoted(stored != null ? Number(stored) : null);
+    } catch {
+      /* storage blocked */
+    }
+  }, [event._id, event.slug, event.pollOptions, slug]);
 
   useEffect(() => {
     if (!calOpen) return;
@@ -132,13 +115,40 @@ function EventView({ event, slug }: { event: CommunityEventRecord; slug: string 
     window.setTimeout(() => setConfetti(false), 4500);
   };
 
+  const giveValue = Number(custom) || amount;
   const give = () => {
-    const value = Number(custom) || amount;
-    if (!value || value <= 0) {
+    if (!giveValue || giveValue <= 0) {
       ToastService.error('Choose an amount to give.');
       return;
     }
-    router.push(buildDonationCheckoutUrl(event, { amount: value, fund: fund || undefined }));
+    router.push(buildDonationCheckoutUrl(event, { amount: giveValue }));
+  };
+
+  const totalVotes = options.reduce((s, o) => s + (o.votes || 0), 0);
+  const castVote = async () => {
+    if (voted !== null || ended) return;
+    if (choice === null) {
+      document.getElementById('event-poll')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      ToastService.info('Pick an option first.');
+      return;
+    }
+    setVoting(true);
+    try {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/events/${event._id}/poll/vote`, { optionIndex: choice });
+      const next = (res.data?.pollOptions as Option[]) || options.map((o, i) => (i === choice ? { ...o, votes: (o.votes || 0) + 1 } : o));
+      setOptions(next);
+      setVoted(choice);
+      try {
+        localStorage.setItem(voteStorageKey(event._id), String(choice));
+      } catch {
+        /* ignore */
+      }
+      celebrate();
+    } catch {
+      ToastService.error('Your vote could not be counted. Please try again.');
+    } finally {
+      setVoting(false);
+    }
   };
 
   const copyLink = async () => {
@@ -150,6 +160,7 @@ function EventView({ event, slug }: { event: CommunityEventRecord; slug: string 
       ToastService.error('Could not copy the link.');
     }
   };
+  const openShare = () => setShare({ id: event.slug || slug, title: event.title, description: event.excerpt, tag: meta.label, url });
 
   const cal = {
     title: event.title,
@@ -159,83 +170,93 @@ function EventView({ event, slug }: { event: CommunityEventRecord; slug: string 
     location: event.liveStreamUrl || event.category || 'Angelpage',
   };
 
-  const shareEvent: EventSharePayload = { id: event.slug || slug, title: event.title, description: event.excerpt, tag: meta.label, url };
   const html = useMemo(() => sanitizeHtml(event.description || ''), [event.description]);
-  const startBlock = formatDateBlock(event.startAt);
-  const endLabel = formatEventDate(event.endAt);
+  const start = formatDateBlock(event.startAt);
+  const end = formatDateBlock(event.endAt);
+  const host = event.authorName || 'Angelpage';
   const related = useMemo(() => {
     const others = (list as CommunityEventRecord[]).filter(e => e._id !== event._id);
-    const same = others.filter(e => getDisplayEventType(e) === type);
-    return [...same, ...others.filter(e => getDisplayEventType(e) !== type)].slice(0, 3);
+    return [...others.filter(e => getDisplayEventType(e) === type), ...others.filter(e => getDisplayEventType(e) !== type)].slice(0, 3);
   }, [list, event._id, type]);
 
   const facts = [
-    startBlock ? { icon: Clock, label: 'When', value: `${startBlock.weekday} ${startBlock.day} ${startBlock.month.toLowerCase()}, ${startBlock.time}` } : null,
-    endLabel ? { icon: CalendarPlus, label: ended ? 'Ended' : 'Closes', value: endLabel } : null,
-    { icon: UserRound, label: 'Hosted by', value: event.authorName || 'Angelpage' },
-    event.category ? { icon: MapPin, label: type === 'live' ? 'Where' : 'Cause', value: event.category } : null,
-  ].filter(Boolean) as { icon: typeof Clock; label: string; value: string }[];
+    { icon: CalendarDays, label: 'Date', value: start ? `${start.weekday}, ${titleMonth(start.month)} ${start.day}` : 'To be announced' },
+    { icon: Clock3, label: ended ? 'Ended' : 'Closes', value: end ? `${titleMonth(end.month)} ${end.day}, ${end.time}` : 'Open-ended' },
+    { icon: UserRound, label: 'Hosted by', value: host },
+    { icon: MapPin, label: 'Where', value: event.category || 'Online' },
+  ];
 
-  /* ---------- action card (sticky on desktop, first on phones) ---------- */
-  const calendarMenu = (
-    <div ref={calRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setCalOpen(o => !o)}
-        aria-expanded={calOpen}
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#E2DCE6] text-[14px] font-medium text-[#0B0112] transition hover:border-[#611192] hover:text-[#611192]"
-      >
-        <CalendarPlus className="h-4 w-4" aria-hidden /> Add to calendar
+  const secondaryActions = (
+    <div className="mt-5 grid grid-cols-2 gap-2 border-t border-[#F0EBF2] pt-5">
+      <div ref={calRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setCalOpen(o => !o)}
+          aria-expanded={calOpen}
+          disabled={!event.startAt}
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#F4F1F6] text-[13px] font-medium text-[#0B0112] transition hover:bg-[#F2E8F8] disabled:opacity-50"
+        >
+          <CalendarPlus className="h-4 w-4" aria-hidden /> Calendar
+        </button>
+        {calOpen ? (
+          <div className="absolute bottom-full left-0 z-20 mb-2 w-[220px] overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_18px_40px_rgba(11,1,18,0.16)] ring-1 ring-[#ECE8EE]">
+            <a href={getGoogleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer" className="block rounded-xl px-3 py-2.5 text-[14px] hover:bg-[#FCF7FE]">
+              Google Calendar
+            </a>
+            <a href={getAppleCalendarUrl(cal)} download={`${event.slug || 'event'}.ics`} className="block rounded-xl px-3 py-2.5 text-[14px] hover:bg-[#FCF7FE]">
+              Apple / Outlook (.ics)
+            </a>
+          </div>
+        ) : null}
+      </div>
+      <button type="button" onClick={copyLink} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#F4F1F6] text-[13px] font-medium text-[#0B0112] transition hover:bg-[#F2E8F8]">
+        {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />} {copied ? 'Copied' : 'Copy link'}
       </button>
-      {calOpen ? (
-        <div className="absolute inset-x-0 bottom-full z-20 mb-2 overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_18px_40px_rgba(11,1,18,0.16)] ring-1 ring-[#ECE8EE]">
-          <a href={getGoogleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer" className="block rounded-xl px-3 py-2.5 text-[14px] hover:bg-[#FCF7FE]">
-            Google Calendar
-          </a>
-          <a href={getAppleCalendarUrl(cal)} download={`${event.slug || 'event'}.ics`} className="block rounded-xl px-3 py-2.5 text-[14px] hover:bg-[#FCF7FE]">
-            Apple / Outlook (.ics)
-          </a>
-        </div>
-      ) : null}
     </div>
   );
+
+  const primaryBtn =
+    'mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#611192] text-[15px] font-semibold text-white shadow-[0_10px_24px_rgba(97,17,146,0.28)] transition hover:bg-[#4C0D73]';
 
   let action: React.ReactNode;
   if (type === 'donation') {
     action = (
       <>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[28px] leading-none font-semibold text-[#0B0112]">{formatMoney(d.raised)}</p>
-            <p className="mt-1.5 text-[13px] text-[#6B686E]">{d.goal ? `raised of ${formatMoney(d.goal)} goal` : 'raised so far'}</p>
-          </div>
-          {d.goal ? <span className="text-[15px] font-semibold text-[#611192]">{d.percent}%</span> : null}
-        </div>
+        <p className="text-[13px] text-[#8A888C]">Raised so far</p>
+        <p className="mt-1 flex items-baseline gap-2">
+          <span className="font-primary text-[34px] leading-none text-[#0B0112]">{money0(d.raised)}</span>
+          {d.goal ? <span className="text-[14px] text-[#8A888C]">of {money0(d.goal)}</span> : null}
+        </p>
         <div className="mt-4">
           <ProgressBar percent={d.percent} />
         </div>
+        {d.goal ? <p className="mt-2 text-[12px] font-semibold text-[#611192]">{d.percent}% of goal</p> : null}
         {!ended ? (
           <>
-            <p className="mt-6 text-[13px] font-medium text-[#0B0112]">Choose an amount</p>
+            <p className="mt-5 text-[13px] font-medium text-[#0B0112]">Choose an amount</p>
             <div className="mt-2 grid grid-cols-4 gap-2">
-              {AMOUNTS.map(a => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => {
-                    setAmount(a);
-                    setCustom('');
-                  }}
-                  aria-pressed={!custom && amount === a}
-                  className={`h-11 rounded-xl text-[14px] font-semibold transition ${
-                    !custom && amount === a ? 'bg-[#611192] text-white' : 'bg-[#F6F3F7] text-[#0B0112] hover:bg-[#F2E8F8]'
-                  }`}
-                >
-                  {formatMoney(a).replace(/\.00$/, '')}
-                </button>
-              ))}
+              {AMOUNTS.map(a => {
+                const on = !custom && amount === a;
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => {
+                      setAmount(a);
+                      setCustom('');
+                    }}
+                    aria-pressed={on}
+                    className={`h-11 rounded-xl text-[14px] font-semibold transition ${on ? 'bg-[#611192] text-white' : 'bg-white text-[#611192] ring-1 ring-[#E2DCE6] hover:ring-[#611192]'}`}
+                  >
+                    {money0(a)}
+                  </button>
+                );
+              })}
             </div>
-            <label className="mt-2 flex h-11 items-center rounded-xl bg-[#F6F3F7] px-4 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#611192]/30">
+            <label className="mt-2 flex h-11 items-center gap-2 rounded-xl px-4 ring-1 ring-[#E2DCE6] focus-within:ring-2 focus-within:ring-[#611192]/40">
+              <span className="text-[14px] text-[#8A888C]" aria-hidden>
+                {money0(0).replace(/[\d.,\s]/g, '')}
+              </span>
               <span className="sr-only">Other amount</span>
               <input
                 type="number"
@@ -247,301 +268,277 @@ function EventView({ event, slug }: { event: CommunityEventRecord; slug: string 
                 className="w-full bg-transparent text-[14px] outline-none placeholder:text-[#8A888C]"
               />
             </label>
-            {funds.length > 1 ? (
-              <label className="mt-2 block">
-                <span className="sr-only">Direct my gift to</span>
-                <select
-                  value={fund}
-                  onChange={e => setFund(e.target.value)}
-                  className="h-11 w-full rounded-xl bg-[#F6F3F7] px-3 text-[14px] text-[#0B0112] outline-none focus:ring-2 focus:ring-[#611192]/30"
-                >
-                  <option value="">Where it&apos;s needed most</option>
-                  {funds.map(f => (
-                    <option key={f.id} value={f.id}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            <button
-              type="button"
-              onClick={give}
-              className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#611192] text-[15px] font-medium text-white transition hover:bg-[#4C0D73]"
-            >
-              <HeartHandshake className="h-4 w-4" aria-hidden /> Give {formatMoney(Number(custom) || amount).replace(/\.00$/, '')}
+            <button type="button" onClick={give} className={primaryBtn.replace('mt-5', 'mt-4')}>
+              Give {money0(giveValue)}
             </button>
-            <p className="mt-3 text-center text-[12px] text-[#8A888C]">Secure checkout · receipt by email</p>
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-[12px] text-[#8A888C]">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#00977A]" aria-hidden /> Secure checkout, receipt by email
+            </p>
           </>
         ) : (
           <p className="mt-5 rounded-xl bg-[#F6F3F7] px-4 py-3 text-[14px] text-[#474648]">This appeal has closed. Thank you to everyone who gave.</p>
         )}
+        {secondaryActions}
       </>
     );
   } else if (type === 'poll') {
     action = (
       <>
-        <p className="text-[13px] text-[#6B686E]">
-          <strong className="font-semibold text-[#0B0112]">{pollTotal(event).toLocaleString()}</strong> votes so far
-        </p>
-        <div className="mt-3">
-          <InlinePoll event={event} disabled={ended} onVoted={celebrate} />
-        </div>
+        <p className="text-[13px] text-[#8A888C]">Votes so far</p>
+        <p className="mt-1 font-primary text-[34px] leading-none text-[#0B0112]">{totalVotes.toLocaleString()}</p>
+        {!ended && event.endAt ? (
+          <div className="mt-5">
+            <CountdownCells to={event.endAt} label="Voting closes in" />
+          </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={castVote}
+          disabled={voted !== null || ended || voting}
+          className={`${primaryBtn} disabled:bg-[#F2E8F8] disabled:text-[#611192] disabled:shadow-none`}
+        >
+          {voting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : voted !== null ? <Check className="h-4 w-4" aria-hidden /> : null}
+          {voted !== null ? 'Thanks for voting' : ended ? 'Voting closed' : 'Cast your vote'}
+        </button>
+        {secondaryActions}
       </>
     );
   } else {
-    const liveNow = type === 'live' && timing === 'live';
     action = (
       <>
-        {timing === 'upcoming' ? (
-          <>
-            <p className="mb-3 text-[13px] font-medium text-[#0B0112]">Starts in</p>
+        <p className="text-[13px] text-[#8A888C]">{liveNow ? 'Live now' : timing === 'upcoming' ? 'Starts in' : ended ? 'Ended' : 'Open'}</p>
+        <div className="mt-3">
+          {liveNow ? (
+            <EventStatus event={event} timing={timing} />
+          ) : timing === 'upcoming' ? (
             <CountdownCells to={event.startAt} />
-          </>
-        ) : liveNow ? (
-          <p className="flex items-center gap-2 text-[15px] font-medium text-[#B80030]">
-            <span className="ap-live-dot" aria-hidden /> Streaming now
-          </p>
-        ) : ended ? (
-          <p className="rounded-xl bg-[#F6F3F7] px-4 py-3 text-[14px] text-[#474648]">This event has ended.</p>
-        ) : (
-          <p className="text-[14px] text-[#474648]">Open to everyone.</p>
-        )}
-        <div className="mt-5 space-y-2">
-          {liveNow && event.liveStreamUrl ? (
-            <a
-              href={event.liveStreamUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#E50035] text-[15px] font-medium text-white transition hover:bg-[#C4002D]"
-            >
-              <Play className="h-4 w-4 fill-current" aria-hidden /> Watch live
-            </a>
-          ) : null}
-          {!ended && !liveNow ? (
-            <button
-              type="button"
-              onClick={() => {
-                setTicketOpen(true);
-                celebrate();
-              }}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#611192] text-[15px] font-medium text-white transition hover:bg-[#4C0D73]"
-            >
-              <PartyPopper className="h-4 w-4" aria-hidden /> I&apos;m going
-            </button>
-          ) : null}
-          {!ended && event.startAt ? calendarMenu : null}
+          ) : (
+            <p className="text-[14px] text-[#474648]">{ended ? 'This event has ended.' : 'Open to everyone.'}</p>
+          )}
         </div>
+        {liveNow && event.liveStreamUrl ? (
+          <a href={event.liveStreamUrl} target="_blank" rel="noopener noreferrer" className={primaryBtn}>
+            Join the live stream
+          </a>
+        ) : null}
+        {secondaryActions}
       </>
     );
   }
 
-  const phonePrimary =
+  const phone =
     type === 'donation' && !ended
-      ? { label: `Give ${formatMoney(Number(custom) || amount).replace(/\.00$/, '')}`, onClick: give }
-      : type === 'live' && timing === 'live' && event.liveStreamUrl
-        ? { label: 'Watch live', onClick: () => window.open(event.liveStreamUrl, '_blank', 'noopener,noreferrer') }
-        : type === 'poll' && !ended
-          ? { label: 'Vote', onClick: () => document.getElementById('event-action')?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
-          : !ended && type !== 'poll'
-            ? { label: "I'm going", onClick: () => {
-                setTicketOpen(true);
-                celebrate();
-              },
-            }
-            : null;
+      ? { label: `Give ${money0(giveValue)}`, sub: d.goal ? `${d.percent}% of ${money0(d.goal)}` : meta.label, onClick: give }
+      : type === 'poll' && voted === null && !ended
+        ? { label: 'Vote', sub: `${totalVotes.toLocaleString()} votes`, onClick: castVote }
+        : liveNow && event.liveStreamUrl
+          ? { label: 'Watch', sub: meta.label, onClick: () => window.open(event.liveStreamUrl, '_blank', 'noopener,noreferrer') }
+          : null;
 
   return (
-    <div className="bg-white pb-20 sm:pb-[150px]">
+    <div className="bg-[#FAF8FB] pb-20 sm:pb-[150px]">
       <EventConfetti active={confetti} />
 
       {/* hero */}
-      <header className="relative isolate overflow-hidden bg-[#0B0112]">
-        <Image src={eventImage(event)} alt="" fill priority sizes="100vw" className="-z-10 object-cover opacity-55" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0B0112] via-[#0B0112]/70 to-[#0B0112]/30" />
-        <div className="custom-container pt-8 pb-14 sm:pt-4 sm:pb-8">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/events" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/10 pr-4 pl-3 text-[13px] font-medium text-white backdrop-blur transition hover:bg-white/20">
-              <ArrowLeft className="h-4 w-4" aria-hidden /> Events
+      <section className="custom-container pt-6 sm:px-0! sm:pt-0">
+        <header className="relative isolate flex min-h-[420px] flex-col justify-between overflow-hidden rounded-[32px] bg-[#14021F] p-8 md:min-h-[380px] sm:min-h-[480px] sm:rounded-none sm:rounded-b-[32px] sm:p-5">
+          <Image src={eventImage(event)} alt="" fill priority sizes="100vw" className="-z-10 object-cover" />
+          <span className="absolute inset-0 -z-10 bg-gradient-to-t from-[#14021F] via-[#14021F]/65 to-[#14021F]/25" />
+          <div className="flex items-center justify-between">
+            <Link href="/events" className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/15 pr-4 pl-3 text-[13px] font-medium text-white backdrop-blur-md transition hover:bg-white/25">
+              <ArrowLeft className="h-4 w-4" aria-hidden /> All events
             </Link>
-            <div className="flex gap-2">
-              <button type="button" onClick={copyLink} aria-label={copied ? 'Link copied' : 'Copy link'} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20">
-                {copied ? <Check className="h-4 w-4" aria-hidden /> : <LinkIcon className="h-4 w-4" aria-hidden />}
-              </button>
-              <button type="button" onClick={() => setShareOpen(true)} aria-label="Share event" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20">
-                <Share2 className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
+            <button type="button" onClick={openShare} aria-label="Share event" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md hover:bg-white/25">
+              <Share2 className="h-4 w-4" aria-hidden />
+            </button>
           </div>
-          <div className="mt-16 max-w-[760px] md:mt-12 sm:mt-10">
+          <div className="max-w-[720px]">
             <div className="flex flex-wrap gap-2">
               <TypeChip type={type} glass />
               <EventStatus event={event} timing={timing} dark />
             </div>
-            <h1 className="ap-display mt-4 text-[52px] leading-[1.08] text-white! laptop-m:text-[44px] sm:text-[30px]">{event.title}</h1>
-            {event.excerpt ? <p className="mt-4 max-w-[620px] text-[17px] leading-relaxed text-white/75 sm:text-[15px]">{event.excerpt}</p> : null}
-          </div>
-        </div>
-      </header>
-
-      <div className="custom-container -mt-6 sm:mt-0">
-        <div className="grid grid-cols-[minmax(0,1fr)_380px] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_340px] md:grid-cols-1 md:gap-6">
-          {/* action card */}
-          <aside id="event-action" className="order-2 md:order-first md:-mt-0 sm:-mx-4">
-            <div className="sticky top-6 rounded-[28px] bg-white p-6 shadow-[0_24px_60px_rgba(59,5,92,0.14)] ring-1 ring-[#ECE8EE] sm:rounded-none sm:shadow-none sm:ring-0 sm:px-4 sm:pt-5 sm:pb-6">
-              <div className="mb-5 flex items-center gap-3 border-b border-[#F0EBF2] pb-5">
-                {event.startAt ? <DateBlock iso={event.startAt} /> : (
-                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: meta.tint, color: meta.ink }}>
-                    <meta.icon className="h-6 w-6" aria-hidden />
-                  </span>
-                )}
-                <div className="min-w-0">
-                  <p className="text-[12px] font-semibold tracking-[0.12em] uppercase" style={{ color: meta.ink }}>
-                    {meta.label}
-                  </p>
-                  <p className="truncate text-[14px] text-[#474648]">{startBlock ? `${startBlock.weekday}, ${startBlock.time}` : event.authorName || 'Angelpage'}</p>
-                </div>
-              </div>
-              {action}
+            <h1 className="ap-display mt-4 text-[48px] leading-[1.08] text-white! laptop-m:text-[42px] sm:text-[30px]">{event.title}</h1>
+            {event.excerpt ? <p className="mt-3 max-w-[560px] text-[16px] leading-relaxed text-white/75 sm:text-[14px]">{event.excerpt}</p> : null}
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-white/80 sm:flex-col sm:items-start">
+              <span className="inline-flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[11px] font-semibold text-[#611192]">{host.charAt(0).toUpperCase()}</span>
+                {host}
+              </span>
+              {start ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarDays className="h-4 w-4" aria-hidden /> {start.weekday} {start.month} {start.day} · {start.time}
+                </span>
+              ) : null}
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-[#7FE0C5]" aria-hidden /> Verified on Angelpage
+              </span>
             </div>
-          </aside>
+          </div>
+        </header>
+      </section>
 
-          {/* main column */}
-          <div className="order-1 min-w-0 pt-14 md:pt-0">
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:gap-0 sm:divide-y sm:divide-[#F0EBF2] sm:rounded-2xl sm:bg-[#FAF8FB] sm:px-4">
+      <div className="custom-container mt-6 sm:mt-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-6 md:grid-cols-1">
+          <div className="min-w-0 space-y-5">
+            <dl className="grid grid-cols-4 gap-3 lg:grid-cols-2">
               {facts.map(f => {
                 const Icon = f.icon;
                 return (
-                  <div key={f.label} className="flex items-start gap-3 rounded-2xl bg-[#FAF8FB] p-4 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-3.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#611192]">
-                      <Icon className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-[12px] text-[#8A888C]">{f.label}</dt>
-                      <dd className="mt-0.5 text-[14px] font-medium text-[#0B0112]">{f.value}</dd>
-                    </div>
+                  <div key={f.label} className="rounded-2xl bg-white p-4 ring-1 ring-[#ECE8EE]">
+                    <Icon className="h-4 w-4 text-[#611192]" aria-hidden />
+                    <dt className="mt-3 text-[10px] font-semibold tracking-[0.14em] text-[#8A888C] uppercase">{f.label}</dt>
+                    <dd className="mt-0.5 truncate text-[14px] font-semibold text-[#0B0112]">{f.value}</dd>
                   </div>
                 );
               })}
             </dl>
 
-            {html ? (
-              <section className="mt-12 sm:mt-8">
-                <h2 className="ap-display text-[28px] sm:text-[22px]">About this {meta.label.toLowerCase()}</h2>
-                <div className="ap-prose ap-prose--compact mt-5" dangerouslySetInnerHTML={{ __html: html }} />
-              </section>
-            ) : null}
+            <section className="rounded-[24px] bg-white p-7 ring-1 ring-[#ECE8EE] sm:p-5">
+              <p className="ap-eyebrow">About this {meta.label.toLowerCase()}</p>
+              {html ? (
+                <div className="ap-prose ap-prose--compact mt-4" dangerouslySetInnerHTML={{ __html: html }} />
+              ) : (
+                <p className="mt-4 text-[15px] leading-relaxed text-[#474648]">{event.excerpt}</p>
+              )}
+            </section>
 
             {type === 'donation' && funds.length ? (
-              <section className="mt-12 sm:mt-8">
-                <h2 className="ap-display text-[28px] sm:text-[22px]">Where your gift goes</h2>
+              <section className="rounded-[24px] bg-white p-7 ring-1 ring-[#ECE8EE] sm:p-5">
+                <h2 className="font-primary text-[24px] text-[#0B0112]">Where your gift goes</h2>
+                <p className="mt-1 text-[13px] text-[#8A888C]">How this charity plans to use the money raised.</p>
                 <div className="mt-5 flex h-3 overflow-hidden rounded-full" aria-hidden>
                   {funds.map((f, i) => (
                     <span key={f.id} className={i ? 'ml-[2px]' : ''} style={{ width: `${f.percent || 100 / funds.length}%`, background: FUND_COLORS[i % FUND_COLORS.length] }} />
                   ))}
                 </div>
-                <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-1">
+                <ul className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-1">
                   {funds.map((f, i) => (
-                    <li key={f.id} className="flex gap-3 rounded-2xl border border-[#ECE8EE] p-4">
-                      <span className="mt-1 h-3 w-3 shrink-0 rounded-full" style={{ background: FUND_COLORS[i % FUND_COLORS.length] }} aria-hidden />
-                      <div>
-                        <p className="flex items-baseline gap-2 text-[15px] font-medium text-[#0B0112]">
+                    <li key={f.id} className="rounded-2xl bg-[#FAF8FB] p-4">
+                      <p className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-2 text-[13px] font-semibold text-[#0B0112]">
+                          <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: FUND_COLORS[i % FUND_COLORS.length] }} aria-hidden />
                           {f.label}
-                          {f.percent != null ? <span className="text-[13px] font-semibold text-[#611192]">{f.percent}%</span> : null}
-                        </p>
-                        {f.description ? <p className="mt-1 text-[13px] leading-relaxed text-[#6B686E]">{f.description}</p> : null}
-                      </div>
+                        </span>
+                        {f.percent != null ? <span className="font-primary text-[18px] text-[#0B0112]">{f.percent}%</span> : null}
+                      </p>
+                      {f.description ? <p className="mt-2 text-[12px] leading-relaxed text-[#6B686E]">{f.description}</p> : null}
                     </li>
                   ))}
                 </ul>
               </section>
             ) : null}
 
-            {type === 'live' && event.liveStreamUrl && !ended ? (
-              <section className="mt-12 flex items-center gap-5 rounded-[24px] bg-[#FFF5F7] p-6 sm:mt-8 sm:flex-col sm:items-start sm:p-5">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-[#E50035]">
-                  <Play className="h-6 w-6 fill-current" aria-hidden />
-                </span>
-                <div className="flex-1">
-                  <p className="font-primary text-[20px] text-[#0B0112]">{timing === 'live' ? 'The stream is on' : 'The stream opens at the start time'}</p>
-                  <p className="mt-1 text-[14px] text-[#6B686E]">It plays on the host&apos;s streaming page in a new tab.</p>
+            {type === 'poll' && options.length ? (
+              <section id="event-poll" className="rounded-[24px] bg-white p-7 ring-1 ring-[#ECE8EE] sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-[#00775F] uppercase">Community vote</p>
+                    <h2 className="mt-2 font-primary text-[24px] leading-snug text-[#0B0112]">{event.pollQuestion || event.title}</h2>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-[#F4F1F6] px-3 py-1 text-[12px] text-[#474648]">{totalVotes.toLocaleString()} votes</span>
                 </div>
-                <a href={event.liveStreamUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0B0112] px-5 text-[14px] font-medium text-white">
-                  Open stream <ArrowRight className="h-4 w-4" aria-hidden />
-                </a>
+                <ul className="mt-5 space-y-2" role="radiogroup" aria-label={event.pollQuestion || 'Vote'}>
+                  {options.map((o, i) => {
+                    const showResults = voted !== null || ended;
+                    const pct = totalVotes ? Math.round(((o.votes || 0) / totalVotes) * 100) : 0;
+                    const selected = voted === i || (voted === null && choice === i);
+                    return (
+                      <li key={`${o.text}-${i}`}>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          disabled={showResults}
+                          onClick={() => setChoice(i)}
+                          className={`relative flex min-h-12 w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-left text-[14px] font-medium text-[#0B0112] ring-1 transition ${
+                            selected ? 'bg-[#F6EEFA] ring-[#611192]' : 'bg-[#FAF8FB] ring-[#ECE8EE] hover:ring-[#611192]/50'
+                          }`}
+                        >
+                          {showResults ? <span className="absolute inset-y-0 left-0 bg-[#EADAF5] transition-[width] duration-700" style={{ width: `${pct}%` }} aria-hidden /> : null}
+                          <span className={`relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full ring-2 ${selected ? 'ring-[#611192]' : 'ring-[#C9C4CC]'}`}>
+                            {selected ? <span className="h-2.5 w-2.5 rounded-full bg-[#611192]" /> : null}
+                          </span>
+                          <span className="relative flex-1">{o.text}</span>
+                          {showResults ? <span className="relative text-[13px] font-semibold text-[#611192]">{pct}%</span> : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-4 text-[12px] text-[#8A888C]">{voted !== null ? 'Thanks for voting. Results update as votes come in.' : 'One vote per person. Results show after you vote.'}</p>
               </section>
             ) : null}
 
-            <section className="mt-12 flex items-center justify-between gap-4 rounded-[24px] border border-[#ECE8EE] p-5 sm:mt-8 sm:flex-col sm:items-start">
-              <div>
-                <p className="font-primary text-[19px] text-[#0B0112]">Spread the word</p>
-                <p className="mt-1 text-[13px] text-[#6B686E]">One share can bring a new supporter.</p>
-              </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={copyLink} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#F6F3F7] px-4 text-[13px] font-medium text-[#0B0112] hover:bg-[#F2E8F8]">
-                  {copied ? <Check className="h-4 w-4" aria-hidden /> : <LinkIcon className="h-4 w-4" aria-hidden />} {copied ? 'Copied' : 'Copy link'}
-                </button>
-                <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#611192] px-4 text-[13px] font-medium text-white">
-                  <Share2 className="h-4 w-4" aria-hidden /> Share
-                </button>
-              </div>
-            </section>
+            {type === 'live' && !ended ? (
+              <section className="overflow-hidden rounded-[24px] bg-[#14021F] p-5 text-white">
+                <div className="relative aspect-[16/7] overflow-hidden rounded-2xl sm:aspect-[16/9]">
+                  <Image src={eventImage(event)} alt="" fill sizes="(max-width: 991px) 100vw, 60vw" className="object-cover opacity-70" />
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#E50035] shadow-lg">
+                      <Play className="ml-0.5 h-6 w-6 fill-current" aria-hidden />
+                    </span>
+                  </span>
+                </div>
+                <div className="mt-5">
+                  {liveNow ? <EventStatus event={event} timing={timing} /> : null}
+                  <p className="mt-3 font-primary text-[24px] text-white">{liveNow ? 'Happening right now' : 'The stream opens at the start time'}</p>
+                  <p className="mt-1 text-[14px] text-white/65">The stream opens in a new tab.</p>
+                  {event.liveStreamUrl ? (
+                    <a href={event.liveStreamUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-[#E50035] px-6 text-[15px] font-semibold text-white hover:bg-[#C4002D]">
+                      <Play className="h-4 w-4 fill-current" aria-hidden /> Watch live
+                    </a>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
+
+            {/* tablet / phone: action card after the content */}
+            <div className="hidden space-y-3 md:block">
+              <div className="rounded-[24px] bg-white p-6 shadow-[0_18px_44px_rgba(59,5,92,0.10)] ring-1 ring-[#ECE8EE] sm:p-5">{action}</div>
+              <ShareCard onClick={openShare} />
+            </div>
           </div>
+
+          <aside className="md:hidden">
+            <div className="sticky top-6 space-y-3">
+              <div className="rounded-[24px] bg-white p-6 shadow-[0_18px_44px_rgba(59,5,92,0.10)] ring-1 ring-[#ECE8EE]">{action}</div>
+              <ShareCard onClick={openShare} />
+            </div>
+          </aside>
         </div>
+
+        {related.length ? (
+          <section className="mt-14 sm:mt-10">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <h2 className="ap-display text-[28px] sm:text-[24px]">More events</h2>
+              <Link href="/events" className="text-[13px] font-semibold text-[#611192]">
+                See all
+              </Link>
+            </div>
+            <div className="ap-no-scrollbar grid grid-cols-3 gap-5 md:grid-cols-2 sm:-mx-4 sm:flex sm:snap-x sm:snap-mandatory sm:overflow-x-auto sm:px-4">
+              {related.map(e => (
+                <div key={e._id} className="sm:w-[82%] sm:shrink-0 sm:snap-start">
+                  <EventTile event={e} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
 
-      {related.length ? (
-        <section className="custom-container mt-20 sm:mt-12">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <h2 className="ap-display text-[30px] sm:text-[24px]">More events</h2>
-            <Link href="/events" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#611192]">
-              All events <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </div>
-          <div className="grid grid-cols-3 gap-5 md:grid-cols-2 ap-no-scrollbar sm:-mx-4 sm:flex sm:snap-x sm:snap-mandatory sm:overflow-x-auto sm:px-4">
-            {related.map(e => (
-              <div key={e._id} className="sm:w-[82%] sm:shrink-0 sm:snap-start">
-                <EventTile event={e} />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* phone action bar (sits above the bottom tab bar) */}
-      {phonePrimary ? (
-        <div className="fixed inset-x-0 z-[60] hidden border-t border-[#ECE8EE] bg-white/95 px-4 py-3 backdrop-blur-md sm:flex sm:items-center sm:gap-3" style={{ bottom: 'calc(66px + env(safe-area-inset-bottom))' }}>
+      {phone ? (
+        <div className="fixed inset-x-0 z-[60] hidden items-center gap-3 border-t border-[#ECE8EE] bg-white/95 px-4 py-3 backdrop-blur-md sm:flex" style={{ bottom: 'calc(66px + env(safe-area-inset-bottom))' }}>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-[#0B0112]">{event.title}</p>
-            <p className="text-[12px] text-[#8A888C]">{type === 'donation' ? `${d.percent}% of goal` : meta.label}</p>
+            <p className="truncate text-[14px] font-medium text-[#0B0112]">{event.title}</p>
+            <p className="text-[12px] text-[#8A888C]">{phone.sub}</p>
           </div>
-          <button type="button" onClick={phonePrimary.onClick} className="inline-flex h-11 shrink-0 items-center rounded-full bg-[#611192] px-5 text-[14px] font-medium text-white">
-            {phonePrimary.label}
+          <button type="button" onClick={phone.onClick} className="inline-flex h-11 shrink-0 items-center rounded-full bg-[#611192] px-5 text-[14px] font-semibold text-white">
+            {phone.label}
           </button>
         </div>
       ) : null}
 
-      <EventShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} event={shareEvent} />
-
-      {ticketOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-end justify-center bg-[#0B0112]/60 p-4 backdrop-blur-sm sm:p-0" role="dialog" aria-modal="true" aria-label="You're going">
-          <div className="w-full max-w-[520px] animate-[ap-sheet-in_300ms_ease] rounded-[28px] bg-white p-6 sm:rounded-b-none sm:pb-[calc(24px+env(safe-area-inset-bottom))] md:self-center">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-primary text-[24px] text-[#0B0112]">You&apos;re going</p>
-                <p className="mt-1 text-[14px] text-[#6B686E]">Save your pass and add the event to your calendar.</p>
-              </div>
-              <button type="button" onClick={() => setTicketOpen(false)} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F3F7]">
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-            <div className="mt-5">
-              <EventAttendanceTicket eventTitle={event.title} eventDate={formatEventDate(event.startAt) || 'Date to be announced'} eventLocation={event.category || 'Angelpage'} ticketId={ticketId} />
-            </div>
-            {event.startAt ? <div className="mt-4">{calendarMenu}</div> : null}
-          </div>
-        </div>
-      ) : null}
+      <EventShareModal isOpen={Boolean(share)} onClose={() => setShare(null)} event={share} />
     </div>
   );
 }

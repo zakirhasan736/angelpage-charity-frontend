@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowUpRight, Play } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import type { CommunityEventRecord } from '@/lib/server-api';
 import { useGetEventsQuery } from '@/store/api/angelpageApi';
 import { formatMoney } from '@/lib/money';
@@ -13,7 +13,6 @@ import { getDisplayEventType, getDonationProgress, getEventTiming } from '@/comp
 import {
   DateBlock,
   EventStatus,
-  ProgressRing,
   TYPE_META,
   TypeChip,
   eventHref,
@@ -26,7 +25,6 @@ import {
 } from '@/components/features/events/eventUi';
 import InlinePoll from '@/components/features/events/InlinePoll';
 
-const QUICK_AMOUNTS = [10, 25, 50];
 
 function Countdown({ to }: { to?: string }) {
   const c = useCountdown(to);
@@ -40,8 +38,8 @@ function Countdown({ to }: { to?: string }) {
   return (
     <div className="flex gap-2" aria-label="Starts in">
       {cells.map(([k, v]) => (
-        <span key={k} className="flex w-14 flex-col items-center rounded-xl bg-white/10 py-2 sm:w-12">
-          <span className="text-[20px] font-semibold text-white tabular-nums sm:text-[18px]">{String(v).padStart(2, '0')}</span>
+        <span key={k} className="flex w-12 flex-col items-center rounded-xl bg-white/10 py-1.5 ring-1 ring-white/15">
+          <span className="font-primary text-[20px] leading-none text-white tabular-nums">{String(v).padStart(2, '0')}</span>
           <span className="text-[10px] tracking-[0.14em] text-white/55 uppercase">{k}</span>
         </span>
       ))}
@@ -76,29 +74,24 @@ function Spotlight({ event }: { event: CommunityEventRecord }) {
         <div className="mt-6 flex flex-wrap items-end justify-between gap-5 sm:mt-5">
           {type === 'donation' ? (
             <>
-              <div className="flex items-center gap-4">
-                <ProgressRing percent={d.percent} dark />
-                <div>
-                  <p className="text-[24px] font-semibold text-white">{formatMoney(d.raised, { compact: true })}</p>
-                  <p className="text-[13px] text-white/60">{d.goal ? `raised of ${formatMoney(d.goal, { compact: true })}` : 'raised so far'}</p>
+              <div className="w-full">
+                <div className="h-1.5 max-w-[340px] overflow-hidden rounded-full bg-white/20">
+                  <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(2, d.percent)}%` }} />
                 </div>
+                <p className="mt-2 text-[13px] text-white/70">
+                  <strong className="font-semibold text-white">{formatMoney(d.raised).replace(/\.00$/, '')}</strong>
+                  {d.goal ? ` raised of ${formatMoney(d.goal).replace(/\.00$/, '')} · ${d.percent}%` : ' raised'}
+                </p>
               </div>
+              {timing !== 'ended' && event.endAt ? <Countdown to={event.endAt} /> : <span />}
               {timing !== 'ended' ? (
-                <div className="flex flex-wrap gap-2">
-                  {QUICK_AMOUNTS.map(a => (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => router.push(buildDonationCheckoutUrl(event, { amount: a }))}
-                      className="h-11 rounded-full border border-white/25 px-4 text-[14px] font-medium text-white transition hover:bg-white hover:text-[#611192]"
-                    >
-                      {formatMoney(a).replace(/\.00$/, '')}
-                    </button>
-                  ))}
-                  <Link href={eventHref(event)} className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-[14px] font-medium text-[#611192] transition hover:bg-[#F2E8F8]">
-                    Give <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Link>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push(buildDonationCheckoutUrl(event, { amount: 50 }))}
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-[14px] font-semibold text-[#0B0112] transition hover:bg-[#F2E8F8]"
+                >
+                  Give now <ArrowRight className="h-4 w-4" aria-hidden />
+                </button>
               ) : null}
             </>
           ) : type === 'live' && timing === 'live' && event.liveStreamUrl ? (
@@ -130,7 +123,7 @@ function AgendaRow({ event }: { event: CommunityEventRecord }) {
   const m = TYPE_META[type];
   return (
     <li>
-      <Link href={eventHref(event)} className="group flex items-center gap-4 rounded-2xl p-2.5 transition hover:bg-white/[0.06]">
+      <Link href={eventHref(event)} className="group flex items-center gap-4 px-2 py-3 transition hover:bg-white/[0.04]">
         {event.startAt ? <DateBlock iso={event.startAt} size="sm" /> : null}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 text-[12px] text-white/55">
@@ -140,10 +133,15 @@ function AgendaRow({ event }: { event: CommunityEventRecord }) {
           </span>
           <span className="mt-0.5 line-clamp-1 block text-[15px] font-medium text-white">{event.title}</span>
         </span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 text-white/40 transition group-hover:text-white" aria-hidden />
+        <ArrowRight className="h-4 w-4 shrink-0 text-white/40 transition group-hover:text-white" aria-hidden />
       </Link>
     </li>
   );
+}
+
+function EventStatusFor({ event }: { event: CommunityEventRecord }) {
+  const timing = useTiming(event);
+  return <EventStatus event={event} timing={timing} />;
 }
 
 /** Home "Events for good" band: spotlight, a poll you can vote on in place, and what's next. */
@@ -171,11 +169,11 @@ const HomeEventsSection = () => {
         <div className="mb-8 flex items-end justify-between gap-6 sm:mb-5">
           <div>
             <p className="ap-eyebrow text-[#D9B8F0]!">Events</p>
-            <h2 className="ap-display mt-2 text-[34px] leading-tight text-white! md:text-[28px] sm:text-[24px]">Give, vote and tune in</h2>
-            <p className="mt-2 max-w-[520px] text-[15px] text-white/65 sm:text-[13px]">Appeals, community polls and live sessions from the charities on Angelpage.</p>
+            <h2 className="ap-display mt-2 text-[36px] leading-tight text-white! md:text-[30px] sm:text-[26px]">Give beside the shop</h2>
+            <p className="mt-2 max-w-[520px] text-[15px] text-white/65 sm:text-[13px]">Support an appeal, shape where funds go next, and join charities live from the ground.</p>
           </div>
-          <Link href="/events" className="group inline-flex shrink-0 items-center gap-1.5 text-[14px] font-medium text-white">
-            All events <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+          <Link href="/events" className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-white px-5 text-[14px] font-semibold text-[#0B0112] transition hover:bg-[#F2E8F8] sm:h-10 sm:px-4">
+            All events <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
 
@@ -190,23 +188,23 @@ const HomeEventsSection = () => {
             {poll || upcoming.length ? (
               <div className="flex flex-col gap-5">
                 {poll ? (
-                  <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6 sm:rounded-[24px] sm:p-5">
+                  <div className="rounded-[24px] bg-white p-5">
                     <div className="flex items-center justify-between gap-3">
-                      <TypeChip type="poll" glass />
-                      <Link href={eventHref(poll)} className="text-[13px] text-white/60 hover:text-white">
-                        Details
-                      </Link>
+                      <TypeChip type="poll" />
+                      <EventStatusFor event={poll} />
                     </div>
-                    <p className="mt-3 text-[12px] text-white/50">{poll.authorName || 'Angelpage'}</p>
-                    <div className="mt-1">
-                      <InlinePoll event={poll} dark />
+                    <div className="mt-3">
+                      <InlinePoll event={poll} />
                     </div>
+                    <Link href={eventHref(poll)} className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[#611192]">
+                      See details <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                    </Link>
                   </div>
                 ) : null}
                 {upcoming.length ? (
-                  <div className="flex-1 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 sm:rounded-[24px]">
+                  <div className="flex-1 rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
                     <p className="px-2.5 pt-2 pb-1 text-[12px] font-semibold tracking-[0.16em] text-white/50 uppercase">Up next</p>
-                    <ul>
+                    <ul className="divide-y divide-white/10">
                       {upcoming.map(e => (
                         <AgendaRow key={e._id} event={e} />
                       ))}
