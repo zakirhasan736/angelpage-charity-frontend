@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { Checkmark } from '@/icons';
+import { Checkmark, FacebookIcon, TwitterIcon, InstagramIcon, LinkedinIcon } from '@/icons';
+import YoutubeIcon from '@/icons/youtube';
 import Link from 'next/link';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
@@ -10,6 +11,14 @@ import { Button } from '../elements';
 
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import { useLocale } from '@/i18n/LocaleProvider';
+
+const socials = [
+  { label: 'Facebook', Icon: FacebookIcon, href: process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK_URL },
+  { label: 'X (Twitter)', Icon: TwitterIcon, href: process.env.NEXT_PUBLIC_SOCIAL_X_URL },
+  { label: 'Instagram', Icon: InstagramIcon, href: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM_URL },
+  { label: 'LinkedIn', Icon: LinkedinIcon, href: process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN_URL },
+  { label: 'YouTube', Icon: YoutubeIcon, href: process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE_URL },
+];
 
 const Footer = () => {
   const { data: session } = useSession();
@@ -162,6 +171,21 @@ const Footer = () => {
               The charity marketplace. Buy and sell pre-loved goods and send most of each sale to a
               cause you believe in.
             </p>
+            <ul aria-label="Angelpage social profiles" className="mt-6 flex flex-wrap items-center gap-2">
+              {socials.map(({ label, Icon, href }) => (
+                <li key={label} className="rounded-full ring-1 ring-[#ECE8EE] [&_svg]:h-[18px] [&_svg]:w-[18px]">
+                  {href ? (
+                    <a href={href} aria-label={label} className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-[#FCF2FF]">
+                      <Icon />
+                    </a>
+                  ) : (
+                    <span role="img" aria-label={label} className="flex h-10 w-10 items-center justify-center">
+                      <Icon />
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {columns.map(col => (
