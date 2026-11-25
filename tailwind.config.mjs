@@ -7,7 +7,8 @@ const config = {
 		"./src/app/**/*.{js,ts,jsx,tsx,mdx}",
 	],
 	theme: {
-		// Breakpoints live in globals.css (@theme + @custom-variant), widest first.
+		// Breakpoints live in globals.css (@theme + @custom-variant), widest first,
+		// so narrower ones win (sm: beats md: on phones).
 		container: {
 			center: true,
 			padding: {

@@ -174,6 +174,59 @@ const BottomNavMegamenu = () => {
     if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpenId(null);
   };
 
+  const focusTrigger = (index: number) => {
+    const cat = categories[(index + categories.length) % categories.length];
+    triggerRefs.current[cat.id]?.focus();
+    return cat.id;
+  };
+
+  const onTriggerKey = (event: React.KeyboardEvent, index: number, id: string) => {
+    switch (event.key) {
+      case 'ArrowRight': {
+        event.preventDefault();
+        const next = focusTrigger(index + 1);
+        if (openId) setOpenId(next);
+        break;
+      }
+      case 'ArrowLeft': {
+        event.preventDefault();
+        const prev = focusTrigger(index - 1);
+        if (openId) setOpenId(prev);
+        break;
+      }
+      case 'ArrowDown':
+        event.preventDefault();
+        setOpenId(id);
+        window.requestAnimationFrame(() => panelRef.current?.querySelector<HTMLAnchorElement>('a')?.focus());
+        break;
+      case 'Escape':
+        setOpenId(null);
+        break;
+      case 'Home':
+        event.preventDefault();
+        focusTrigger(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        focusTrigger(categories.length - 1);
+        break;
+      default:
+    }
+  };
+
+  const onPanelKey = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape' && openId) {
+      event.preventDefault();
+      const id = openId;
+      setOpenId(null);
+      triggerRefs.current[id]?.focus();
+    }
+  };
+
+  const onPanelBlur = (event: React.FocusEvent) => {
+    if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpenId(null);
+  };
+
   return (
     <nav
       ref={rootRef}
