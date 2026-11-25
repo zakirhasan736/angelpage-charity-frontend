@@ -3,8 +3,8 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { Button } from '../elements';
-import TopNavList from './topNavList';
 import MobileViewOffcanvas from './mobileViewOffcanvas';
 import MiniCart from '../cart/miniCart';
 import FavoritesAlert from './favoritesAlert';
@@ -20,254 +20,141 @@ import LanguageSwitch from './LanguageSwitch';
 import { useLocale } from '@/i18n/LocaleProvider';
 
 const Header = () => {
-  const { data: session, status: _sessionStatus } = useSession();
+  const { data: session } = useSession();
   const { t } = useLocale();
   const homePath = getHomePathForRole(session?.user?.role);
-
   const pathname = usePathname();
-  // Define paths where BottomNavMegamenu should not appear
-  const hideBottomNavPaths = ['/auth/login', '/auth/register'];
 
-  // Check if current pathname is in the array
-  const shouldHideBottomNav = hideBottomNavPaths.includes(pathname || '');
-
-  // Check if current page is '/product/post-product'
+  const isAuthPage = ['/auth/login', '/auth/register'].includes(pathname || '');
   const isPostProductPage = pathname === '/product/post-product';
-  const isCheckoutPage =
-    pathname === '/checkout' || pathname === '/checkout/confirmation/';
-
+  const isCheckoutPage = pathname === '/checkout' || pathname === '/checkout/confirmation/';
   const isTempLogin = pathname === '/internal-home';
-  const showCategoryBar =
-    !shouldHideBottomNav && !isPostProductPage && !isCheckoutPage;
-  const isSellNowPage = pathname === '/product/post-product';
+
+  const showCategoryBar = !isAuthPage && !isPostProductPage && !isCheckoutPage;
+  const showTools = isTempLogin || (!isPostProductPage && !isCheckoutPage);
+  const showMemberTools = isTempLogin || (!isAuthPage && Boolean(session));
   const showEnvBanner = process.env.NEXT_PUBLIC_SHOW_ENV_BANNER === 'true';
   const envBannerLabel =
-    process.env.NEXT_PUBLIC_ENV_BANNER_TEXT ||
-    (isTempLogin ? 'Demo Mode, Launching soon!' : 'Test Mode');
+    process.env.NEXT_PUBLIC_ENV_BANNER_TEXT || (isTempLogin ? 'Demo Mode, Launching soon!' : 'Test Mode');
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(prev => !prev);
-  };
   return (
     <>
-      {isTempLogin ? (
-        <>
-          <header
-            className={`${isCheckoutPage ? 'bg-mono-100' : ''} header-section relative z-9999`}
-          >
-            {showEnvBanner && (
-              <div className="notice-banner bg-mono-100 py-1">
-                <p className="body-bold-small text-center text-mono-0">
-                  {envBannerLabel}
-                </p>
+      <header className={`ap-header header-section ${isCheckoutPage ? 'is-dark' : ''} ${isTempLogin ? 'z-9999' : ''}`}>
+        {showEnvBanner && (
+          <div className="notice-banner bg-[#3B055C] py-1.5">
+            <p className="text-center text-[12px] font-medium tracking-wide text-white">{envBannerLabel}</p>
+          </div>
+        )}
+
+        <div className="header-top-cont relative border-b border-[#ECE8EE]!">
+          <div className="custom-container">
+            <div className="header-top-wrapper flex h-[76px] items-center gap-8 laptop-m:gap-5 sm:h-16 sm:gap-3">
+              <div className="flex shrink-0 items-center gap-3">
+                {!isCheckoutPage && <MobileViewOffcanvas />}
+                <Link href={homePath} className="site-brand-logo block" aria-label="Angelpage home">
+                  <Image
+                    src={isCheckoutPage ? '/images/brand-logo-white.svg' : '/images/brand-logo-black.svg'}
+                    alt="Angelpage"
+                    width={124}
+                    height={38}
+                    priority
+                    className="h-auto w-[124px] sm:w-[104px]"
+                  />
+                </Link>
               </div>
-            )}
-            <div className="header-top-cont relative">
-              <div className="custom-container">
-                <div className="header-top-wrapper py-4 grid grid-cols-12 sm:grid-cols-6 gap-6">
-                  <div
-                    className={`header-left-cont col-span-7 sm:col-span-4 flex items-center gap-4 ${session ? 'md:col-span-2' : ''}`}
-                  >
-                    {!isTempLogin && <TopNavList />}
-                    {!isCheckoutPage && <MobileViewOffcanvas />}
 
-                    <div className="site-brand-logo mr-auto sm:mr-[-4px]">
-                      <Link href={homePath}>
-                        <Image
-                          src={`${isCheckoutPage ? '/images/brand-logo-white.svg' : '/images/brand-logo-black.svg'}`}
-                          alt="company brand logo"
-                          width={112}
-                          height={34}
-                        />
-                      </Link>
-                    </div>
-                  </div>
-                  <div
-                    className={`header-right-cont sm:col-span-2 flex items-center gap-4 justify-end col-span-5 ${session ? 'md:col-span-10' : ''}`}
-                  >
-                    {isTempLogin && (
-                      <>
-                        <GlobalSearch className="sm:hidden" />
-                        {isTempLogin && (
-                          <div className="post-product-btn sm:hidden">
-                            <Link href="/product/post-product/">
-                              <Button
-                                variant="primary"
-                                className="w-full block max-w-[105px]"
-                              >
-                                {t('nav.sell')}
-                              </Button>
-                            </Link>
-                          </div>
-                        )}
-                        <UserAccountMenu className="sm:hidden" />
-                        {isTempLogin && (
-                          <>
-                            <FavoritesAlert className="sm:hidden" />
-
-                            <div className="notification-dropdown-area relative sm:static">
-                              <NotificationButton
-                                notificationBtnClass="sm:hidden!"
-                                toggleDropdown={toggleDropdown}
-                              />
-                              {isDropdownOpen && (
-                                <NotificationDropdown
-                                  isDropdownOpen={isDropdownOpen}
-                                  toggleDropdown={toggleDropdown}
-                                />
-                              )}
-                            </div>
-                          </>
-                        )}
-                        <MiniCart />
-                      </>
-                    )}
-                    {showCategoryBar ? (
-                      <div className="hidden sm:block">
-                        <LanguageSwitch tone="light" />
-                      </div>
-                    ) : (
-                      <LanguageSwitch
-                        tone={
-                          isCheckoutPage ? 'dark' : 'light'
-                        }
-                      />
-                    )}
+              {showTools ? (
+                <div className="min-w-0 flex-1 sm:hidden">
+                  <div className="mx-auto max-w-[560px]">
+                    <GlobalSearch className="w-full" />
                   </div>
                 </div>
-              </div>
-            </div>
+              ) : (
+                <div className="flex-1" />
+              )}
 
-            {!shouldHideBottomNav && !isPostProductPage && !isCheckoutPage && (
-              <div className="header-bottom-cont pt-[15px] pb-[16px] sm:hidden">
-                <BottomNavMegamenu />
-              </div>
-            )}
-          </header>
-        </>
-      ) : (
-        <>
-          <header
-            className={`${isCheckoutPage ? 'bg-mono-100' : ''} header-section`}
-          >
-            {showEnvBanner && (
-              <div className="notice-banner bg-mono-100 py-1">
-                <p className="body-bold-small text-center text-mono-0">
-                  {envBannerLabel}
-                </p>
-              </div>
-            )}
-            <div className="header-top-cont relative">
-              <div className="custom-container">
-                <div className="header-top-wrapper py-4 grid grid-cols-12 sm:grid-cols-6 gap-6">
-                  <div
-                    className={`header-left-cont col-span-7 sm:col-span-4 flex items-center gap-4 ${session ? 'md:col-span-2' : ''}`}
-                  >
-                    {!(isCheckoutPage || session || isPostProductPage) && (
-                      <TopNavList />
-                    )}
-                    {!isCheckoutPage && <MobileViewOffcanvas />}
-                    <div className="site-brand-logo mr-auto sm:mr-[-4px]">
-                      <Link href={homePath}>
-                        <Image
-                          src={`${isCheckoutPage ? '/images/brand-logo-white.svg' : '/images/brand-logo-black.svg'}`}
-                          alt="company brand logo"
-                          width={112}
-                          height={34}
-                        />
-                      </Link>
-                    </div>
-                  </div>
-                  <div
-                    className={`header-right-cont sm:col-span-2 flex items-center gap-4 justify-end col-span-5 ${session ? 'md:col-span-10' : ''}`}
-                  >
-                    {!isPostProductPage && !isCheckoutPage && (
+              <div className="header-right-cont flex shrink-0 items-center gap-1.5 sm:ml-auto">
+                {showTools && (
+                  <>
+                    {!session && !isTempLogin && (
                       <>
-                        <GlobalSearch className="sm:hidden" />
-                        {!shouldHideBottomNav && session ? (
-                          <div className="post-product-btn sm:hidden">
-                            <Link href="/product/post-product/">
-                              <Button
-                                variant="primary"
-                                className="w-full block max-w-[105px]"
-                              >
-                                {t('nav.sell')}
-                              </Button>
-                            </Link>
-                          </div>
-                        ) : (
-                          ''
-                        )}
-                        <UserAccountMenu className="sm:hidden" />
-                        {!shouldHideBottomNav && session ? (
-                          <>
-                            <FavoritesAlert className="sm:hidden" />
-
-                            <div className="notification-dropdown-area relative sm:static">
-                              <NotificationButton
-                                notificationBtnClass="sm:hidden!"
-                                toggleDropdown={toggleDropdown}
-                              />
-                              {isDropdownOpen && (
-                                <NotificationDropdown
-                                  isDropdownOpen={isDropdownOpen}
-                                  toggleDropdown={toggleDropdown}
-                                />
-                              )}
-                            </div>
-                          </>
-                        ) : (
-                          ''
-                        )}
-                        <MiniCart />
+                        <Link
+                          href="/how-it-works"
+                          className="rounded-full px-3 py-2 text-[13px] font-medium text-[#474648] transition hover:text-[#611192] laptop-m:hidden"
+                        >
+                          How it works
+                        </Link>
+                        <Link
+                          href="/auth/login"
+                          className="rounded-full px-3 py-2 text-[13px] font-medium text-[#474648] transition hover:text-[#611192] sm:hidden"
+                        >
+                          Sign in
+                        </Link>
+                        <Link href="/auth/register?intent=sell" className="mr-1.5 sm:hidden">
+                          <Button variant="primary" className="h-10! px-5!">
+                            Start selling
+                          </Button>
+                        </Link>
                       </>
                     )}
-                    {isCheckoutPage && (
+
+                    {showMemberTools && (
                       <>
-                        <div className="checkout-header-right-cont flex items-center gap-4">
-                          <Image
-                            src="/images/icons/shield-one.svg"
-                            alt="shield done icons image"
-                            width={16}
-                            height={18}
-                          />
-                          <p className="body-bold-small text-mono-0!">
-                            {t('nav.secureCheckout')}
-                          </p>
+                        <Link href="/product/post-product/" className="mr-2 sm:hidden">
+                          <Button variant="primary" className="h-10! gap-1.5! px-5!">
+                            <Plus className="h-4 w-4" aria-hidden />
+                            {t('nav.sell')}
+                          </Button>
+                        </Link>
+                        <div className="ap-icon-btn relative sm:hidden">
+                          <FavoritesAlert className="" />
+                        </div>
+                        <div className="notification-dropdown-area ap-icon-btn relative sm:static">
+                          <NotificationButton notificationBtnClass="" toggleDropdown={toggleDropdown} />
+                          {isDropdownOpen && (
+                            <NotificationDropdown isDropdownOpen={isDropdownOpen} toggleDropdown={toggleDropdown} />
+                          )}
                         </div>
                       </>
                     )}
-                    {showCategoryBar ? (
-                      <div className="hidden sm:block">
-                        <LanguageSwitch tone="light" />
-                      </div>
-                    ) : (
-                      <LanguageSwitch
-                        tone={
-                          isCheckoutPage ? 'dark' : 'light'
-                        }
-                      />
-                    )}
+
+                    <div className="ap-icon-btn relative">
+                      <MiniCart />
+                    </div>
+
+                    {(session || isTempLogin) && <UserAccountMenu className="sm:hidden" />}
+                  </>
+                )}
+
+                {isCheckoutPage && (
+                  <div className="checkout-header-right-cont flex items-center gap-3 rounded-full bg-white/10 px-4 py-2">
+                    <Image src="/images/icons/shield-one.svg" alt="" width={16} height={18} />
+                    <p className="text-[13px] font-medium text-mono-0!">{t('nav.secureCheckout')}</p>
                   </div>
-                </div>
+                )}
+
+                {showCategoryBar ? (
+                  <div className="hidden sm:block">
+                    <LanguageSwitch tone="light" />
+                  </div>
+                ) : (
+                  <LanguageSwitch tone={isCheckoutPage ? 'dark' : 'light'} />
+                )}
               </div>
             </div>
+          </div>
+        </div>
 
-            {!shouldHideBottomNav && !isPostProductPage && !isCheckoutPage && (
-              <div className="header-bottom-cont pt-[15px] pb-[16px] sm:hidden">
-                <BottomNavMegamenu />
-              </div>
-            )}
-          </header>
-        </>
-      )}
-      {isSellNowPage ? (
-        ''
-      ) : (
-        <StickyNavMenu session={{ session }} toggleDropdown={toggleDropdown} />
-      )}
+        {showCategoryBar && (
+          <div className="header-bottom-cont border-b border-[#ECE8EE]! sm:hidden">
+            <BottomNavMegamenu />
+          </div>
+        )}
+      </header>
+      {isPostProductPage ? null : <StickyNavMenu session={{ session }} toggleDropdown={toggleDropdown} />}
     </>
   );
 };
