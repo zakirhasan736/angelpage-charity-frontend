@@ -174,14 +174,6 @@ const BottomNavMegamenu = () => {
     if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpenId(null);
   };
 
-  const promoImages = [
-    '/images/home/category/category-card-img1.png',
-    '/images/home/category/category-card-img2.png',
-    '/images/home/category/category-card-img3.png',
-    '/images/home/category/category-card-img4.png',
-  ];
-  const openIndex = open ? categories.findIndex(c => c.id === open.id) : 0;
-
   return (
     <nav
       ref={rootRef}

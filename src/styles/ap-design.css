@@ -1,5 +1,5 @@
 /*
-  Angelpage design layer
+  Angelpage design layer (2026 refresh)
   Builds on the existing brand: Lustria (display) + Poppins (UI),
   #611192 primary, #3B055C deep plum, #F2E8F8 / #FCF2FF tints,
   #1B264F navy and the pill buttons in styles.css.
@@ -28,9 +28,898 @@
   --ap-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* The global `* { color }` reset in globals.css (base layer) stops icons and inline
-   text from inheriting their parent's colour. Same layer, higher specificity:
-   inheritance works again, while utility classes on the element still win. */
+@layer components {
+/* ---------- Section rhythm ---------- */
+.ap-section {
+  padding-top: 72px;
+  padding-bottom: 72px;
+}
+
+@media (max-width: 767px) {
+  .ap-section {
+    padding-top: 44px;
+    padding-bottom: 44px;
+  }
+}
+
+.ap-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ap-primary);
+}
+
+.ap-eyebrow::before {
+  content: '';
+  width: 18px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.ap-eyebrow--plain::before {
+  display: none;
+}
+
+.ap-display {
+  font-family: 'Lustria', serif;
+  font-weight: 400;
+  color: var(--ap-ink);
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+}
+
+/* ---------- Surfaces ---------- */
+.ap-card {
+  background: var(--ap-surface);
+  border: 1px solid var(--ap-line);
+  border-radius: var(--ap-radius);
+  box-shadow: var(--ap-shadow-sm);
+}
+
+.ap-card--hover {
+  transition: box-shadow 260ms var(--ap-ease), transform 260ms var(--ap-ease), border-color 260ms var(--ap-ease);
+}
+
+.ap-card--hover:hover {
+  box-shadow: var(--ap-shadow);
+  border-color: var(--ap-line-strong);
+  transform: translateY(-2px);
+}
+
+/* ---------- Slider arrows ---------- */
+.ap-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--ap-line-strong);
+  background: var(--ap-surface);
+  color: var(--ap-primary);
+  box-shadow: var(--ap-shadow-sm);
+  transition: background-color 200ms var(--ap-ease), color 200ms var(--ap-ease),
+    border-color 200ms var(--ap-ease), box-shadow 200ms var(--ap-ease), opacity 200ms;
+}
+
+.ap-arrow:hover:not(:disabled) {
+  background: var(--ap-primary);
+  border-color: var(--ap-primary);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(97, 17, 146, 0.24);
+}
+
+.ap-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+.ap-arrow:focus-visible {
+  outline: 2px solid var(--ap-primary);
+  outline-offset: 3px;
+}
+
+.ap-arrow--dark {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.ap-arrow--dark:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+  color: var(--ap-primary);
+}
+
+/* Slider progress track under rails */
+.ap-progress {
+  position: relative;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ap-line);
+  overflow: hidden;
+}
+
+.ap-progress > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--ap-primary);
+  transition: width 400ms var(--ap-ease), left 400ms var(--ap-ease);
+}
+
+/* ---------- Chips ---------- */
+.ap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--ap-primary-tint);
+  color: var(--ap-primary);
+  white-space: nowrap;
+}
+
+.ap-chip--glass {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(11, 1, 18, 0.08);
+}
+
+.ap-chip--live {
+  background: #E50035;
+  color: #fff;
+}
+
+.ap-live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.ap-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: ap-pulse 1.6s var(--ap-ease) infinite;
+}
+
+@keyframes ap-pulse {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ---------- Header ---------- */
+/* In-flow header: no sticky/backdrop-filter, so the daisyUI drawers
+   (fixed-position children) keep working as before. */
+.ap-header {
+  position: relative;
+  background: #fff;
+}
+
+.ap-header.is-dark {
+  background: var(--ap-ink);
+}
+
+.ap-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  color: var(--ap-ink);
+  transition: background-color 200ms var(--ap-ease), color 200ms;
+}
+
+.ap-icon-btn:hover {
+  background: var(--ap-primary-wash);
+  color: var(--ap-primary);
+}
+
+.ap-header .global-search-group-field input,
+.ap-header .global-search-bar input {
+  border-radius: 999px !important;
+}
+
+/* ---------- Mega menu ---------- */
+.ap-mega-enter {
+  animation: ap-mega-in 220ms var(--ap-ease);
+}
+
+@keyframes ap-mega-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ap-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  padding: 0 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-ink-2);
+  white-space: nowrap;
+  transition: color 180ms;
+}
+
+.ap-nav-link::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ap-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 260ms var(--ap-ease);
+}
+
+.ap-nav-link:hover,
+.ap-nav-link[aria-expanded='true'],
+.ap-nav-link.is-current {
+  color: var(--ap-primary);
+}
+
+.ap-nav-link:hover::after,
+.ap-nav-link[aria-expanded='true']::after,
+.ap-nav-link.is-current::after {
+  transform: scaleX(1);
+}
+
+.ap-nav-link:focus-visible {
+  outline: 2px solid var(--ap-primary);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* ---------- Dashboard ---------- */
+.ap-dash-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--ap-ink-2);
+  text-align: left;
+  transition: background-color 180ms var(--ap-ease), color 180ms;
+}
+
+.ap-dash-nav-item:hover {
+  background: var(--ap-primary-wash);
+  color: var(--ap-primary);
+}
+
+.ap-dash-nav-item.is-active {
+  background: var(--ap-primary);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(97, 17, 146, 0.22);
+}
+
+.ap-dash-nav-item.is-active svg {
+  color: #fff;
+}
+
+}
+
+/* Inner dashboard panels: softer, consistent surfaces */
+.ap-dash-main .tabs-cont-item > * {
+  max-width: 100%;
+}
+
+.ap-dash-main table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ap-dash-main thead th {
+  background: var(--ap-canvas);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ap-muted);
+}
+
+.ap-dash-main tbody tr {
+  transition: background-color 160ms;
+}
+
+.ap-dash-main tbody tr:hover {
+  background: var(--ap-primary-wash);
+}
+
+/* Hide scrollbars on chip rails */
+.ap-no-scrollbar {
+  scrollbar-width: none;
+}
+
+.ap-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-card--hover,
+  .ap-arrow,
+  .ap-nav-link::after,
+  .ap-mega-enter,
+  .ap-live-dot::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Panels inside the dashboard card already sit in a container */
+.ap-dash-main .custom-container {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Listing grids were sized for full-width pages; let them flow inside the dashboard */
+.ap-dash-main .product-listing-list-area {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.ap-dash-main .product-handle-listing-wrapper {
+  background: transparent;
+  padding: 0;
+}
+
+/* ======================================================================
+   Dashboard panels: modern treatment of the legacy building blocks
+   used across Listings, Sold, Bought, Account, Earnings, Payouts, etc.
+   Scoped to .ap-dash-main so marketing pages are untouched.
+   ====================================================================== */
+
+/* Form fields (global Input keeps its behaviour; we only soften the shape) */
+.ap-dash-main .input-wrapper label,
+.ap-dash-main label.font-secondary {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ap-ink-2);
+}
+
+.ap-dash-main .input-field,
+.ap-dash-main input[type='text'],
+.ap-dash-main input[type='email'],
+.ap-dash-main input[type='tel'],
+.ap-dash-main input[type='number'],
+.ap-dash-main input[type='url'],
+.ap-dash-main input[type='password'],
+.ap-dash-main input[type='date'],
+.ap-dash-main input[type='search'] {
+  height: 46px;
+  padding-left: 14px;
+  padding-right: 14px;
+  border-radius: 12px !important;
+  background: #fff;
+  font-size: 14px;
+  color: var(--ap-ink);
+  transition: box-shadow 160ms, border-color 160ms;
+}
+
+.ap-dash-main select,
+.ap-dash-main textarea {
+  border-radius: 12px !important;
+  border: 1px solid var(--ap-line-strong) !important;
+  background-color: #fff;
+  font-size: 14px;
+  padding: 11px 14px;
+}
+
+.ap-dash-main select {
+  height: 46px;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B686E' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.ap-dash-main input:focus,
+.ap-dash-main select:focus,
+.ap-dash-main textarea:focus {
+  outline: none;
+  border-color: rgba(97, 17, 146, 0.5) !important;
+  box-shadow: 0 0 0 4px rgba(97, 17, 146, 0.1);
+}
+
+/* Legacy grey wrappers -> soft canvas */
+.ap-dash-main [class^='bg-[#F1F1F7]'],
+.ap-dash-main [class*=' bg-[#F1F1F7]'],
+.ap-dash-main [class^='bg-[#F1F1F8]'],
+.ap-dash-main [class*=' bg-[#F1F1F8]'],
+.ap-dash-main [class*=' bg-[#f1f1f7]'] {
+  background-color: var(--ap-canvas) !important;
+  border-radius: 16px;
+}
+
+/* Section titles inside panels */
+.ap-dash-main .sold-item-wrapper-head h3,
+.ap-dash-main .bought-item-wrapper-head h3,
+.ap-dash-main .product-listing-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ap-muted);
+}
+
+/* Master-detail order lists (Sold / Bought) */
+.ap-dash-main .sold-item-wrapper-cont-box,
+.ap-dash-main .bought-item-wrapper-cont-box {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  gap: 20px;
+}
+
+.ap-dash-main .sold-product-states-items ul,
+.ap-dash-main .bought-product-states-items ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ap-dash-main .sold-product-states-item,
+.ap-dash-main .bought-product-states-item {
+  border: 1px solid var(--ap-line) !important;
+  border-radius: 16px;
+  background: #fff;
+  transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+}
+
+.ap-dash-main .sold-product-states-item:hover,
+.ap-dash-main .bought-product-states-item:hover {
+  border-color: var(--ap-line-strong) !important;
+  box-shadow: 0 8px 20px rgba(59, 5, 92, 0.06);
+  background: #fff !important;
+}
+
+.ap-dash-main .sold-product-states-item[class*=' bg-[#F1F1'],
+.ap-dash-main .bought-product-states-item[class*=' bg-[#F1F1'] {
+  border-color: var(--ap-primary) !important;
+  background: var(--ap-primary-wash) !important;
+}
+
+.ap-dash-main .sold-item-img img,
+.ap-dash-main .bought-item-img img,
+.ap-dash-main .sold-item-img,
+.ap-dash-main .bought-item-img {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Status text in order rows -> pill */
+.ap-dash-main .sold-product-states-item .forms-bold,
+.ap-dash-main .bought-product-states-item .forms-bold {
+  border-radius: 999px;
+  padding: 4px 10px !important;
+  font-size: 11px;
+}
+
+/* Detail pane (right column) */
+.ap-dash-main .sold-product-states-item-cont,
+.ap-dash-main .bought-product-states-item-cont {
+  border-radius: 20px;
+  height: auto !important;
+}
+
+/* Detail panes in master-detail views */
+.ap-dash-main [class*='sold-product-details'],
+.ap-dash-main [class*='bought-product-details'],
+.ap-dash-main .create-label-area {
+  border-radius: 18px;
+  border: 1px solid var(--ap-line);
+}
+
+/* Empty states */
+.ap-dash-main .not-found-screen-design {
+  margin: 8px 0;
+  padding: 56px 24px !important;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(97, 17, 146, 0.08), transparent 60%),
+    var(--ap-canvas);
+}
+
+.ap-dash-main .not-found-screen-design::before {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 18px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='%23611192' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8 12 3 3 8v8l9 5 9-5V8z'/%3E%3Cpath d='m3 8 9 5 9-5M12 13v8'/%3E%3C/svg%3E") center / 26px no-repeat,
+    #fff;
+  box-shadow: 0 8px 20px rgba(59, 5, 92, 0.1);
+}
+
+/* Generic legacy boxes with hard square borders */
+.ap-dash-main .border:not(table *):not(input):not(select):not(textarea) {
+  border-color: var(--ap-line);
+}
+
+.ap-dash-main .rounded-lg {
+  border-radius: 14px;
+}
+
+/* Tables: rounded frame, comfortable rows */
+.ap-dash-main .overflow-x-auto > table,
+.ap-dash-main table.w-full {
+  font-size: 13px;
+}
+
+.ap-dash-main th,
+.ap-dash-main td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.ap-dash-main .overflow-x-auto {
+  border-radius: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: panels lose their outer card so content gets full width */
+@media (max-width: 767px) {
+  .ap-dash-main .sold-item-wrapper-cont-box,
+  .ap-dash-main .bought-item-wrapper-cont-box {
+    gap: 12px;
+  }
+
+  .ap-dash-main .input-field,
+  .ap-dash-main select,
+  .ap-dash-main input {
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+}
+
+/* ---------- App-like mobile shell ---------- */
+@media (max-width: 767px) {
+  /* room for the bottom tab bar */
+  .ap-app-main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .footer-section {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* tactile press feedback */
+  .ap-app-main a:active,
+  .ap-app-main button:active {
+    transform: scale(0.98);
+  }
+}
+
+.ap-sheet {
+  animation: ap-sheet-in 280ms var(--ap-ease);
+}
+
+@keyframes ap-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Storefront grid uses the shared ProductList; give it a responsive grid */
+.ap-store-grid .product-list {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 28px 20px !important;
+}
+
+@media (max-width: 1170px) {
+  .ap-store-grid .product-list { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 767px) {
+  .ap-store-grid .product-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 20px 12px !important; }
+}
+
+.ap-drawer {
+  animation: ap-drawer-in 300ms var(--ap-ease);
+}
+
+@keyframes ap-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 767px) {
+  .ap-drawer { animation-name: ap-sheet-in; }
+}
+
+/* Range slider (How it works split demo) */
+.ap-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #ECE8EE;
+  outline: none;
+}
+.ap-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #611192;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(97, 17, 146, 0.35);
+  cursor: pointer;
+}
+.ap-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #611192;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(97, 17, 146, 0.35);
+  cursor: pointer;
+}
+.ap-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid #611192;
+  outline-offset: 2px;
+}
+
+/* Article typography (blog detail) */
+.ap-prose {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #2B2530;
+}
+.ap-prose > * + * { margin-top: 1.25em; }
+.ap-prose > p:first-child:not(.lead)::first-letter {
+  float: left;
+  font-family: 'Lustria', serif;
+  font-size: 3.4em;
+  line-height: 0.9;
+  margin: 0.08em 0.1em 0 0;
+  color: var(--ap-primary);
+}
+.ap-prose h2 { margin-top: 2em; font-family: 'Lustria', serif; font-size: 30px; line-height: 1.25; color: var(--ap-ink); }
+.ap-prose h3 { margin-top: 1.6em; font-size: 21px; font-weight: 600; color: var(--ap-ink); }
+.ap-prose a { color: var(--ap-primary); text-decoration: underline; text-underline-offset: 3px; }
+.ap-prose strong { color: var(--ap-ink); }
+.ap-prose ul, .ap-prose ol { padding-left: 1.3em; }
+.ap-prose ul { list-style: disc; }
+.ap-prose ol { list-style: decimal; }
+.ap-prose li + li { margin-top: 0.4em; }
+.ap-prose li::marker { color: var(--ap-primary); }
+.ap-prose blockquote {
+  margin: 2em 0;
+  padding: 4px 0 4px 24px;
+  border-left: 3px solid var(--ap-primary);
+  font-family: 'Lustria', serif;
+  font-size: 24px;
+  line-height: 1.5;
+  color: var(--ap-ink);
+}
+.ap-prose img { border-radius: 20px; width: 100%; height: auto; margin: 2em 0; }
+.ap-prose hr { border: 0; height: 1px; background: var(--ap-line); margin: 2.5em 0; }
+/* Shorter text blocks (event descriptions) */
+.ap-prose--compact { font-size: 16px; line-height: 1.75; }
+.ap-prose--compact > p:first-child::first-letter { float: none; font-size: inherit; margin: 0; color: inherit; font-family: inherit; }
+
+/* Content blocks (backend blog posts) */
+.ap-prose h2 { scroll-margin-top: 24px; }
+.ap-prose .lead {
+  font-size: 1.2em;
+  line-height: 1.65;
+  color: var(--ap-ink);
+}
+.ap-prose .stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 2em 0;
+}
+.ap-prose .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: #fcf7fe;
+  border: 1px solid #f0e4f8;
+}
+.ap-prose .stat strong {
+  font-family: 'Lustria', serif;
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 400;
+  color: var(--ap-primary);
+}
+.ap-prose .stat span {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #6b686e;
+}
+.ap-prose .callout {
+  position: relative;
+  margin: 2em 0;
+  padding: 20px 22px 20px 56px;
+  border-radius: 20px;
+  background: #f2e8f8;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #3b055c;
+}
+.ap-prose .callout::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--ap-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M12 8v.01M12 11v5'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+.ap-prose .callout strong { color: #3b055c; }
+.ap-prose .takeaways {
+  margin: 2.5em 0 0;
+  padding: 24px 26px;
+  border-radius: 24px;
+  background: #1a0329;
+  color: rgba(255, 255, 255, 0.85);
+}
+.ap-prose .takeaways h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d9b8f0;
+}
+.ap-prose .takeaways ul { list-style: none; padding: 0; margin: 0; }
+.ap-prose .takeaways li {
+  position: relative;
+  padding-left: 30px;
+  font-size: 16px;
+  color: #fff;
+}
+.ap-prose .takeaways li + li { margin-top: 10px; }
+.ap-prose .takeaways li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D9B8F0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l4 4 10-10'/%3E%3C/svg%3E") center / 11px no-repeat;
+}
+.ap-prose figure { margin: 2em 0; }
+.ap-prose figure img { margin: 0; }
+.ap-prose figcaption { margin-top: 10px; font-size: 13px; color: #8a888c; text-align: center; }
+@media (max-width: 767px) {
+  .ap-prose { font-size: 17px; line-height: 1.75; }
+  .ap-prose h2 { font-size: 24px; }
+  .ap-prose blockquote { font-size: 20px; }
+  .ap-prose .stat strong { font-size: 24px; }
+  .ap-prose .callout { padding: 16px 16px 16px 48px; font-size: 15px; }
+  .ap-prose .callout::before { left: 16px; top: 18px; }
+  .ap-prose .takeaways { padding: 20px; }
+}
+
+/* Account settings: each form section becomes a card */
+.ap-dash-main .Users-account-info-wrapper,
+.ap-dash-main .charity-account-info-wrapper {
+  max-width: 760px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ap-dash-main .profile-img-section,
+.ap-dash-main .personal-info-section,
+.ap-dash-main .charity-info-section,
+.ap-dash-main .admin-info-section,
+.ap-dash-main .address-section,
+.ap-dash-main .payment-section {
+  padding: 22px 24px !important;
+  border: 1px solid var(--ap-line);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.ap-dash-main .title-line-area-section {
+  border-bottom: 1px solid var(--ap-line) !important;
+  margin-bottom: 18px !important;
+}
+
+.ap-dash-main .title-line-area-section > p,
+.ap-dash-main .title-line-area-section .body-bold-regular {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+
+.ap-dash-main .states-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--ap-primary-wash);
+  font-weight: 500;
+  transition: background-color 160ms;
+}
+
+.ap-dash-main .states-btn:hover {
+  background: var(--ap-primary-tint);
+}
+
+.ap-dash-main .payment-section .btn-states-box,
+.ap-dash-main .address-section .btn-states-box,
+.ap-dash-main .payment-section .payment-details,
+.ap-dash-main .address-section .address-details {
+  border-radius: 14px;
+  border-color: var(--ap-line);
+}
+
+@media (max-width: 767px) {
+  .ap-dash-main .profile-img-section,
+  .ap-dash-main .personal-info-section,
+  .ap-dash-main .charity-info-section,
+  .ap-dash-main .admin-info-section,
+  .ap-dash-main .address-section,
+  .ap-dash-main .payment-section {
+    padding: 18px 16px !important;
+    border-radius: 18px;
+  }
+}
+
+/* Product card: stack price over a full-width button whenever the card is narrow */
+.ap-product-card {
+  container-type: inline-size;
+}
+
+@container (max-width: 250px) {
+  .ap-card-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .ap-card-foot .btn-styles {
+    width: 100%;
+    height: 40px !important;
+  }
+}
+
+/* The global `* { color }` reset in globals.css (base layer) stops icons from
+   inheriting their parent's colour. Same layer, higher specificity: icons inherit
+   again, while utility classes on the svg itself still win. */
 @layer base {
   svg,
   svg *,
@@ -43,296 +932,25 @@
   }
 }
 
-@layer components {
-  /* ---------- Section rhythm ---------- */
-  .ap-section {
-    padding-top: 72px;
-    padding-bottom: 72px;
-  }
+.ap-prose p,
+.ap-prose li {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
 
-  @media (max-width: 767px) {
-    .ap-section {
-      padding-top: 44px;
-      padding-bottom: 44px;
-    }
+@media (max-width: 767px) {
+  .ap-dash-main .product-listing-list-area {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
   }
-
-  .ap-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ap-primary);
-  }
-
-  .ap-eyebrow::before {
-    content: '';
-    width: 18px;
-    height: 1.5px;
-    border-radius: 2px;
-    background: currentColor;
-    opacity: 0.6;
-  }
-
-  .ap-eyebrow--plain::before {
-    display: none;
-  }
-
-  .ap-display {
-    font-family: 'Lustria', serif;
-    font-weight: 400;
-    color: var(--ap-ink);
-    letter-spacing: -0.01em;
-    line-height: 1.08;
-  }
-
-  /* ---------- Surfaces ---------- */
-  .ap-card {
-    background: var(--ap-surface);
-    border: 1px solid var(--ap-line);
-    border-radius: var(--ap-radius);
-    box-shadow: var(--ap-shadow-sm);
-  }
-
-  .ap-card--hover {
-    transition: box-shadow 260ms var(--ap-ease), transform 260ms var(--ap-ease), border-color 260ms var(--ap-ease);
-  }
-
-  .ap-card--hover:hover {
-    box-shadow: var(--ap-shadow);
-    border-color: var(--ap-line-strong);
-    transform: translateY(-2px);
-  }
-
-  /* ---------- Slider arrows ---------- */
-  .ap-arrow {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-    border-radius: 999px;
-    border: 1px solid var(--ap-line-strong);
-    background: var(--ap-surface);
-    color: var(--ap-primary);
-    box-shadow: var(--ap-shadow-sm);
-    transition: background-color 200ms var(--ap-ease), color 200ms var(--ap-ease),
-      border-color 200ms var(--ap-ease), box-shadow 200ms var(--ap-ease), opacity 200ms;
-  }
-
-  .ap-arrow:hover:not(:disabled) {
-    background: var(--ap-primary);
-    border-color: var(--ap-primary);
-    color: #fff;
-    box-shadow: 0 8px 20px rgba(97, 17, 146, 0.24);
-  }
-
-  .ap-arrow:disabled {
-    opacity: 0.35;
-    cursor: default;
-    box-shadow: none;
-  }
-
-  .ap-arrow:focus-visible {
-    outline: 2px solid var(--ap-primary);
-    outline-offset: 3px;
-  }
-
-  .ap-arrow--dark {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.24);
-    color: #fff;
-    backdrop-filter: blur(8px);
-  }
-
-  .ap-arrow--dark:hover:not(:disabled) {
-    background: #fff;
-    border-color: #fff;
-    color: var(--ap-primary);
-  }
-
-  .ap-progress {
-    position: relative;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--ap-line);
-    overflow: hidden;
-  }
-
-  .ap-progress > span {
-    position: absolute;
-    inset: 0 auto 0 0;
-    border-radius: 2px;
-    background: var(--ap-primary);
-    transition: width 400ms var(--ap-ease), left 400ms var(--ap-ease);
-  }
-
-  /* ---------- Chips ---------- */
-  .ap-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 28px;
-    padding: 0 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 500;
-    background: var(--ap-primary-tint);
-    color: var(--ap-primary);
-    white-space: nowrap;
-  }
-
-  .ap-chip--glass {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 2px 10px rgba(11, 1, 18, 0.08);
-  }
-
-  .ap-chip--live {
-    background: #E50035;
-    color: #fff;
-  }
-
-  .ap-live-dot {
-    position: relative;
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: currentColor;
-  }
-
-  .ap-live-dot::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 999px;
-    border: 2px solid currentColor;
-    opacity: 0;
-    animation: ap-pulse 1.6s var(--ap-ease) infinite;
-  }
-
-  /* ---------- Header ---------- */
-  /* In-flow header: no sticky/backdrop-filter, so the daisyUI drawers
-     (fixed-position children) keep working. */
-  .ap-header {
-    position: relative;
-    background: #fff;
-  }
-
-  .ap-header.is-dark {
-    background: var(--ap-ink);
-  }
-
-  .ap-icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 999px;
-    color: var(--ap-ink);
-    transition: background-color 200ms var(--ap-ease), color 200ms;
-  }
-
-  .ap-icon-btn:hover {
-    background: var(--ap-primary-wash);
-    color: var(--ap-primary);
-  }
-
-  /* ---------- Mega menu ---------- */
-  .ap-mega-enter {
-    animation: ap-mega-in 220ms var(--ap-ease);
-  }
-
-  .ap-nav-link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    height: 44px;
-    padding: 0 12px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ap-ink-2);
-    white-space: nowrap;
-    transition: color 180ms;
-  }
-
-  .ap-nav-link::after {
-    content: '';
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 0;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--ap-primary);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 260ms var(--ap-ease);
-  }
-
-  .ap-nav-link:hover,
-  .ap-nav-link[aria-expanded='true'],
-  .ap-nav-link.is-current {
-    color: var(--ap-primary);
-  }
-
-  .ap-nav-link:hover::after,
-  .ap-nav-link[aria-expanded='true']::after,
-  .ap-nav-link.is-current::after {
-    transform: scaleX(1);
-  }
-
-  .ap-nav-link:focus-visible {
-    outline: 2px solid var(--ap-primary);
-    outline-offset: -2px;
-    border-radius: 8px;
-  }
-
-  .ap-no-scrollbar {
-    scrollbar-width: none;
-  }
-
-  .ap-no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .ap-dash-main .product-card-item {
+    max-width: none !important;
+    padding: 8px !important;
+    gap: 10px !important;
   }
 }
 
-@keyframes ap-pulse {
-  0% { transform: scale(0.6); opacity: 0.8; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-@keyframes ap-mega-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes ap-sheet-in {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-@keyframes ap-drawer-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ap-card--hover,
-  .ap-arrow,
-  .ap-nav-link::after,
-  .ap-mega-enter,
-  .ap-live-dot::after {
-    transition: none !important;
-    animation: none !important;
-  }
+.ap-dash-main .product-listing-type-item {
+  padding-bottom: 32px !important;
 }
