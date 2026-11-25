@@ -50,6 +50,8 @@ export type BlogPostRecord = {
   authorName?: string;
   authorAvatar?: string;
   publishedAt?: string;
+  tags?: string[];
+  featured?: boolean;
 };
 
 export type BlogListResponse = { posts: BlogPostRecord[] };
@@ -152,6 +154,12 @@ export type ProductRecord = {
 
 export type ProductDetailResponse = { product: ProductRecord };
 
+/** Rough reading time at 220 words a minute. */
+export function readingMinutes(html?: string) {
+  const words = (html || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 220));
+}
+
 export function mapBlogToCard(post: BlogPostRecord) {
   return {
     id: post.slug || post._id,
@@ -161,6 +169,7 @@ export function mapBlogToCard(post: BlogPostRecord) {
     image: post.coverImage || '/images/blog/blog1.jpg',
     date: post.publishedAt,
     author: post.authorName,
+    readMins: readingMinutes(post.content || post.excerpt),
   };
 }
 
