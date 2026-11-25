@@ -89,15 +89,19 @@ const UserAccountMenu = ({
 
   const displayName = session.user.name || session.user.email || 'Your account';
   const initial = (displayName || 'A').trim().charAt(0).toUpperCase();
+  const roleLabel = isAdmin
+    ? 'Administrator'
+    : userRole === 'CHARITY' || userRole === 'CHARITY_STAFF'
+      ? 'Charity account'
+      : 'Member';
+  const itemClass =
+    'flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]';
 
   return (
-    <div
-      className={`user-account-dropdown-area relative ${showLabel ? 'text-center' : ''} ${className}`}
-      ref={menuRef}
-    >
+    <div className={`user-account-dropdown-area relative ${showLabel ? 'text-center' : ''} ${className}`} ref={menuRef}>
       <button
         type="button"
-        className={`user-account flex items-center cursor-pointer ${showLabel ? 'flex-col gap-[13px] w-full' : 'ap-icon-btn'}`}
+        className={`user-account flex cursor-pointer items-center ${showLabel ? 'w-full flex-col gap-[13px]' : 'ap-icon-btn'}`}
         onClick={() => setIsOpen(prev => !prev)}
         aria-label="Account menu"
         aria-expanded={isOpen}
@@ -112,7 +116,7 @@ const UserAccountMenu = ({
           </span>
         )}
         {showLabel && (
-          <p className="link-title font-secondary font-normal text-center text-mono-100 text-body-small xxs:text-[13px] leading-[150%]">
+          <p className="link-title font-secondary text-body-small text-center leading-[150%] font-normal text-mono-100 xxs:text-[13px]">
             {label}
           </p>
         )}
@@ -128,35 +132,20 @@ const UserAccountMenu = ({
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-mono-100">{displayName}</p>
-              <p className="truncate text-xs text-mono-70">
-                {isAdmin ? 'Administrator' : userRole === 'CHARITY' || userRole === 'CHARITY_STAFF' ? 'Charity account' : 'Member'}
-              </p>
+              <p className="truncate text-xs text-mono-70">{roleLabel}</p>
             </div>
           </div>
           <div className="p-2">
-            <Link
-              href={accountPath}
-              className="flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]"
-              onClick={() => setIsOpen(false)}
-            >
+            <Link href={accountPath} className={itemClass} onClick={() => setIsOpen(false)}>
               {isAdmin ? 'Admin dashboard' : 'Dashboard'}
             </Link>
-            {!isAdmin && (
-              <Link
-                href="/favourite"
-                className="flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]"
-                onClick={() => setIsOpen(false)}
-              >
-                Favourites
-              </Link>
-            )}
-            {isAdmin && (
-              <Link
-                href="/"
-                className="flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]"
-                onClick={() => setIsOpen(false)}
-              >
+            {isAdmin ? (
+              <Link href="/" className={itemClass} onClick={() => setIsOpen(false)}>
                 View storefront
+              </Link>
+            ) : (
+              <Link href="/favourite" className={itemClass} onClick={() => setIsOpen(false)}>
+                Favourites
               </Link>
             )}
           </div>
