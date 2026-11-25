@@ -3,8 +3,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
-import Image from 'next/image';
-import { Button } from '@/components/elements';
+import { Megaphone, Share2 } from 'lucide-react';
+import Image from '@/components/common/SafeImage';
+import { Btn, EmptyState, RowSkeleton, Toolbar } from '@/components/dashboard/DashKit';
+import { formatMoney } from '@/lib/money';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import AdminSocialPostingPanel from '@/components/product/AdminSocialPostingPanel';
 import type { SocialPostingPrefs } from '@/components/product/SocialPostingToggles';
@@ -25,6 +27,8 @@ const PromotedListingsAdmin = () => {
   const [products, setProducts] = useState<LiveProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSocial, setExpandedSocial] = useState<string | null>(null);
+  const [q, setQ] = useState('');
+  const [view, setView] = useState('all');
 
   const fetchLive = useCallback(async () => {
     if (!session?.token) return;
@@ -66,73 +70,68 @@ const PromotedListingsAdmin = () => {
     }
   };
 
-  if (loading) {
-    return <p className="body-small text-mono-70">Loading listings…</p>;
-  }
+  if (loading) return <RowSkeleton rows={4} />;
+  if (!products.length) return <EmptyState icon={Megaphone} title="No live listings" body="Once listings are approved you can promote them here." />;
 
-  if (!products.length) {
-    return (
-      <p className="body-small text-mono-70">No live listings to manage.</p>
-    );
-  }
+  const promotedCount = products.filter(p => p.isPromoted).length;
+  const term = q.trim().toLowerCase();
+  const visible = products.filter(p => (view === 'all' || (view === 'promoted' ? p.isPromoted : !p.isPromoted)) && (!term || `${p.name} ${p.charity?.charityName || ''}`.toLowerCase().includes(term)));
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="body-small text-mono-70">
-        Promoted listings appear in the homepage carousel and marketplace
-        highlights.
-      </p>
-      {products.map(product => (
-        <div
-          key={product._id}
-          className="flex flex-col gap-3 border border-mono-40 rounded-lg p-4"
-        >
-          <div className="flex flex-wrap items-center gap-4">
-          <Image
-            src={product.images?.[0]?.url || '/placeholder.png'}
-            alt={product.name}
-            width={72}
-            height={72}
-            className="object-cover rounded-sm"
-          />
-          <div className="flex-1 min-w-[200px]">
-            <p className="body-bold-small">{product.name}</p>
-            <p className="caption text-mono-70">
-              £{product.price?.toFixed(2)} ·{' '}
-              {product.charity?.charityName || 'Charity'}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              setExpandedSocial(
-                expandedSocial === product._id ? null : product._id
-              )
-            }
-          >
-            Social channels
-          </Button>
-          <Button
-            variant={product.isPromoted ? 'secondary' : 'primary'}
-            onClick={() =>
-              togglePromoted(product._id, !product.isPromoted)
-            }
-          >
-            {product.isPromoted ? 'Remove promotion' : 'Promote'}
-          </Button>
-          </div>
-          </div>
-          {expandedSocial === product._id && session?.token && (
-            <AdminSocialPostingPanel
-              productId={product._id}
-              token={session.token}
-              initialPrefs={product.socialPosting}
-              listingVideoUrl={product.videos?.[0]?.url || ''}
-            />
-          )}
-        </div>
-      ))}
+    <div>
+      <p className="mb-4 text-[13px] text-[#6B686E]">Promoted listings appear in the homepage carousel and marketplace highlights.</p>
+      <Toolbar
+        search={q}
+        onSearch={setQ}
+        placeholder="Search listings or charities"
+        value={view}
+        onFilter={setView}
+        filters={[
+          { id: 'all', label: 'All', count: products.length },
+          { id: 'promoted', label: 'Promoted', count: promotedCount },
+          { id: 'not', label: 'Not promoted', count: products.length - promotedCount },
+        ]}
+      />
+      <ul className="space-y-2">
+        {visible.map(product => (
+          <li key={product._id} className={`rounded-2xl bg-white p-3 ring-1 transition ${product.isPromoted ? 'ring-2 ring-[#611192]/40' : 'ring-[#ECE8EE]'}`}>
+            <div className="flex items-center gap-3 sm:flex-wrap">
+              <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F4F1F6]">
+                <Image src={product.images?.[0]?.url || ''} alt="" fill sizes="64px" className="object-cover" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-semibold text-[#0B0112]">{product.name}</p>
+                <p className="truncate text-[12.5px] text-[#8A888C]">
+                  {formatMoney(product.price)} · {product.charity?.charityName || 'Charity'}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 sm:w-full sm:justify-end">
+                <Btn size="sm" variant="ghost" icon={Share2} onClick={() => setExpandedSocial(expandedSocial === product._id ? null : product._id)}>
+                  Social
+                </Btn>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={Boolean(product.isPromoted)}
+                  onClick={() => togglePromoted(product._id, !product.isPromoted)}
+                  className={`inline-flex h-9 items-center gap-2 rounded-full pr-3 pl-1 text-[13px] font-medium transition ${product.isPromoted ? 'bg-[#611192] text-white' : 'bg-[#F4F1F6] text-[#474648]'}`}
+                >
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-full ${product.isPromoted ? 'bg-white text-[#611192]' : 'bg-white text-[#8A888C]'}`}>
+                    <Megaphone className="h-3.5 w-3.5" aria-hidden />
+                  </span>
+                  {product.isPromoted ? 'Promoted' : 'Promote'}
+                </button>
+              </div>
+            </div>
+            {expandedSocial === product._id && session?.token ? (
+              <div className="mt-3 rounded-2xl bg-[#FAF8FB] px-3 pb-3 [&>div]:mt-0! [&>div]:border-0!">
+                <AdminSocialPostingPanel productId={product._id} token={session.token} initialPrefs={product.socialPosting} listingVideoUrl={product.videos?.[0]?.url || ''} />
+              </div>
+            ) : null}
+          </li>
+        ))}
+        {visible.length === 0 ? <li className="rounded-2xl bg-[#FAF8FB] px-4 py-6 text-center text-[13.5px] text-[#6B686E]">No listings match.</li> : null}
+      </ul>
     </div>
   );
 };

@@ -5,7 +5,8 @@ import axios from 'axios';
 import moment from 'moment';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { Checkbox } from '@/components/elements';
+import { Check, Users, X } from 'lucide-react';
+import { ConfirmDialog, SectionCard, StatusPill, Toolbar } from '@/components/dashboard/DashKit';
 import Pagination from '@/components/elements/Pagination';
 
 interface User {
@@ -48,6 +49,7 @@ const UsersTable: React.FC = () => {
   const [sessionFilter, setSessionFilter] = useState<string>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]); // Store selected users
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [totalFilteredRecords, setTotalFilteredRecords] = useState(0); // Total filtered users count
   const usersPerPage = 10;
@@ -253,214 +255,166 @@ const UsersTable: React.FC = () => {
     }
   };
 
-  return (
-    <div className="grid grid-cols-12 gap-0 mt-10">
-      <div className="users-info-table-overview col-span-full">
-        <div className="user-info-table-wrapper">
-          <div className="user-info-table-top-head flex gap-4 sm:gap-2 items-center justify-between px-[30px] sm:px-5 py-5">
-            <h3 className="title body-bold-large sm:body-bold-small max-w-[320px] sm:max-w-[60px] w-full font-secondary text-mono-100">
-              Users
-            </h3>
-            <div className="right-content-list w-full flex items-center justify-between gap-3 sm:gap-2">
-              <div className="table-item-selection-status flex items-center gap-5">
-                <p className="forms-bold sm:hidden font-secondary font-medium leading-[150%] text-[#677788]">
-                  {selectedUsers.length} Selected
-                </p>
-                <button
-                  type="button"
-                  className="px-[17px] sm:px-2 h-[24px] gap-2 flex items-center justify-center rounded-[24px] text-[#611192] forms-bold font-secondary font-medium leading-[150%]"
-                  onClick={() => handleBulkVerify(true)}
-                >
-                  Verify
-                </button>
-                <button
-                  type="button"
-                  className="px-[17px] sm:px-2 h-[24px] gap-2 flex items-center justify-center rounded-[24px] text-[#D10C3B] table-item-delet-btn forms-bold font-secondary font-medium leading-[150%]"
-                  onClick={handleDeleteUsers}
-                >
-                  <span className="hidden sm:block text-[#D10C3B]">
-                    {selectedUsers.length}
-                  </span>{' '}
-                  Delete
-                </button>
-              </div>
-              <div className="table-item-user-status-filter sm:flex-col flex items-center gap-5 sm:gap-1">
-                <p className="forms-bold sm:text-[10px] sm:hidden font-secondary font-medium leading-[150%] text-[#677788]">
-                  Status:
-                </p>
-                <select
-                  id="sort-select"
-                  className="filter-dropdown text-center border-0! select bg-transparent focus:outline-0 w-full max-w-[160px] pr-8 pl-2!"
-                  value={statusFilter}
-                  onChange={handleStatusFilterChange}
-                >
-                  <option className="bg-[#FCF2FF] caption" value="all">
-                    All
-                  </option>
-                  <option className="bg-[#FCF2FF] caption" value="USER">
-                    User
-                  </option>
-                  <option className="bg-[#FCF2FF] caption" value="CHARITY">
-                    Charity
-                  </option>
-                </select>
-              </div>
-              <div className="table-item-user-session-filter sm:flex-col flex items-center gap-5 sm:gap-1">
-                <p className="forms-bold sm:text-[10px] sm:hidden whitespace-nowrap font-secondary font-medium leading-[150%] text-[#677788]">
-                  Signed Up:
-                </p>
-                <select
-                  id="sort-select"
-                  className="filter-dropdown text-center select border-0! bg-transparent focus:outline-0 w-full max-w-[160px] pr-8 pl-2!"
-                  value={sessionFilter}
-                  onChange={handleSessionFilterChange}
-                >
-                  <option className="bg-[#FCF2FF] caption" value="all">
-                   All
-                  </option>
-                  <option className="bg-[#FCF2FF] caption" value="last7days">
-                    Last 7 Days
-                  </option>
-                  <option className="bg-[#FCF2FF] caption" value="1month">
-                    1 Month Ago
-                  </option>
-                </select>
-              </div>
-              <div className="table-item-user-search sm:hidden max-w-[200px]">
-                <form action="" className="search-form relative">
-                  <input
-                    id="searchTableItem"
-                    type="search"
-                    className="search-input-filed h-10 w-full placeholder:text-[#CDD3DA] rounded-[24px]! outline-hidden text-body-form font-normal pr-2 pl-8 py-[11.5px] text-[#CDD3DA] leading-[150%] font-secondary"
-                    placeholder="Search user, charity..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                  />
-                  <Image
-                    src="/images/Search-primary.svg"
-                    className="absolute top-0 left-3 bottom-0 my-auto"
-                    alt="search icon"
-                    width={13}
-                    height={13}
-                  />
-                </form>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
-            <table className="min-w-full user-info-table text-sm text-left text-gray-500">
-              <thead className="bg-[#F1F1F7] border-b text-gray-600 font-semibold">
-                <tr>
-                  <th className="px-4 py-3 caption-bold text-[#677788] font-secondary font-medium">
-                    <Checkbox
-                      checked={selectedUsers.length === users.length}
-                      onChange={handleSelectAll}
-                    />
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    Full Name
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    Type
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    Signed Up
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    Verified
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    Blog
-                  </th>
-                  <th className="px-4 py-3 caption-bold text-mono-100 font-secondary font-medium">
-                    User ID
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(user => (
-                  <tr key={user.id} className="border-b hover:bg-gray-100">
-                    <td className="pl-4 py-4 caption-bold text-[#677788] font-secondary font-medium">
-                      <Checkbox
-                        checked={selectedUsers.includes(user.id)}
-                        onChange={() =>
-                          setSelectedUsers(prev =>
-                            prev.includes(user.id)
-                              ? prev.filter(id => id !== user.id)
-                              : [...prev, user.id]
-                          )
-                        }
-                      />
-                    </td>
-                    <td className="pr-4 py-4 caption-bold text-mono-100 font-secondary font-medium">
-                      <div className="flex items-center gap-6">
-                        <Image
-                          src={
-                            user.profileImage ||
-                            '/images/icons/elisp-profile-default-img.svg'
-                          }
-                          alt="user profile image"
-                          width={180}
-                          height={180}
-                          className="w-8 h-8 rounded-full"
-                        />
-                        {user.fullName}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 caption-bold text-[#677788] font-secondary font-medium">
-                      {user.email}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          user.type === 'CHARITY'
-                            ? 'bg-[#F2E8F8] text-[#611192]'
-                            : 'bg-mono-40 text-mono-100'
-                        }`}
-                      >
-                        {user.type === 'CHARITY' ? 'Charity' : 'Individual'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 caption-bold text-[#677788] font-secondary font-medium">
-                      {user.signedUp}
-                    </td>
-                    <td className="px-4 py-4">
-                      <Checkbox
-                        checked={!!user.verified}
-                        onChange={() => handleToggleVerified(user)}
-                      />
-                    </td>
-                    <td className="px-4 py-4">
-                      <Checkbox
-                        checked={!!user.canBlog}
-                        onChange={() => handleToggleCanBlog(user)}
-                      />
-                    </td>
-                    <td className="px-4 py-4 caption-bold text-[#677788] font-secondary font-medium">
-                      {user.id}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="px-4 py-5 flex items-center table-user-info-list-bottom mt-6 justify-between bg-gray-50">
-              <span className="caption-bold">
-                Showing {startCount}–{endCount} of {totalFilteredRecords}
-              </span>
+  const allSelected = users.length > 0 && selectedUsers.length === users.length;
+  const toggleOne = (id: string) => setSelectedUsers(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
 
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </div>
+  const Switch = ({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) => (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={onClick} className={`relative h-6 w-10 shrink-0 rounded-full transition ${on ? 'bg-[#611192]' : 'bg-[#DCD5E0]'}`}>
+      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-[18px]' : 'left-0.5'}`} />
+    </button>
+  );
+
+  const Box = ({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) => (
+    <button type="button" role="checkbox" aria-checked={checked} aria-label={label} onClick={onChange} className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition ${checked ? 'bg-[#611192] text-white' : 'bg-white ring-1 ring-[#CFC6D5] hover:ring-[#611192]'}`}>
+      {checked ? <Check className="h-3.5 w-3.5" aria-hidden /> : null}
+    </button>
+  );
+
+  return (
+    <SectionCard icon={Users} title="People" description="Members and charities on Angelpage. Verify accounts and control who can blog." className="mt-5">
+      <Toolbar
+        search={searchTerm}
+        onSearch={v => {
+          setSearchTerm(v);
+          setCurrentPage(1);
+        }}
+        placeholder="Search name, email or ID"
+        value={statusFilter}
+        onFilter={v => {
+          setStatusFilter(v);
+          setCurrentPage(1);
+        }}
+        filters={[
+          { id: 'all', label: 'Everyone' },
+          { id: 'USER', label: 'Individuals' },
+          { id: 'CHARITY', label: 'Charities' },
+        ]}
+        trailing={
+          <select aria-label="Signed up" value={sessionFilter} onChange={handleSessionFilterChange} className="h-10! w-auto! py-0! text-[13px]! sm:w-full!">
+            <option value="all">Any sign-up date</option>
+            <option value="last7days">Last 7 days</option>
+            <option value="1month">About a month ago</option>
+          </select>
+        }
+      />
+
+      {selectedUsers.length ? (
+        <div className="sticky top-2 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-[#0B0112] px-4 py-2.5 text-white shadow-lg">
+          <span className="mr-auto text-[13px] font-medium">{selectedUsers.length} selected</span>
+          <button type="button" onClick={() => handleBulkVerify(true)} className="h-9 rounded-lg px-3 text-[13px] font-medium hover:bg-white/10">
+            Verify
+          </button>
+          <button type="button" onClick={() => handleBulkVerify(false)} className="h-9 rounded-lg px-3 text-[13px] font-medium hover:bg-white/10">
+            Unverify
+          </button>
+          <button type="button" onClick={() => setConfirmDelete(true)} className="h-9 rounded-lg bg-[#C0143C] px-3 text-[13px] font-medium">
+            Delete
+          </button>
+          <button type="button" onClick={() => setSelectedUsers([])} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10" aria-label="Clear selection">
+            <X className="h-4 w-4" aria-hidden />
+          </button>
         </div>
+      ) : null}
+
+      {/* desktop table */}
+      <div className="overflow-x-auto rounded-2xl ring-1 ring-[#ECE8EE] md:hidden">
+        <table className="w-full min-w-[760px] text-left text-[13.5px]">
+          <thead>
+            <tr>
+              <th className="w-10 px-4">
+                <Box checked={allSelected} onChange={handleSelectAll} label="Select all on this page" />
+              </th>
+              <th className="px-3">Name</th>
+              <th className="px-3">Type</th>
+              <th className="px-3">Joined</th>
+              <th className="px-3 text-center">Verified</th>
+              <th className="px-3 text-center">Can blog</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.id} className={`border-t border-[#F3EFF5] ${selectedUsers.includes(user.id) ? 'bg-[#FAF5FD]' : ''}`}>
+                <td className="px-4">
+                  <Box checked={selectedUsers.includes(user.id)} onChange={() => toggleOne(user.id)} label={`Select ${user.fullName}`} />
+                </td>
+                <td className="px-3">
+                  <div className="flex items-center gap-3">
+                    <Image src={user.profileImage || '/images/icons/elisp-profile-default-img.svg'} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-[#0B0112]">{user.fullName}</p>
+                      <p className="truncate text-[12px] text-[#8A888C]">{user.email}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-3">
+                  <StatusPill status={user.type === 'CHARITY' ? 'Charity' : 'Individual'} tone={user.type === 'CHARITY' ? 'purple' : 'blue'} />
+                </td>
+                <td className="px-3 text-[#6B686E]">{user.signedUp}</td>
+                <td className="px-3">
+                  <div className="flex justify-center">
+                    <Switch on={!!user.verified} onClick={() => handleToggleVerified(user)} label={`Verified: ${user.fullName}`} />
+                  </div>
+                </td>
+                <td className="px-3">
+                  <div className="flex justify-center">
+                    <Switch on={!!user.canBlog} onClick={() => handleToggleCanBlog(user)} label={`Can blog: ${user.fullName}`} />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </div>
+
+      {/* phone / tablet cards */}
+      <ul className="hidden space-y-2 md:block">
+        {users.map(user => (
+          <li key={user.id} className={`rounded-2xl p-3.5 ring-1 ${selectedUsers.includes(user.id) ? 'bg-[#FAF5FD] ring-[#D9B8F0]' : 'bg-white ring-[#ECE8EE]'}`}>
+            <div className="flex items-center gap-3">
+              <Box checked={selectedUsers.includes(user.id)} onChange={() => toggleOne(user.id)} label={`Select ${user.fullName}`} />
+              <Image src={user.profileImage || '/images/icons/elisp-profile-default-img.svg'} alt="" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-semibold text-[#0B0112]">{user.fullName}</p>
+                <p className="truncate text-[12px] text-[#8A888C]">{user.email}</p>
+              </div>
+              <StatusPill status={user.type === 'CHARITY' ? 'Charity' : 'Individual'} tone={user.type === 'CHARITY' ? 'purple' : 'blue'} />
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#F3EFF5] pt-3 text-[12.5px] text-[#6B686E]">
+              <span>Joined {user.signedUp}</span>
+              <span className="flex items-center gap-4">
+                <span className="flex items-center gap-2">
+                  Verified <Switch on={!!user.verified} onClick={() => handleToggleVerified(user)} label="Verified" />
+                </span>
+                <span className="flex items-center gap-2">
+                  Blog <Switch on={!!user.canBlog} onClick={() => handleToggleCanBlog(user)} label="Can blog" />
+                </span>
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {users.length === 0 ? <p className="rounded-2xl bg-[#FAF8FB] px-4 py-8 text-center text-[13.5px] text-[#6B686E]">No people match.</p> : null}
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <span className="text-[12.5px] text-[#8A888C]">
+          {totalFilteredRecords ? `Showing ${startCount}–${Math.max(startCount, startCount + users.length - 1)} of ${totalFilteredRecords}` : ''}
+        </span>
+        {totalPages > 1 ? <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} /> : null}
+      </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Delete ${selectedUsers.length} account${selectedUsers.length === 1 ? '' : 's'}?`}
+        body="Their profiles, listings and messages are removed. This can’t be undone."
+        confirmLabel="Delete accounts"
+        onConfirm={async () => {
+          await handleDeleteUsers();
+          setConfirmDelete(false);
+        }}
+        onClose={() => setConfirmDelete(false)}
+      />
+    </SectionCard>
   );
 };
 

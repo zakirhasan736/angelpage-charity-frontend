@@ -3,8 +3,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
-import Image from 'next/image';
-import { Button } from '@/components/elements';
+import { Check, Star, X } from 'lucide-react';
+import Image from '@/components/common/SafeImage';
+import { Btn, EmptyState, RowSkeleton, StatusPill } from '@/components/dashboard/DashKit';
+import { formatMoney } from '@/lib/money';
+import { timeSince } from '@/lib/timeSince';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 
 interface PendingReview {
@@ -64,79 +67,52 @@ const ProductReviewsAdmin = () => {
     }
   };
 
-  if (loading) {
-    return <p className="body-small text-mono-70">Loading buyer reviews…</p>;
-  }
+  if (loading) return <RowSkeleton rows={3} />;
 
   if (!reviews.length) {
-    return (
-      <p className="body-small text-mono-70">
-        No buyer reviews awaiting moderation.
-      </p>
-    );
+    return <EmptyState icon={Star} title="No reviews waiting" body="Buyer reviews that need a look will appear here." />;
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="body-small text-mono-70 mb-2">
-        Approve honest buyer reviews to build product trust on the storefront.
-        Verified purchase reviews are marked for buyers.
-      </p>
-      {reviews.map(review => {
-        const imageUrl =
-          review.product?.images?.[0]?.url ||
-          '/images/products/card-placeholder-image.webp';
-        const buyerName = review.user
-          ? `${review.user.firstName || ''} ${review.user.lastName || ''}`.trim()
-          : 'Buyer';
-
-        return (
-          <div
-            key={review._id}
-            className="flex flex-col gap-3 p-4 border border-mono-20 rounded-xl"
-          >
-            <div className="flex gap-4">
-              <Image
-                src={imageUrl}
-                alt={review.product?.name || 'Product'}
-                width={72}
-                height={72}
-                className="rounded-lg object-cover w-[72px] h-[72px]"
-              />
-              <div className="flex-1">
-                <h5 className="body-bold-small">{review.product?.name}</h5>
-                <p className="body-small text-mono-70">
-                  £{review.product?.price} · {buyerName}
-                  {review.verifiedPurchase && (
-                    <span className="ml-2 text-primary-color-100">
-                      Verified purchase
+    <div>
+      <p className="mb-4 text-[13px] text-[#6B686E]">Publish honest reviews to build trust. Verified purchases are labelled for buyers.</p>
+      <ul className="space-y-3">
+        {reviews.map(review => {
+          const buyerName = review.user ? `${review.user.firstName || ''} ${review.user.lastName || ''}`.trim() || 'Buyer' : 'Buyer';
+          return (
+            <li key={review._id} className="rounded-[22px] bg-white p-4 ring-1 ring-[#ECE8EE]">
+              <div className="flex gap-4">
+                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F4F1F6]">
+                  <Image src={review.product?.images?.[0]?.url || ''} alt="" fill sizes="64px" className="object-cover" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-semibold text-[#0B0112]">{review.product?.name}</p>
+                  <p className="text-[12.5px] text-[#8A888C]">{formatMoney(review.product?.price)}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="flex" aria-label={`${review.rating} out of 5 stars`}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-[#F5A524] text-[#F5A524]' : 'text-[#DCD5E0]'}`} aria-hidden />
+                      ))}
                     </span>
-                  )}
-                </p>
-                <p className="body-small mt-1">
-                  {'★'.repeat(review.rating)}
-                  {'☆'.repeat(5 - review.rating)}
-                </p>
-                <p className="body-small text-mono-90 mt-2">{review.comment}</p>
+                    <span className="text-[12.5px] text-[#474648]">{buyerName}</span>
+                    {review.verifiedPurchase ? <StatusPill status="Verified purchase" tone="green" /> : null}
+                    <span className="text-[12px] text-[#8A888C]">{timeSince(review.createdAt)} ago</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="primary"
-                onClick={() => moderate(review._id, 'approve')}
-              >
-                Approve
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => moderate(review._id, 'reject')}
-              >
-                Reject
-              </Button>
-            </div>
-          </div>
-        );
-      })}
+              <blockquote className="mt-3 rounded-2xl bg-[#FAF8FB] px-4 py-3 text-[14px] leading-relaxed text-[#2A2730]">{review.comment || <span className="text-[#8A888C]">No comment, rating only.</span>}</blockquote>
+              <div className="mt-3 flex justify-end gap-2 sm:flex-col-reverse">
+                <Btn size="sm" variant="secondary" icon={X} onClick={() => moderate(review._id, 'reject')} className="text-[#B0002A]!">
+                  Reject
+                </Btn>
+                <Btn size="sm" icon={Check} onClick={() => moderate(review._id, 'approve')}>
+                  Publish
+                </Btn>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };

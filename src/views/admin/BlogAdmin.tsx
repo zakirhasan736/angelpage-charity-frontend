@@ -3,7 +3,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/elements';
+import { Check, Newspaper, PenSquare, Send, X } from 'lucide-react';
+import { AuthField, AuthTextarea } from '@/components/auth/AuthKit';
+import { Btn, EmptyState, humanizeStatus, RowSkeleton, SectionCard, StatusPill, Toolbar } from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import Link from 'next/link';
 import AiAssistButton from '@/components/ai/AiAssistButton';
@@ -148,133 +150,89 @@ const BlogAdmin: React.FC = () => {
     }
   };
 
-  return (
-    <div className="blog-admin mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h3 className="body-bold-large text-mono-100">Blog</h3>
-          <p className="body-caption text-mono-70 mt-1">
-            Published posts appear on <Link href="/blog" className="underline">/blog</Link> and the homepage.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <select
-            className="border rounded-lg px-3 py-2 text-sm"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="pending_review">Pending review</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
-          <Button variant="primary" onClick={() => setEditorOpen(!editorOpen)}>
-            {editorOpen ? 'Close editor' : 'New post'}
-          </Button>
-        </div>
-      </div>
+  const CATEGORIES = ['general', 'stories', 'impact', 'sustainability', 'fashion', 'community', 'guides', 'news'];
+  const counter = (v: string, max: number) => <span className={v.length > max ? 'text-[#C0143C]' : ''}>{v.length}/{max}</span>;
 
-      {editorOpen && (
-        <div className="mb-8 rounded-xl border bg-white p-6 space-y-4">
-          <div className="flex flex-wrap gap-3 items-center justify-between">
-            <p className="body-small font-medium">New post</p>
-            <AiAssistButton
-              label="✨ AI SEO title, tags & content"
-              loading={aiLoading}
-              onClick={handleAiBlog}
-            />
-          </div>
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Title"
-            value={form.title}
-            onChange={e => setForm({ ...form, title: e.target.value })}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="SEO meta title (optional)"
-            value={form.metaTitle}
-            onChange={e => setForm({ ...form, metaTitle: e.target.value })}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Excerpt"
-            value={form.excerpt}
-            onChange={e => setForm({ ...form, excerpt: e.target.value })}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="SEO meta description"
-            value={form.metaDescription}
-            onChange={e =>
-              setForm({ ...form, metaDescription: e.target.value })
-            }
-          />
-          <select
-            className="w-full border rounded-lg px-3 py-2"
-            value={form.category}
-            onChange={e => setForm({ ...form, category: e.target.value })}
+  return (
+    <div className="blog-admin space-y-5">
+      <Toolbar
+        value={statusFilter}
+        onFilter={setStatusFilter}
+        filters={[
+          { id: 'pending_review', label: 'Needs review' },
+          { id: 'published', label: 'Published' },
+          { id: 'draft', label: 'Drafts' },
+          { id: '', label: 'All' },
+        ]}
+        trailing={
+          <Btn icon={editorOpen ? X : PenSquare} variant={editorOpen ? 'secondary' : 'primary'} onClick={() => setEditorOpen(!editorOpen)} className="sm:w-full">
+            {editorOpen ? 'Close editor' : 'New post'}
+          </Btn>
+        }
+      />
+
+      {editorOpen ? (
+        <SectionCard icon={PenSquare} title="New post" description={<>Published posts appear on the <Link href="/blog" className="font-medium text-[#611192] underline">journal</Link> and homepage.</>} action={<AiAssistButton label="✨ AI SEO assist" loading={aiLoading} onClick={handleAiBlog} />}>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              createPost();
+            }}
+            className="space-y-4"
           >
-            {['general', 'stories', 'impact', 'sustainability', 'fashion', 'community', 'guides', 'news'].map(
-              c => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ),
-            )}
-          </select>
-          <TagPills
-            tags={form.tags}
-            onRemove={tag =>
-              setForm(f => ({ ...f, tags: f.tags.filter(t => t !== tag) }))
-            }
-          />
-          {form.keywords.length > 0 && (
-            <p className="caption text-mono-70">
-              Keywords: {form.keywords.join(', ')}
-            </p>
-          )}
-          <textarea
-            className="w-full border rounded-lg px-3 py-2 min-h-[160px]"
-            placeholder="Content (HTML or plain text)"
-            value={form.content}
-            onChange={e => setForm({ ...form, content: e.target.value })}
-          />
-          <Button variant="primary" onClick={createPost}>
-            Publish now
-          </Button>
-        </div>
-      )}
+            <AuthField label="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+            <AuthTextarea label="Excerpt" rows={2} value={form.excerpt} onChange={e => setForm({ ...form, excerpt: e.target.value })} />
+            <div>
+              <p className="mb-1.5 text-[13px] font-medium text-[#2A2730]">Category</p>
+              <div className="flex flex-wrap gap-1.5">
+                {CATEGORIES.map(c => (
+                  <button key={c} type="button" aria-pressed={form.category === c} onClick={() => setForm({ ...form, category: c })} className={`h-8 rounded-full px-3 text-[12.5px] font-medium capitalize ${form.category === c ? 'bg-[#611192] text-white' : 'bg-[#F4F1F6] text-[#474648]'}`}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <AuthTextarea label="Content" rows={10} value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} hint="HTML or plain text." />
+            <div className="space-y-3 rounded-2xl bg-[#FAF8FB] p-4">
+              <p className="text-[13px] font-semibold text-[#0B0112]">Search appearance</p>
+              <AuthField label="Meta title" value={form.metaTitle} onChange={e => setForm({ ...form, metaTitle: e.target.value })} hint={counter(form.metaTitle, 60)} />
+              <AuthTextarea label="Meta description" rows={2} value={form.metaDescription} onChange={e => setForm({ ...form, metaDescription: e.target.value })} hint={`${form.metaDescription.length}/160`} />
+              <TagPills tags={form.tags} onRemove={tag => setForm(f => ({ ...f, tags: f.tags.filter(t => t !== tag) }))} />
+              {form.keywords.length > 0 ? <p className="text-[12px] text-[#8A888C]">Keywords: {form.keywords.join(', ')}</p> : null}
+            </div>
+            <div className="flex justify-end">
+              <Btn type="submit" icon={Send} className="sm:w-full">
+                Publish now
+              </Btn>
+            </div>
+          </form>
+        </SectionCard>
+      ) : null}
 
       {loading ? (
-        <p className="body-small text-mono-70">Loading posts…</p>
+        <RowSkeleton rows={3} />
       ) : posts.length === 0 ? (
-        <p className="body-small text-mono-70">No posts in this filter.</p>
+        <EmptyState icon={Newspaper} title="No posts here" body={statusFilter === 'pending_review' ? 'Nothing waiting for review.' : 'Try another filter.'} />
       ) : (
-        <div className="space-y-4">
+        <ul className="space-y-2">
           {posts.map(post => (
-            <div
-              key={post._id}
-              className="rounded-xl border bg-white p-5 flex flex-wrap justify-between gap-4"
-            >
-              <div>
-                <p className="body-bold-small text-mono-100">{post.title}</p>
-                <p className="caption text-mono-70 mt-1">
-                  {post.status} · {post.authorRole || 'author'} ·{' '}
-                  {new Date(post.createdAt).toLocaleDateString('en-GB')}
+            <li key={post._id} className="flex flex-wrap items-start gap-3 rounded-2xl bg-white p-4 ring-1 ring-[#ECE8EE]">
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-semibold text-[#0B0112]">{post.title}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-[#8A888C]">
+                  <StatusPill status={post.status === 'pending_review' ? 'Needs review' : post.status} tone={post.status === 'published' ? 'green' : post.status === 'pending_review' ? 'amber' : 'grey'} />
+                  {humanizeStatus(post.authorRole || 'author')} · {new Date(post.createdAt).toLocaleDateString()}
                 </p>
-                {post.excerpt && (
-                  <p className="body-small text-mono-80 mt-2">{post.excerpt}</p>
-                )}
+                {post.excerpt ? <p className="mt-2 line-clamp-2 text-[13.5px] text-[#474648]">{post.excerpt}</p> : null}
               </div>
-              {post.status === 'pending_review' && (
-                <Button variant="primary" onClick={() => publishPost(post._id)}>
-                  Approve & publish
-                </Button>
-              )}
-            </div>
+              {post.status === 'pending_review' ? (
+                <Btn size="sm" icon={Check} onClick={() => publishPost(post._id)} className="sm:w-full">
+                  Approve &amp; publish
+                </Btn>
+              ) : null}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

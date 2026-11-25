@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import CharityApproval from './CharityApproval';
-import { Button } from '@/components/elements';
+import { Banknote, Download, HandHeart, Package } from 'lucide-react';
+import StatCard from '@/components/dashboard/StatCard';
+import { Btn } from '@/components/dashboard/DashKit';
+import { formatMoney } from '@/lib/money';
+import { CHARITY_SHARE_PERCENT, PLATFORM_FEE_PERCENT } from '@/constants/brand';
 
 const FinancePanel: React.FC = () => {
   const { data: session } = useSession() || {};
@@ -48,40 +52,23 @@ const FinancePanel: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
-    return <p className="body-small text-mono-70 mt-6">Loading finance data…</p>;
-  }
-
   return (
-    <div className="finance-panel mt-6 space-y-10">
+    <div className="finance-panel space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="body-bold-large">Finance overview</h3>
-        <Button variant="secondary" onClick={exportFinance}>
+        <p className="text-[13px] text-[#6B686E]">Revenue across all orders. Export for bookkeeping.</p>
+        <Btn variant="secondary" icon={Download} onClick={exportFinance}>
           Export orders (CSV)
-        </Button>
+        </Btn>
       </div>
-
-      <div className="grid sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border bg-white p-6">
-          <p className="caption text-mono-70">Platform revenue</p>
-          <p className="h4 text-[#611192] mt-1">£{totalRevenue.toFixed(2)}</p>
-          <p className="caption text-mono-70 mt-1">
-            {salesChange >= 0 ? '+' : ''}
-            {salesChange.toFixed(1)}% vs prior period
-          </p>
-        </div>
-        <div className="rounded-xl border bg-white p-6">
-          <p className="caption text-mono-70">Items sold</p>
-          <p className="h4 text-mono-100 mt-1">{soldItemsCount}</p>
-        </div>
-        <div className="rounded-xl border bg-white p-6">
-          <p className="caption text-mono-70">Charity share policy</p>
-          <p className="body-small text-mono-80 mt-2">
-            90% of each sale is allocated to charity. Platform fee is 10%.
-          </p>
+      <div className="grid grid-cols-3 gap-4 md:grid-cols-1">
+        <StatCard label="Platform revenue" value={loading ? '—' : formatMoney(totalRevenue)} change={salesChange} subtitle="vs prior period" loading={loading} accent="purple" icon={<Banknote className="h-5 w-5" strokeWidth={1.75} aria-hidden />} />
+        <StatCard label="Items sold" value={loading ? '—' : soldItemsCount} loading={loading} accent="green" icon={<Package className="h-5 w-5" strokeWidth={1.75} aria-hidden />} />
+        <div className="rounded-[20px] bg-gradient-to-br from-[#3B055C] to-[#14021F] p-5 text-white">
+          <HandHeart className="h-5 w-5 text-[#D9B8F0]" aria-hidden />
+          <p className="mt-3 text-[13px] text-white/70">Split policy</p>
+          <p className="mt-1 text-[15px] leading-snug">Up to {CHARITY_SHARE_PERCENT}% of each sale goes to charity. Platform fee is {PLATFORM_FEE_PERCENT}%.</p>
         </div>
       </div>
-
       <CharityApproval />
     </div>
   );
