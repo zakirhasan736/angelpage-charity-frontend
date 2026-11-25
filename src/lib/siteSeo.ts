@@ -34,11 +34,11 @@ export function hasFacets(params: Record<string, string | string[] | undefined> 
 
 /** Official profiles (fill in as they go live; empty entries are dropped). */
 export const SOCIAL_PROFILES = [
-  process.env.NEXT_PUBLIC_FACEBOOK_URL,
-  process.env.NEXT_PUBLIC_INSTAGRAM_URL,
-  process.env.NEXT_PUBLIC_X_URL,
-  process.env.NEXT_PUBLIC_LINKEDIN_URL,
-  process.env.NEXT_PUBLIC_TIKTOK_URL,
+  process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK_URL,
+  process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM_URL,
+  process.env.NEXT_PUBLIC_SOCIAL_X_URL,
+  process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN_URL,
+  process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE_URL,
 ].filter((u): u is string => Boolean(u));
 
 export function absoluteUrl(path = '/') {
