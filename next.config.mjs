@@ -15,21 +15,32 @@ const nextConfig = {
       },
     ],
   },
-  async headers() {
-    if (allowIndexing) {
-      return [];
-    }
+  async redirects() {
+    const site = new URL(
+      process.env.NEXT_PUBLIC_SITE_URL || 'https://www.angelpage.shop'
+    );
+    if (site.origin !== 'https://www.angelpage.shop') return [];
     return [
       {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Robots-Tag',
-            value: 'noindex, nofollow',
-          },
-        ],
+        source: '/:path*',
+        has: [{ type: 'host', value: 'angelpage\\.shop' }],
+        destination: site.origin + '/:path*',
+        permanent: true,
       },
     ];
+  },
+  async headers() {
+    const headers = [];
+    if (process.env.NODE_ENV === 'production') {
+      headers.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000',
+      });
+    }
+    if (!allowIndexing) {
+      headers.push({ key: 'X-Robots-Tag', value: 'noindex, nofollow' });
+    }
+    return headers.length ? [{ source: '/(.*)', headers }] : [];
   },
 };
 

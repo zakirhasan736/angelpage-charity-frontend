@@ -15,7 +15,7 @@ export const INDEXABLE = process.env.NEXT_PUBLIC_ALLOW_INDEXING !== 'false';
 export const DEFAULT_TITLE =
   'Angelpage | Charity marketplace starting in the USA';
 export const DEFAULT_DESCRIPTION =
-  'Angelpage is a charity marketplace that starts in the United States and also sells in Canada and the United Kingdom. Buy and sell pre-loved goods and send most of each sale to a charity.';
+  'Shop pre-loved goods or sell an item to support a charity you choose. Explore the Angelpage charity marketplace in the United States, Canada and the UK.';
 
 export const DEFAULT_KEYWORDS = [
   'Angelpage',

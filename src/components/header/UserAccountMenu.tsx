@@ -73,6 +73,7 @@ const UserAccountMenu = ({
     return (
       <Link
         href="/auth/login"
+        aria-label={showLabel ? undefined : 'Sign in'}
         className={`user-account flex items-center ${showLabel ? 'flex-col gap-[13px]' : ''} ${className}`}
       >
         <div className={showLabel ? 'icons-box' : ''}>

@@ -7,10 +7,6 @@ import { useSession } from 'next-auth/react';
 const HomePage = () => {
   const { status } = useSession() || {};
 
-  if (status === 'loading') {
-    return null;
-  }
-
   if (status === 'authenticated') {
     return <StorefrontHomeContent />;
   }
