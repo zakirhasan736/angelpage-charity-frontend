@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { CreditCard } from 'lucide-react';
+import { RowSkeleton, SectionCard, StatusPill } from '@/components/dashboard/DashKit';
+import { formatMoney } from '@/lib/money';
 import axios from 'axios';
 
 interface FailedOrder {
@@ -35,55 +38,32 @@ const FailedPaymentsTable: React.FC = () => {
     load();
   }, [session?.token]);
 
-  if (loading) {
-    return (
-      <p className="body-small text-mono-70 mt-8">Loading failed transactions…</p>
-    );
-  }
-
   return (
-    <div className="mt-10">
-      <h3 className="body-bold-large mb-4 text-mono-100">Failed transactions</h3>
-      {orders.length === 0 ? (
-        <p className="body-small text-mono-70">No failed payments recorded.</p>
+    <SectionCard icon={CreditCard} tone={orders.length ? 'danger' : 'default'} title="Failed payments" description="Orders where the card payment didn’t go through.">
+      {loading ? (
+        <RowSkeleton rows={2} />
+      ) : orders.length === 0 ? (
+        <p className="rounded-2xl bg-[#FAF8FB] px-4 py-6 text-center text-[13.5px] text-[#6B686E]">No failed payments.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-white">
-          <table className="min-w-full text-sm">
-            <thead className="bg-[#F1F1F7]">
-              <tr>
-                <th className="px-4 py-2 text-left">Order</th>
-                <th className="px-4 py-2 text-left">Buyer</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Payment</th>
-                <th className="px-4 py-2 text-right">Amount</th>
-                <th className="px-4 py-2 text-left">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map(order => (
-                <tr key={order._id} className="border-t">
-                  <td className="px-4 py-2">{order._id.slice(-8)}</td>
-                  <td className="px-4 py-2">
-                    {order.buyer?.email ||
-                      order.buyer?.name ||
-                      `${order.buyer?.firstName || ''} ${order.buyer?.lastName || ''}`.trim() ||
-                      '—'}
-                  </td>
-                  <td className="px-4 py-2">{order.status}</td>
-                  <td className="px-4 py-2 text-[#D10C3B]">{order.paymentStatus}</td>
-                  <td className="px-4 py-2 text-right">
-                    £{order.grandTotal?.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2">
-                    {new Date(order.createdAt).toLocaleDateString('en-GB')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="divide-y divide-[#F3EFF5]">
+          {orders.map(order => {
+            const buyer = order.buyer?.email || order.buyer?.name || `${order.buyer?.firstName || ''} ${order.buyer?.lastName || ''}`.trim() || 'Unknown buyer';
+            return (
+              <li key={order._id} className="flex flex-wrap items-center gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-medium text-[#0B0112]">{buyer}</p>
+                  <p className="text-[12px] text-[#8A888C]">
+                    #{order._id.slice(-8)} · {new Date(order.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <StatusPill status={order.paymentStatus || 'Failed'} tone="red" />
+                <p className="w-24 text-right text-[14px] font-semibold tabular-nums">{formatMoney(order.grandTotal)}</p>
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </SectionCard>
   );
 };
 

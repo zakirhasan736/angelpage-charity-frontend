@@ -3,7 +3,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/elements';
+import { Download, Receipt, ShieldAlert, Vault } from 'lucide-react';
+import { Btn, ConfirmDialog, humanizeStatus, MiniStats, RowSkeleton, SectionCard, StatusPill, Toolbar } from '@/components/dashboard/DashKit';
+import { formatMoney } from '@/lib/money';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 
 interface OrderRow {
@@ -27,6 +29,9 @@ const OperationsPanel: React.FC = () => {
   const [escrowReady, setEscrowReady] = useState<OrderRow[]>([]);
   const [disputes, setDisputes] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
+  const [acting, setActing] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ kind: 'release' | 'resolve' | 'resolve-release'; order: OrderRow } | null>(null);
   const api = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchAll = useCallback(async () => {
@@ -103,105 +108,113 @@ const OperationsPanel: React.FC = () => {
     `${o.buyerId?.firstName || ''} ${o.buyerId?.lastName || ''}`.trim() ||
     '—';
 
-  if (loading) {
-    return <p className="body-small text-mono-70 mt-6">Loading operations…</p>;
-  }
+
+  const runPending = async () => {
+    if (!pendingAction) return;
+    setActing(true);
+    try {
+      if (pendingAction.kind === 'release') await releaseEscrow(pendingAction.order._id);
+      else await resolveDispute(pendingAction.order._id, pendingAction.kind === 'resolve-release');
+    } finally {
+      setActing(false);
+      setPendingAction(null);
+    }
+  };
+
+  if (loading) return <RowSkeleton rows={4} />;
+
+  const term = q.trim().toLowerCase();
+  const recent = orders.filter(o => !term || `${o._id} ${buyerLabel(o)} ${o.status} ${o.paymentStatus}`.toLowerCase().includes(term));
 
   return (
-    <div className="operations-panel mt-6 space-y-10">
-      <div className="flex justify-end">
-        <Button variant="secondary" onClick={downloadExport}>
-          Export orders (CSV)
-        </Button>
-      </div>
-      <section>
-        <h3 className="body-bold-large mb-4">Escrow ready for release</h3>
+    <div className="operations-panel space-y-5">
+      <MiniStats
+        items={[
+          { label: 'Escrow to release', value: escrowReady.length, icon: Vault },
+          { label: 'Open disputes', value: disputes.length, icon: ShieldAlert },
+          { label: 'Recent orders', value: orders.length, icon: Receipt },
+        ]}
+      />
+
+      <SectionCard icon={Vault} title="Escrow ready for release" description="Delivered orders whose funds can be released to sellers and charities.">
         {escrowReady.length === 0 ? (
-          <p className="body-small text-mono-70">No orders ready for escrow release.</p>
+          <p className="rounded-2xl bg-[#FAF8FB] px-4 py-5 text-center text-[13.5px] text-[#6B686E]">Nothing waiting.</p>
         ) : (
-          <div className="space-y-3">
+          <ul className="space-y-2">
             {escrowReady.map(order => (
-              <div
-                key={order._id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4"
-              >
-                <div>
-                  <p className="body-small font-medium">#{order._id.slice(-8)}</p>
-                  <p className="caption text-mono-70">{buyerLabel(order)}</p>
-                  <p className="caption text-mono-70">
-                    £{order.grandTotal?.toFixed(2)} · {order.escrowStatus}
-                  </p>
+              <li key={order._id} className="flex flex-wrap items-center gap-3 rounded-2xl p-3.5 ring-1 ring-[#ECE8EE]">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-semibold text-[#0B0112]">#{order._id.slice(-8)}</p>
+                  <p className="truncate text-[12.5px] text-[#8A888C]">{buyerLabel(order)}</p>
                 </div>
-                <Button variant="primary" onClick={() => releaseEscrow(order._id)}>
-                  Release escrow
-                </Button>
-              </div>
+                <StatusPill status={order.escrowStatus} tone="amber" />
+                <p className="w-24 text-right text-[14px] font-semibold tabular-nums">{formatMoney(order.grandTotal)}</p>
+                <Btn size="sm" onClick={() => setPendingAction({ kind: 'release', order })} className="sm:w-full">
+                  Release
+                </Btn>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </section>
+      </SectionCard>
 
-      <section>
-        <h3 className="body-bold-large mb-4">Open disputes</h3>
+      <SectionCard icon={ShieldAlert} tone={disputes.length ? 'danger' : 'default'} title="Open disputes" description="Buyer or seller has raised a problem with the order.">
         {disputes.length === 0 ? (
-          <p className="body-small text-mono-70">No active disputes.</p>
+          <p className="rounded-2xl bg-[#FAF8FB] px-4 py-5 text-center text-[13.5px] text-[#6B686E]">No active disputes.</p>
         ) : (
-          <div className="space-y-3">
+          <ul className="space-y-2">
             {disputes.map(order => (
-              <div
-                key={order._id}
-                className="rounded-xl border bg-white p-4 flex flex-wrap items-center justify-between gap-3"
-              >
-                <div>
-                  <p className="body-small font-medium">#{order._id.slice(-8)}</p>
-                  <p className="caption text-mono-70">{buyerLabel(order)} · {order.status}</p>
-                  {order.disputeNotes && (
-                    <p className="caption text-mono-80 mt-1">{order.disputeNotes}</p>
-                  )}
+              <li key={order._id} className="rounded-2xl p-3.5 ring-1 ring-[#F7C9D3]">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-semibold text-[#0B0112]">#{order._id.slice(-8)}</p>
+                    <p className="truncate text-[12.5px] text-[#8A888C]">{buyerLabel(order)}</p>
+                  </div>
+                  <StatusPill status={humanizeStatus(order.status)} />
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="secondary" onClick={() => resolveDispute(order._id, false)}>
+                {order.disputeNotes ? <p className="mt-3 rounded-xl bg-[#FFF7F8] px-3 py-2 text-[13px] text-[#474648]">{order.disputeNotes}</p> : null}
+                <div className="mt-3 flex justify-end gap-2 sm:flex-col">
+                  <Btn size="sm" variant="secondary" onClick={() => setPendingAction({ kind: 'resolve', order })}>
                     Resolve
-                  </Button>
-                  <Button variant="primary" onClick={() => resolveDispute(order._id, true)}>
-                    Resolve & release escrow
-                  </Button>
+                  </Btn>
+                  <Btn size="sm" onClick={() => setPendingAction({ kind: 'resolve-release', order })}>
+                    Resolve &amp; release funds
+                  </Btn>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </section>
+      </SectionCard>
 
-      <section>
-        <h3 className="body-bold-large mb-4">Recent orders</h3>
-        <div className="overflow-x-auto rounded-xl border">
-          <table className="min-w-full text-sm">
-            <thead className="bg-[#F1F1F7]">
-              <tr>
-                <th className="px-4 py-2 text-left">Order</th>
-                <th className="px-4 py-2 text-left">Buyer</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Payment</th>
-                <th className="px-4 py-2 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map(order => (
-                <tr key={order._id} className="border-t">
-                  <td className="px-4 py-2">{order._id.slice(-8)}</td>
-                  <td className="px-4 py-2">{buyerLabel(order)}</td>
-                  <td className="px-4 py-2">{order.status}</td>
-                  <td className="px-4 py-2">{order.paymentStatus}</td>
-                  <td className="px-4 py-2 text-right">
-                    £{order.grandTotal?.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <SectionCard icon={Receipt} title="Recent orders" action={<Btn size="sm" variant="secondary" icon={Download} onClick={downloadExport}>Export CSV</Btn>}>
+        <Toolbar search={q} onSearch={setQ} placeholder="Search order, buyer or status" />
+        <ul className="divide-y divide-[#F3EFF5]">
+          {recent.map(order => (
+            <li key={order._id} className="flex flex-wrap items-center gap-3 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-medium text-[#0B0112]">{buyerLabel(order)}</p>
+                <p className="text-[12px] text-[#8A888C]">#{order._id.slice(-8)}</p>
+              </div>
+              <StatusPill status={humanizeStatus(order.status)} />
+              <StatusPill status={order.paymentStatus} />
+              <p className="w-24 text-right text-[14px] font-semibold tabular-nums">{formatMoney(order.grandTotal)}</p>
+            </li>
+          ))}
+          {recent.length === 0 ? <li className="py-6 text-center text-[13.5px] text-[#6B686E]">No orders match.</li> : null}
+        </ul>
+      </SectionCard>
+
+      <ConfirmDialog
+        open={Boolean(pendingAction)}
+        tone="primary"
+        title={pendingAction?.kind === 'resolve' ? 'Mark dispute as resolved?' : 'Release funds?'}
+        body={pendingAction ? `Order #${pendingAction.order._id.slice(-8)} · ${formatMoney(pendingAction.order.grandTotal)}. ${pendingAction.kind === 'resolve' ? 'Funds stay held.' : 'Money goes to the seller and charity. This can’t be undone.'}` : null}
+        confirmLabel={pendingAction?.kind === 'resolve' ? 'Resolve' : 'Release funds'}
+        loading={acting}
+        onConfirm={runPending}
+        onClose={() => setPendingAction(null)}
+      />
     </div>
   );
 };

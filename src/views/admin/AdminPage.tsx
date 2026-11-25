@@ -1,6 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import BannerSection from './Banner';
+import { ShieldOff } from 'lucide-react';
+import { EmptyState } from '@/components/dashboard/DashKit';
 import AnalyticsPage from './Analytics';
 import UsersAccountInfoMain from './Account';
 import LogoutButton from '@/components/elements/button/LogoutButton';
@@ -148,7 +150,6 @@ const AdminAccount = () => {
         setLoading(false);
         return;
       }
-      console.log('Fetching returning user analytics...');
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/analytics/returning-users-weekly`,
@@ -185,7 +186,6 @@ const AdminAccount = () => {
         setLoading(false);
         return;
       }
-      console.log('Fetching returning user analytics...');
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/analytics/user-sessions-weekly`,
@@ -223,12 +223,19 @@ const AdminAccount = () => {
 
   if (visibleTabs.length === 0) {
     return (
-      <div className="custom-container py-20 text-center">
-        <p className="body-bold-small">No admin panels for this account.</p>
-        <p className="body-caption text-mono-70 mt-2">
-          Sign in at <a href="/admin/login" className="underline">/admin/login</a> with
-          a team account, or ask Super Admin to create one under Team.
-        </p>
+      <div className="custom-container py-16">
+        <div className="mx-auto max-w-[460px]">
+          <EmptyState
+            icon={ShieldOff}
+            title="No admin access yet"
+            body="This account doesn’t have any admin panels. Ask a Super Admin to give you access from the Team tab, or sign in with a team account."
+            action={
+              <a href="/admin/login" className="inline-flex h-11 items-center rounded-xl bg-[#611192] px-5 text-[14px] font-medium text-white">
+                Admin sign in
+              </a>
+            }
+          />
+        </div>
       </div>
     );
   }

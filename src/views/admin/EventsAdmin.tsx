@@ -3,7 +3,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/elements';
+import { CalendarDays, CalendarPlus, Check, ExternalLink, X } from 'lucide-react';
+import { AuthField, AuthTextarea } from '@/components/auth/AuthKit';
+import { Btn, EmptyState, humanizeStatus, SectionCard, StatusPill, Toolbar } from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import AiAssistButton from '@/components/ai/AiAssistButton';
 import { suggestEvent } from '@/lib/aiApi';
@@ -146,166 +148,113 @@ const EventsAdmin: React.FC = () => {
     }
   };
 
+  const Toggle = ({ on, onChange, label, hint }: { on: boolean; onChange: (v: boolean) => void; label: string; hint: string }) => (
+    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 ring-1 ring-[#ECE8EE]">
+      <span>
+        <span className="block text-[14px] font-medium text-[#0B0112]">{label}</span>
+        <span className="block text-[12px] text-[#8A888C]">{hint}</span>
+      </span>
+      <input type="checkbox" className="sr-only" checked={on} onChange={e => onChange(e.target.checked)} />
+      <span aria-hidden className={`relative h-6 w-10 shrink-0 rounded-full transition ${on ? 'bg-[#611192]' : 'bg-[#DCD5E0]'}`}>
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-[18px]' : 'left-0.5'}`} />
+      </span>
+    </label>
+  );
+
   return (
-    <div className="events-admin mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h3 className="body-bold-large text-mono-100">Events & donations</h3>
-          <p className="body-caption text-mono-70 mt-1">
-            Create donation drives, live sessions, or polls. Featured items appear on the homepage.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <select
-            className="border rounded-lg px-3 py-2 text-sm"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="pending_review">Pending review</option>
-            <option value="published">Published</option>
-          </select>
-          <Button variant="primary" onClick={() => setEditorOpen(!editorOpen)}>
+    <div className="events-admin space-y-5">
+      <Toolbar
+        value={statusFilter}
+        onFilter={setStatusFilter}
+        filters={[
+          { id: 'pending_review', label: 'Needs review' },
+          { id: 'published', label: 'Published' },
+          { id: '', label: 'All' },
+        ]}
+        trailing={
+          <Btn icon={editorOpen ? X : CalendarPlus} variant={editorOpen ? 'secondary' : 'primary'} onClick={() => setEditorOpen(!editorOpen)} className="sm:w-full">
             {editorOpen ? 'Close' : 'New event'}
-          </Button>
-        </div>
-      </div>
+          </Btn>
+        }
+      />
 
-      {editorOpen && (
-        <div className="mb-8 rounded-xl border bg-white p-6 space-y-4">
-          <div className="flex flex-wrap justify-between items-center gap-3">
-            <p className="body-small font-medium">New event</p>
-            <AiAssistButton
-              label="✨ AI suggest title & description"
-              loading={aiLoading}
-              onClick={handleAiEvent}
-            />
-          </div>
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Topic or theme (optional — AI uses this)"
-            value={form.topic}
-            onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Title"
-            value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-          />
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Short excerpt"
-            rows={2}
-            value={form.excerpt}
-            onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))}
-          />
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Full description"
-            rows={4}
-            value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select
-              className="border rounded-lg px-3 py-2"
-              value={form.eventType}
-              onChange={e => setForm(f => ({ ...f, eventType: e.target.value }))}
-            >
-              <option value="donation">Donation</option>
-              <option value="live_session">Live session</option>
-              <option value="general">General event</option>
-            </select>
-            <input
-              className="border rounded-lg px-3 py-2"
-              placeholder="Donation goal (£)"
-              value={form.donationGoal}
-              onChange={e => setForm(f => ({ ...f, donationGoal: e.target.value }))}
-            />
-            <input
-              className="border rounded-lg px-3 py-2"
-              placeholder="Donation URL"
-              value={form.donationUrl}
-              onChange={e => setForm(f => ({ ...f, donationUrl: e.target.value }))}
-            />
-            <input
-              className="border rounded-lg px-3 py-2"
-              placeholder="Live stream URL"
-              value={form.liveStreamUrl}
-              onChange={e => setForm(f => ({ ...f, liveStreamUrl: e.target.value }))}
-            />
-          </div>
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Poll question (optional)"
-            value={form.pollQuestion}
-            onChange={e => setForm(f => ({ ...f, pollQuestion: e.target.value }))}
-          />
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Poll options (one per line)"
-            rows={3}
-            value={form.pollOptions}
-            onChange={e => setForm(f => ({ ...f, pollOptions: e.target.value }))}
-          />
-          <label className="flex items-center gap-2 body-small">
-            <input
-              type="checkbox"
-              checked={form.featuredOnHomepage}
-              onChange={e =>
-                setForm(f => ({ ...f, featuredOnHomepage: e.target.checked }))
-              }
-            />
-            Feature on homepage
-          </label>
-          <label className="flex items-center gap-2 body-small">
-            <input
-              type="checkbox"
-              checked={form.publishNow}
-              onChange={e => setForm(f => ({ ...f, publishNow: e.target.checked }))}
-            />
-            Publish immediately
-          </label>
-          <Button variant="primary" onClick={createEvent}>
-            Save event
-          </Button>
-        </div>
-      )}
-
-      <ul className="space-y-3">
-        {events.map(ev => (
-          <li
-            key={ev._id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white px-4 py-3"
+      {editorOpen ? (
+        <SectionCard icon={CalendarPlus} title="New event" description="Donation drives, live sessions and polls. Featured events show on the homepage." action={<AiAssistButton label="✨ AI suggest" loading={aiLoading} onClick={handleAiEvent} />}>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              createEvent();
+            }}
+            className="space-y-4"
           >
-            <div>
-              <p className="body-bold-small">{ev.title}</p>
-              <p className="caption text-mono-70">
-                {ev.eventType} · {ev.status}
-                {ev.featuredOnHomepage ? ' · Featured' : ''}
-              </p>
+            <div role="radiogroup" className="grid grid-cols-3 gap-1 rounded-xl bg-[#F4F1F6] p-1 sm:grid-cols-1">
+              {[
+                { v: 'donation', l: 'Donation drive' },
+                { v: 'live_session', l: 'Live session' },
+                { v: 'general', l: 'General event' },
+              ].map(o => (
+                <button key={o.v} type="button" role="radio" aria-checked={form.eventType === o.v} onClick={() => setForm(f => ({ ...f, eventType: o.v }))} className={`h-10 rounded-lg text-[13px] font-medium ${form.eventType === o.v ? 'bg-white text-[#611192] shadow-sm' : 'text-[#6B686E]'}`}>
+                  {o.l}
+                </button>
+              ))}
             </div>
-            <div className="flex gap-2">
-              {ev.status === 'published' && (
-                <a
-                  href={`/events/${ev.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="body-caption underline text-primary-color-100"
-                >
-                  View
+            <AuthField label="Topic (optional)" value={form.topic} onChange={e => setForm(f => ({ ...f, topic: e.target.value }))} hint="AI uses this to suggest copy." />
+            <AuthField label="Title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+            <AuthTextarea label="Short summary" rows={2} value={form.excerpt} onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} />
+            <AuthTextarea label="Full description" rows={5} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+              <AuthField label="Donation goal" inputMode="decimal" value={form.donationGoal} onChange={e => setForm(f => ({ ...f, donationGoal: e.target.value }))} />
+              <AuthField label="Donation link" type="url" inputMode="url" placeholder="https://" value={form.donationUrl} onChange={e => setForm(f => ({ ...f, donationUrl: e.target.value }))} />
+              <AuthField label="Live stream link" type="url" inputMode="url" placeholder="https://" value={form.liveStreamUrl} onChange={e => setForm(f => ({ ...f, liveStreamUrl: e.target.value }))} className="col-span-2 sm:col-span-1" />
+            </div>
+            <div className="space-y-3 rounded-2xl bg-[#FAF8FB] p-4">
+              <p className="text-[13px] font-semibold text-[#0B0112]">Poll (optional)</p>
+              <AuthField label="Question" value={form.pollQuestion} onChange={e => setForm(f => ({ ...f, pollQuestion: e.target.value }))} />
+              <AuthTextarea label="Options" rows={3} value={form.pollOptions} onChange={e => setForm(f => ({ ...f, pollOptions: e.target.value }))} hint="One per line." />
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
+              <Toggle on={form.featuredOnHomepage} onChange={v => setForm(f => ({ ...f, featuredOnHomepage: v }))} label="Feature on homepage" hint="Shows in the events strip" />
+              <Toggle on={form.publishNow} onChange={v => setForm(f => ({ ...f, publishNow: v }))} label="Publish immediately" hint="Otherwise saved for review" />
+            </div>
+            <div className="flex justify-end">
+              <Btn type="submit" className="sm:w-full">
+                Save event
+              </Btn>
+            </div>
+          </form>
+        </SectionCard>
+      ) : null}
+
+      {events.length === 0 ? (
+        <EmptyState icon={CalendarDays} title="No events here" body="Try another filter or create one." />
+      ) : (
+        <ul className="space-y-2">
+          {events.map(ev => (
+            <li key={ev._id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-[#ECE8EE]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F2E8F8] text-[#611192]">
+                <CalendarDays className="h-[18px] w-[18px]" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14.5px] font-semibold text-[#0B0112]">{ev.title}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-[#8A888C]">
+                  <StatusPill status={ev.status === 'pending_review' ? 'Needs review' : ev.status} tone={ev.status === 'published' ? 'green' : 'amber'} />
+                  {humanizeStatus(ev.eventType)}
+                  {ev.featuredOnHomepage ? <StatusPill status="Featured" tone="purple" /> : null}
+                </p>
+              </div>
+              {ev.status === 'published' ? (
+                <a href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] font-medium text-[#611192] hover:bg-[#F6EEFA]">
+                  View <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                 </a>
-              )}
-              {ev.status !== 'published' && (
-                <Button variant="primary" onClick={() => publishEvent(ev._id)}>
+              ) : (
+                <Btn size="sm" icon={Check} onClick={() => publishEvent(ev._id)} className="sm:w-full">
                   Publish
-                </Button>
+                </Btn>
               )}
-            </div>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
