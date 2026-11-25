@@ -14,8 +14,9 @@ const Register = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromGuestCheckout = searchParams?.get('from') === 'guest-checkout';
+  // ?type=charity opens the charity form (used by "Are you a charity?" links)
   const [activeTab, setActiveTab] = useState<'individual' | 'charity'>(
-    'individual'
+    searchParams?.get('type') === 'charity' ? 'charity' : 'individual'
   );
   const [formData, setFormData] = useState({
     userName: '',
