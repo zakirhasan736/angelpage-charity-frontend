@@ -165,7 +165,7 @@ const CharityStoreListing = ({
   }
 
   return (
-    <section className="products-lists-section pt-[31px] pb-[54px] md:pb-9 sm:pt-5 sm:pb-8 bg-[#F1F1F7]">
+    <section className="products-lists-section pt-10 pb-16 md:pb-9 sm:pt-5 sm:pb-8 bg-[#FAF8FB]">
       <div className="custom-container">
         <div className="products-lists-wrapper">
           <div className="products-lists-main-cont flex items-start md:flex-col gap-6">

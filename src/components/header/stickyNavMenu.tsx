@@ -39,7 +39,7 @@ const StickyNavMenu: React.FC<StickyNavbar> = ({ toggleDropdown}) => {
   }, [lastScrollY]);
   return (
     <motion.div
-      className="sticky-mobilenav-elements hidden sm:block z-999 h-[87px]   px-4 pt-[13px] pb-3 fixed bottom-0 w-full bg-mono-0"
+      className="sticky-mobilenav-elements hidden sm:block z-999 h-[84px] px-4 pt-3 pb-3 fixed bottom-0 w-full rounded-t-[22px] bg-white/95 backdrop-blur shadow-[0_-8px_30px_rgba(11,1,18,0.08)] border-t border-[#ECE8EE]"
       initial={{ y: 100 }}
       animate={{ y: showNavbar ? 0 : 100 }}
       transition={{ type: 'spring', stiffness: 200, damping: 30 }} // Smooth transition

@@ -108,60 +108,69 @@ const CharityStorefront = () => {
     );
   }
 
+  const tabs = [
+    { label: 'Shop', count: productCount },
+    { label: 'About' },
+  ];
+
   return (
     <div className="charity-storefront-main-page-wrapper">
       <StoreFrontBanner
         charityStore={charityData}
         productCount={productCount}
+        actions={
+          charityData?._id ? (
+            <div className="favorite-btn-item-store flex h-11 w-11 items-center justify-center rounded-full bg-white ring-1 ring-[#DCD5E0]">
+              <FavoriteButton itemId={charityData._id} type="Charity" />
+            </div>
+          ) : null
+        }
       />
       <div className="charity-storefront-wrapper-area">
         <div className="storefront-tabs-area">
-          <div className="storefront-tabs-box">
+          <div className="storefront-tabs-box border-b border-[#ECE8EE] bg-white">
             <div className="custom-container">
-              <div className="storefront-tabs-btn-box pt-[51px] pb-[17px] flex justify-between items-center gap-6">
-                <ul className="tabs-btn-items flex items-center gap-6">
-                  {/* Tab buttons */}
-                  <li
-                    className={`tabs-btn-list body-small px-[11px] py-2 rounded-[24px] cursor-pointer ${
-                      activeTab === 0
-                        ? 'bg-[#FCF2FF] text-primary-color-100'
-                        : 'hover:bg-[#FCF2FF] hover:text-primary-color-100'
-                    }`}
-                    onClick={() => setActiveTab(0)}
-                  >
-                    Shop
-                  </li>
-                  <li
-                    className={`tabs-btn-list body-small px-[11px] py-2 rounded-[24px] cursor-pointer ${
-                      activeTab === 1
-                        ? 'bg-[#FCF2FF] text-primary-color-100'
-                        : 'hover:bg-[#FCF2FF] hover:text-primary-color-100'
-                    }`}
-                    onClick={() => setActiveTab(1)}
-                  >
-                    About
-                  </li>
-                </ul>
-                {activeTab === 1 && charityData?.storefrontId && (
-                  <div className="favorite-btn-item-store test cursor-pointer p-3">
-                    {charityData?._id && (
-                      <FavoriteButton
-                        itemId={charityData?._id}
-                        type="Charity"
+              <div className="storefront-tabs-btn-box flex items-center gap-8 pt-8 max-[767px]:pt-5" role="tablist">
+                {tabs.map((tab, idx) => {
+                  const active = activeTab === idx;
+                  return (
+                    <button
+                      key={tab.label}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setActiveTab(idx)}
+                      className={`relative inline-flex items-center gap-2 pb-4 text-[15px] font-medium transition ${
+                        active ? 'text-[#611192]' : 'text-[#6B686E] hover:text-[#0B0112]'
+                      }`}
+                    >
+                      {tab.label}
+                      {tab.count != null ? (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] ${
+                            active ? 'bg-[#611192] text-white' : 'bg-[#F2E8F8] text-[#611192]'
+                          }`}
+                        >
+                          {tab.count}
+                        </span>
+                      ) : null}
+                      <span
+                        className={`absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-[#611192] transition-transform duration-300 ${
+                          active ? 'scale-x-100' : 'scale-x-0'
+                        }`}
                       />
-                    )}
-                  </div>
-                )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Tab content */}
           <div className="store-front-tabs-cont-area">
             <ul className="tabs-content-area">
               {activeTab === 0 && (
                 <li className="tabs-cont-item">
-                  <div className="storefront-shop-tabs-cont bg-[#F1F1F7] sm:py-0!">
+                  <div className="storefront-shop-tabs-cont bg-[#FAF8FB] max-[767px]:py-0!">
                     <CharityStoreListing storefrontid={storefrontid} />
                   </div>
                 </li>

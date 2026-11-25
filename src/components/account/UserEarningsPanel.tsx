@@ -73,16 +73,16 @@ const UserEarningsPanel = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard label="Total earned" value={`£${(data?.totalEarned || 0).toFixed(2)}`} accent="purple" />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard label="In escrow" value={`£${(data?.pendingEscrow || 0).toFixed(2)}`} subtitle="held until release" accent="amber" />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard label="Released" value={`£${(data?.releasedEscrow || 0).toFixed(2)}`} accent="green" />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard label="In dispute" value={`£${(data?.disputedAmount || 0).toFixed(2)}`} accent="blue" />
         </div>
       </div>

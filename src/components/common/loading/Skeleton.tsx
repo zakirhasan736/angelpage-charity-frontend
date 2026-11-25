@@ -28,14 +28,16 @@ export function CardLines({ lines = 3 }: { lines?: number }) {
 
 export function ProductCardSkeleton() {
   return (
-    <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#E6E3E7] bg-white">
-      <SkeletonBlock className="aspect-[1/1] rounded-none" />
-      <div className="flex flex-1 flex-col gap-3 px-4 py-4">
+    <article className="flex h-full w-full flex-col">
+      <SkeletonBlock className="aspect-[4/5] rounded-[20px]" />
+      <div className="flex flex-1 flex-col gap-3 px-1 pt-4">
         <SkeletonLine className="h-3 w-1/3" />
         <SkeletonLine className="h-4 w-full" />
-        <SkeletonLine className="h-4 w-4/5" />
-        <SkeletonLine className="mt-2 h-3 w-1/2" />
-        <SkeletonBlock className="mt-auto h-10 rounded-full" />
+        <SkeletonLine className="h-4 w-3/5" />
+        <div className="mt-2 flex items-center justify-between">
+          <SkeletonLine className="h-5 w-16" />
+          <SkeletonBlock className="h-10 w-28 rounded-full" />
+        </div>
       </div>
     </article>
   );

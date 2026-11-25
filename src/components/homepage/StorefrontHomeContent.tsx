@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import HomeLandingBanner from '@/components/banner/HomeLandingBanner';
+import HomeMemberBanner from '@/components/banner/HomeMemberBanner';
 import HomeValueStrip from '@/components/homepage/HomeValueStrip';
 import IntHomeCtaSec from '@/components/homepage/IntHomeCtaSec';
 import JewelleryProductCtaSec from '@/components/homepage/JewelleryProductCtaSec';
@@ -18,7 +18,7 @@ import WomansCategoryProducts from '@/components/product/WomansCategoryProducts'
 const StorefrontHomeContent = () => {
   return (
     <div className="internal-homepage-main-wrapper">
-      <HomeLandingBanner />
+      <HomeMemberBanner />
       <HomeValueStrip />
       <PromotedProductsStrip />
       <TopCategoryProducts secClassName="" />

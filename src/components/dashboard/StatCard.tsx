@@ -55,7 +55,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-[#E6E3E7] bg-white p-5 shadow-xs animate-pulse">
+      <div className="rounded-[18px] border border-[#ECE8EE] bg-white p-5 animate-pulse">
         <div className="h-3 w-24 bg-mono-40 rounded-sm mb-4" />
         <div className="h-8 w-32 bg-mono-40 rounded-sm mb-3" />
         <div className="h-3 w-20 bg-mono-40 rounded-sm" />
@@ -67,10 +67,14 @@ const StatCard: React.FC<StatCardProps> = ({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-[#E6E3E7] border-l-4 ${accentStyle.border} bg-white p-5 shadow-xs hover:shadow-lg ${accentStyle.glow} transition-all duration-200 h-full`}
+      className={`group relative h-full overflow-hidden rounded-[18px] border border-[#ECE8EE] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#DCD5E0] hover:shadow-[0_14px_32px_rgba(59,5,92,0.08)] ${accentStyle.glow}`}
     >
+      <span
+        className={`pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-linear-to-r ${accentStyle.gradient} opacity-80`}
+        aria-hidden
+      />
       <div className="flex items-start justify-between gap-3 mb-3">
-        <p className="forms-bold text-mono-80 text-xs uppercase tracking-wide">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-mono-70">
           {label}
         </p>
         {icon && (
@@ -81,7 +85,7 @@ const StatCard: React.FC<StatCardProps> = ({
           </div>
         )}
       </div>
-      <p className="h4 font-primary text-mono-100 mb-2">{value}</p>
+      <p className="mb-2 font-primary text-[30px] leading-none text-mono-100">{value}</p>
       <div className="flex items-center gap-2 flex-wrap">
         {change != null && (
           <span

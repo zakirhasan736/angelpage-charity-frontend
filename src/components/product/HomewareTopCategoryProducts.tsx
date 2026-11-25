@@ -1,12 +1,8 @@
 'use client';
 import React from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import ProductCategoryCardV1 from '../common/cards/product/ProductCategoryCardV1';
+import CategoryTileRail from '../common/product-slider/CategoryTileRail';
 
-interface HomewareTopCategoryProductsProps {
+interface Props {
   secClassName?: string;
 }
 
@@ -43,55 +39,17 @@ const homewareCategories = [
   },
 ];
 
-const HomewareTopCategoryProducts: React.FC<
-  HomewareTopCategoryProductsProps
-> = ({ secClassName }) => {
-  return (
-    <section
-      className={`product-section ${secClassName || ''} bg-mono-0 pt-20 pb-[70px]`}
-    >
-      <div className="custom-container">
-        <div className="product-sec-title-box mb-6 flex sm:flex-col items-start justify-between gap-4">
-          <div className="product-title-box-left-cont">
-            <h4 className="title h4">Homeware favourites</h4>
-            <p className="body-small mt-2">
-              All homeware items are brand new and in the original packaging
-            </p>
-          </div>
-          <div className="product-title-box-right-cont sm:hidden pt-2"></div>
-        </div>
-      </div>
-      <div className="custom-container md:pr-0!">
-        <div className="product-category-area sm:pr-8 sm:pl-4 overflow-hidden">
-          <div className="product-category-wrapper">
-            <Swiper
-              spaceBetween={20}
-              slidesPerView={2}
-              navigation
-              modules={[Navigation, Autoplay]}
-              autoplay={{ delay: 4000, disableOnInteraction: false }}
-              breakpoints={{
-                640: { slidesPerView: 2, spaceBetween: 10 }, // Breakpoint for small screens
-                768: { slidesPerView: 3, spaceBetween: 15 }, // Breakpoint for medium screens
-                1024: { slidesPerView: 4.3, spaceBetween: 19 },
-              }}
-            >
-              {homewareCategories.map((item, index) => (
-                <SwiperSlide key={index}>
-                  <ProductCategoryCardV1
-                    productCategory={item.productCategory}
-                    productImageSrc={item.productImageSrc}
-                    productImageAlt={item.productImageAlt}
-                    productTitle={item.productTitle}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
+const tiles = homewareCategories.map(c => ({ title: c.productTitle, image: c.productImageSrc, href: c.productCategory }));
+
+const HomewareTopCategoryProducts: React.FC<Props> = ({ secClassName }) => (
+  <CategoryTileRail
+    eyebrow="Homeware"
+    title="Homeware favourites"
+    description="Brand new, in the original packaging."
+    tiles={tiles}
+    viewAllHref="/product?category=homeware"
+    className={secClassName || 'bg-[#FAF8FB]'}
+  />
+);
 
 export default HomewareTopCategoryProducts;

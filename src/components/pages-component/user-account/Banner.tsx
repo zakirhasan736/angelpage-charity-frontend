@@ -74,79 +74,65 @@ const BannerSection = () => {
   }
 
   return (
-    <section className="users-account-banner-section relative pt-0 pb-[50px] sm:pb-9">
-      <div className="profile-status-area  pt-10 sm:pt-8">
-        <div className="custom-container">
-          {!profileData.verified && (
-            <div className="email-verify-area text-center flex items-center justify-center gap-2">
-              <p className="text-error body-small">
-                Your email is not verified. Please verify your email.
-              </p>
-              <Button
-                variant="accend-link"
-                onClick={() => router.push('/auth/verify-email')}
-                className="underline!"
-              >
-                Verify Email
-              </Button>
-            </div>
-          )}
-
-          {/* Profile Completion Progress */}
-          {profileData.profileCompleted ? (
-            <p className="text-success text-center body-small">
-              Your profile is 100% complete!
-            </p>
-          ) : (
-            <div className="mb-0">
-              <p className="text-mono-100 mb-2 text-center body-small">
-                Complete your profile to 100%.
-              </p>
-              <p className="w-full py-0 mb-3 mt-0 body-small text-center">
-                Please select the account tab and complete your profile
-              </p>
-              <ProgressBar
-                progress={progress}
-                className="max-w-[650px] mx-auto w-full h-2 rounded-full"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+    <section className="users-account-banner-section bg-white pt-6 max-[767px]:pt-4">
       <div className="custom-container">
-        <div className="users-account-banner-wrapper pt-10 flex items-center justify-between sm:flex-col sm:items-start sm:gap-8">
-          <div className="users-account-left-cont flex items-center gap-4">
-            {!loading && userData ? (
-              <Image
-                src={
-                  userData.profileImage ||
-                  '/images/icons/elisp-profile-default-img.svg'
-                }
-                alt="user profile image"
-                className="rounded-full w-10 h-10 object-cover"
-                width={40}
-                height={40}
-              />
-            ) : (
-              <div className="skeleton bg-mono-40 h-10 w-10 shrink-0 rounded-full"></div>
-            )}
-            <div className="users-info-cont">
-              <h1 className="h5 sm:text-[17px]  font-primary user-profile-name whitespace-nowrap text-mono-100 mb-[2px]">
-                {userData?.firstName || 'Unknown'}
-              </h1>
-              <p className="user-username body-small">
-                {userData?.userName || 'Unknown'}
-              </p>
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#FCF2FF] via-white to-[#F2E8F8] p-8 ring-1 ring-[#ECE8EE] max-[767px]:rounded-[22px] max-[767px]:p-5">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[#E4D0F0]/70 blur-3xl" aria-hidden />
+          <div className="relative flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-start max-[991px]:gap-6">
+            <div className="flex items-center gap-5 max-[767px]:gap-4">
+              {!loading && userData ? (
+                <Image
+                  src={userData.profileImage || '/images/icons/elisp-profile-default-img.svg'}
+                  alt="Profile photo"
+                  className="h-[72px] w-[72px] rounded-full object-cover ring-4 ring-white shadow-[0_10px_24px_rgba(59,5,92,0.14)] max-[767px]:h-14 max-[767px]:w-14"
+                  width={72}
+                  height={72}
+                />
+              ) : (
+                <div className="skeleton h-[72px] w-[72px] shrink-0 rounded-full bg-mono-40" />
+              )}
+              <div className="min-w-0">
+                <p className="ap-eyebrow ap-eyebrow--plain">Seller dashboard</p>
+                <h1 className="ap-display user-profile-name mt-1.5 truncate text-[32px] max-[767px]:text-[24px]">
+                  {userData?.firstName || 'Welcome'}
+                </h1>
+                <p className="user-username mt-0.5 text-sm text-[#6B686E]">
+                  @{userData?.userName || 'member'}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="users-account-right-cont hidden  flex-col items-end sm:items-start">
-            <Button variant="primary" className="body-small ">
-              Turn on holiday mode
-            </Button>
-            <p className="forms text-mono-100 mt-2 md:max-w-[375px]">
-              In Holiday Mode, your active listings will be temporarily hidden
-              in the database.
-            </p>
+
+            <div className="w-full max-w-[380px] rounded-2xl bg-white/80 p-5 ring-1 ring-[#ECE8EE] backdrop-blur max-[991px]:max-w-full">
+              {profileData.profileCompleted ? (
+                <p className="flex items-center gap-2 text-sm font-medium text-[#138A21]">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E7F8E9]">✓</span>
+                  Your profile is complete
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-mono-100">Profile completion</span>
+                    <span className="font-semibold text-[#611192]">{Math.round(progress)}%</span>
+                  </div>
+                  <ProgressBar progress={progress} className="mt-3 h-2 w-full rounded-full" />
+                  <p className="mt-2 text-xs text-[#6B686E]">
+                    Finish your details in the Account tab to start selling faster.
+                  </p>
+                </>
+              )}
+              {!profileData.verified && (
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#FFF1F4] px-3 py-2.5">
+                  <p className="text-xs text-[#B0002A]">Your email is not verified yet.</p>
+                  <Button
+                    variant="accend-link"
+                    onClick={() => router.push('/auth/verify-email')}
+                    className="text-xs! text-[#B0002A]! [-webkit-text-fill-color:#B0002A]! underline!"
+                  >
+                    Verify email
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

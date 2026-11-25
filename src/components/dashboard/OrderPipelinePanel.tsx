@@ -86,7 +86,7 @@ const OrderPipelinePanel: React.FC<OrderPipelinePanelProps> = ({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+      <div className="grid grid-cols-1 min-[768px]:grid-cols-2 gap-4 mb-5">
         <div className="h-[180px] flex items-center justify-center">
           {pieData.length === 0 ? (
             <p className="text-mono-70 body-small">No orders yet</p>

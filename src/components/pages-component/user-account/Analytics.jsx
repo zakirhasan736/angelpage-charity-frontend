@@ -64,7 +64,7 @@ const AnalyticsPage = () => {
       }
     >
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Revenue"
             value={`£${(seller?.revenue || 0).toFixed(2)}`}
@@ -74,7 +74,7 @@ const AnalyticsPage = () => {
             accent="purple"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Items sold"
             value={seller?.itemsSold || 0}
@@ -84,7 +84,7 @@ const AnalyticsPage = () => {
             accent="green"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Items bought"
             value={buyer?.itemsBought || 0}
@@ -94,7 +94,7 @@ const AnalyticsPage = () => {
             accent="blue"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Money spent"
             value={`£${(buyer?.moneySpent || 0).toFixed(2)}`}
@@ -107,7 +107,7 @@ const AnalyticsPage = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 xl:col-span-7">
+        <div className="col-span-12 min-[1200px]:col-span-7">
           <PerformanceChart
             title="Selling performance"
             period={period}
@@ -119,7 +119,7 @@ const AnalyticsPage = () => {
             revenueLabel={`this ${apiPeriod}`}
           />
         </div>
-        <div className="col-span-12 xl:col-span-5">
+        <div className="col-span-12 min-[1200px]:col-span-5">
           <OrderPipelinePanel
             title="Sales pipeline"
             summary={seller?.statusSummary}
@@ -130,7 +130,7 @@ const AnalyticsPage = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 xl:col-span-7">
+        <div className="col-span-12 min-[1200px]:col-span-7">
           <PerformanceChart
             title="Purchase activity"
             period={period}
@@ -142,7 +142,7 @@ const AnalyticsPage = () => {
             revenueLabel="total spend"
           />
         </div>
-        <div className="col-span-12 xl:col-span-5">
+        <div className="col-span-12 min-[1200px]:col-span-5">
           <OrderPipelinePanel
             title="Purchase pipeline"
             summary={buyer?.statusSummary}
@@ -153,7 +153,7 @@ const AnalyticsPage = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Live listings"
             value={data?.listings?.live || 0}
@@ -161,7 +161,7 @@ const AnalyticsPage = () => {
             loading={loading}
           />
         </div>
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Conversations"
             value={messaging?.conversationCount || 0}
@@ -169,7 +169,7 @@ const AnalyticsPage = () => {
             loading={loading}
           />
         </div>
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Unread messages"
             value={messaging?.unreadCount || 0}

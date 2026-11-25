@@ -52,7 +52,7 @@ const CharityPayoutsPanel = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Profit received"
             value={`£${(charityFunds?.totalEarned || 0).toFixed(2)}`}
@@ -60,7 +60,7 @@ const CharityPayoutsPanel = () => {
             accent="green"
           />
         </div>
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Pending payout"
             value={`£${(charityFunds?.totalHeldFunds || 0).toFixed(2)}`}
@@ -68,7 +68,7 @@ const CharityPayoutsPanel = () => {
             accent="amber"
           />
         </div>
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Charity share"
             value="90%"

@@ -87,6 +87,9 @@ const UserAccountMenu = ({
     );
   }
 
+  const displayName = session.user.name || session.user.email || 'Your account';
+  const initial = (displayName || 'A').trim().charAt(0).toUpperCase();
+
   return (
     <div
       className={`user-account-dropdown-area relative ${showLabel ? 'text-center' : ''} ${className}`}
@@ -94,14 +97,20 @@ const UserAccountMenu = ({
     >
       <button
         type="button"
-        className={`user-account flex items-center cursor-pointer ${showLabel ? 'flex-col gap-[13px] w-full' : ''}`}
+        className={`user-account flex items-center cursor-pointer ${showLabel ? 'flex-col gap-[13px] w-full' : 'ap-icon-btn'}`}
         onClick={() => setIsOpen(prev => !prev)}
         aria-label="Account menu"
         aria-expanded={isOpen}
       >
-        <div className={showLabel ? 'icons-box' : ''}>
-          <UserIcon />
-        </div>
+        {showLabel ? (
+          <div className="icons-box">
+            <UserIcon />
+          </div>
+        ) : (
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#611192] text-sm font-semibold text-white ring-2 ring-[#F2E8F8]">
+            {initial}
+          </span>
+        )}
         {showLabel && (
           <p className="link-title font-secondary font-normal text-center text-mono-100 text-body-small xxs:text-[13px] leading-[150%]">
             {label}
@@ -111,31 +120,55 @@ const UserAccountMenu = ({
 
       {isOpen && (
         <div
-          className={`user-account-dropdown absolute z-999 w-[200px] rounded-lg border border-mono-40 bg-white py-2 shadow-lg ${dropdownPositionClass}`}
+          className={`user-account-dropdown ap-mega-enter absolute z-999 w-[248px] overflow-hidden rounded-2xl border border-[#ECE8EE] bg-white text-left shadow-[0_24px_48px_rgba(11,1,18,0.12)] ${dropdownPositionClass}`}
         >
-          <Link
-            href={accountPath}
-            className="block px-4 py-2 body-small text-mono-100 hover:bg-[#FCF2FF]"
-            onClick={() => setIsOpen(false)}
-          >
-            {isAdmin ? 'Admin dashboard' : 'Account overview'}
-          </Link>
-          {isAdmin && (
+          <div className="flex items-center gap-3 border-b border-[#ECE8EE] bg-[#FCF2FF] px-4 py-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#611192] text-sm font-semibold text-white">
+              {initial}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-mono-100">{displayName}</p>
+              <p className="truncate text-xs text-mono-70">
+                {isAdmin ? 'Administrator' : userRole === 'CHARITY' || userRole === 'CHARITY_STAFF' ? 'Charity account' : 'Member'}
+              </p>
+            </div>
+          </div>
+          <div className="p-2">
             <Link
-              href="/"
-              className="block px-4 py-2 body-small text-mono-100 hover:bg-[#FCF2FF]"
+              href={accountPath}
+              className="flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]"
               onClick={() => setIsOpen(false)}
             >
-              View storefront
+              {isAdmin ? 'Admin dashboard' : 'Dashboard'}
             </Link>
-          )}
-          <button
-            type="button"
-            className="block w-full text-left px-4 py-2 body-small text-mono-100 hover:bg-[#FCF2FF]"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
+            {!isAdmin && (
+              <Link
+                href="/favourite"
+                className="flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]"
+                onClick={() => setIsOpen(false)}
+              >
+                Favourites
+              </Link>
+            )}
+            {isAdmin && (
+              <Link
+                href="/"
+                className="flex items-center rounded-xl px-3 py-2.5 text-sm text-mono-100 transition hover:bg-[#FCF2FF] hover:text-[#611192]"
+                onClick={() => setIsOpen(false)}
+              >
+                View storefront
+              </Link>
+            )}
+          </div>
+          <div className="border-t border-[#ECE8EE] p-2">
+            <button
+              type="button"
+              className="flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-[#B0002A] transition hover:bg-[#FFF1F4]"
+              onClick={handleLogout}
+            >
+              Log out
+            </button>
+          </div>
         </div>
       )}
     </div>

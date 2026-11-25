@@ -29,7 +29,7 @@ const HomeLanding = () => {
       <AboutSection />
       <AngelPageInfoSection />
       <OurPlatformSection />
-      <LatestBlogsSection secClassName="bg-mono-0 pt-10 pb-20" />
+      <LatestBlogsSection />
     </div>
   );
 };

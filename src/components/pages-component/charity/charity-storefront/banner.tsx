@@ -1,8 +1,10 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
+import { BadgeCheck, MapPin, Package, Share2, Check } from 'lucide-react';
 
 interface CharityStore {
+  _id?: string;
   charityName?: string;
   charityNumber?: string;
   charityID?: string;
@@ -18,65 +20,102 @@ interface CharityStore {
   charityBannerImage?: string;
 }
 
-
 interface StoreFrontBannerProps {
   charityStore?: CharityStore;
   productCount: number;
+  actions?: React.ReactNode;
 }
 
 const StoreFrontBanner: React.FC<StoreFrontBannerProps> = ({
   charityStore = {},
   productCount,
-
+  actions,
 }) => {
+  const [copied, setCopied] = useState(false);
+  const location = charityStore.addresses?.[0];
+  const locationLabel = [location?.city, location?.country].filter(Boolean).join(', ');
+
+  const share = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: charityStore.charityName, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* user cancelled */
+    }
+  };
+
   return (
-    <section className="storefront-banner-component bg-mono-100 sm:bg-transparent sm:mt-2">
-      <div className="custom-container-full laptop-m:pl-6 sm:px-3">
-        <div className="storefront-banner-wrapper grid grid-cols-12 gap-2 sm:grid-col-full sm:relative sm:bg-mono-100">
-          <div className="col-span-5 w-full pr-[57px] laptop-x:pr-[103px] sm:col-span-full sm:order-2 laptop-m:pr-14 py-[42px] flex flex-col justify-end   bottom-0 left-0 sm:bg-mono-100 sm:pb-6 sm:pt-5 sm:px-6">
-            <div className="storefront-banner-cont max-w-[385px] ml-auto">
-              {charityStore ? (
-                <Image
-                  src={
-                    charityStore.profileImage || '/images/icons/charity-img.png'
-                  }
-                  className="w-10 h-10 object-cover mb-2 sm:mb-1 sm:w-8 sm:h-8"
-                  alt="charity-account charity logo image"
-                  width={40}
-                  height={40}
-                />
-              ) : (
-                <span className="skeleton bg-mono-40 h-10 w-10 rounded-full"></span>
-              )}
-              <h1 className="h3 storefront-banner-tittle capitalize! text-mono-0!">
-                {charityStore ? (
-                  charityStore.charityName
-                ) : (
-                  <span className="skeleton bg-mono-40 h-2 w-20"></span>
-                )}
-              </h1>
-              <p className="available-product-total-number body-small mt-2 sm:mt-1 text-mono-0!">
-                {productCount || '0'} items for sale
+    <section className="storefront-banner-component bg-white pt-5 max-[767px]:pt-3">
+      <div className="custom-container">
+        <div className="relative h-[340px] overflow-hidden rounded-[32px] bg-[#F2E8F8] max-[1280px]:h-[300px] max-[767px]:h-[170px] max-[767px]:rounded-[22px]">
+          <Image
+            src={
+              charityStore.charityBannerImage ||
+              '/images/charity-storefront/charity-banner-img1.png'
+            }
+            className="object-cover object-center"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 1248px) 100vw, 1200px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0112]/55 via-transparent to-transparent" />
+        </div>
+
+        <div className="relative flex items-start justify-between gap-6 px-8 max-[767px]:flex-col max-[767px]:gap-4 max-[767px]:px-2">
+          <div className="flex items-start gap-5 max-[767px]:gap-3">
+            <div className="relative -mt-14 h-[124px] w-[124px] shrink-0 overflow-hidden rounded-[28px] bg-white p-1.5 shadow-[0_18px_40px_rgba(59,5,92,0.18)] max-[767px]:-mt-9 max-[767px]:h-20 max-[767px]:w-20 max-[767px]:rounded-[20px]">
+              <Image
+                src={charityStore.profileImage || '/images/icons/charity-img.png'}
+                className="h-full w-full rounded-[22px] object-cover max-[767px]:rounded-[16px]"
+                alt={`${charityStore.charityName || 'Charity'} logo`}
+                width={124}
+                height={124}
+              />
+            </div>
+            <div className="pt-5 max-[767px]:pt-3">
+              <p className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#611192]">
+                <BadgeCheck className="h-4 w-4" aria-hidden />
+                Verified charity storefront
               </p>
+              <h1 className="ap-display mt-1 text-[36px] capitalize max-[767px]:text-[24px]">
+                {charityStore.charityName || 'Charity'}
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="ap-chip">
+                  <Package className="h-3.5 w-3.5" aria-hidden />
+                  {productCount || 0} items for sale
+                </span>
+                {locationLabel ? (
+                  <span className="ap-chip bg-[#FAF8FB]! text-[#474648]! ring-1 ring-[#ECE8EE]">
+                    <MapPin className="h-3.5 w-3.5" aria-hidden />
+                    {locationLabel}
+                  </span>
+                ) : null}
+                {charityStore.charityNumber ? (
+                  <span className="ap-chip bg-[#FAF8FB]! text-[#474648]! ring-1 ring-[#ECE8EE]">
+                    Reg. {charityStore.charityNumber}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
-          <div className="col-span-7 sm:col-span-full w-full sm:order-1">
-            <div className="storefront-banner-modal-img w-full h-[387px] sm:h-[156px]">
-              {charityStore ? (
-                <Image
-                  src={
-                    charityStore.charityBannerImage || 
-                    '/images/charity-storefront/charity-banner-img1.png'
-                  }
-                  className="w-full h-full object-cover object-top"
-                  alt="storefront charity model image"
-                  width={831}
-                  height={387}
-                />
-              ) : (
-                <div className="skeleton bg-mono-40 rounded-none! h-full w-full"></div>
-              )}
-            </div>
+          <div className="flex items-center gap-2 pt-6 max-[767px]:pt-0">
+            {actions}
+            <button
+              type="button"
+              onClick={share}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-medium text-[#611192] ring-1 ring-[#DCD5E0] transition hover:bg-[#FCF2FF]"
+            >
+              {copied ? <Check className="h-4 w-4" aria-hidden /> : <Share2 className="h-4 w-4" aria-hidden />}
+              {copied ? 'Link copied' : 'Share'}
+            </button>
           </div>
         </div>
       </div>

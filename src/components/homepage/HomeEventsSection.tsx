@@ -30,6 +30,7 @@ import { getDonationProgress } from '@/components/features/events/eventUtils';
 import { buildDonationCheckoutUrl } from '@/lib/eventDonationFlow';
 import type { CommunityEventRecord } from '@/lib/server-api';
 import { useGetEventsQuery } from '@/store/api/angelpageApi';
+import SectionHeading from '@/components/common/product-slider/SectionHeading';
 
 const FALLBACK_IMAGES = {
   donation: '/images/events/charity_event_hero.jpg',
@@ -226,9 +227,9 @@ const DonationColumnCard = ({
   return (
     <article
       onClick={() => onNavigate(event.slug)}
-      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[28px] bg-[#0B0112]"
+      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[28px] bg-white ring-1 ring-[#ECE8EE] transition duration-300 hover:shadow-[0_24px_50px_rgba(59,5,92,0.12)]"
     >
-      <div className="relative h-[340px] w-full overflow-hidden sm:h-56">
+      <div className="relative h-[360px] w-full overflow-hidden max-[767px]:h-56">
         <Image
           src={event.image}
           alt={event.title}
@@ -256,7 +257,7 @@ const DonationColumnCard = ({
           <Share2 className="h-4 w-4" aria-hidden />
         </button>
         <div className="absolute inset-x-0 bottom-0 p-6">
-          <h3 className="font-primary max-w-lg text-4xl leading-none text-white! sm:text-3xl">
+          <h3 className="font-primary max-w-lg text-4xl leading-none text-white! max-[767px]:text-3xl">
             {event.title}
           </h3>
         </div>
@@ -270,8 +271,8 @@ const DonationColumnCard = ({
             </span>
             <span className="font-medium text-[#611192]">{percentProgress}%</span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-[#F2E8F8]">
-            <div className="h-full rounded-full bg-[#611192]" style={{ width: `${percentProgress}%` }} />
+          <div className="h-2 overflow-hidden rounded-full bg-[#F2E8F8]">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#611192] to-[#9B4DCA] transition-all duration-700" style={{ width: `${percentProgress}%` }} />
           </div>
           <p className="mt-2 text-xs text-[#8A7E90]">Goal ${target.toLocaleString()}</p>
         </div>
@@ -281,8 +282,10 @@ const DonationColumnCard = ({
               key={val}
               type="button"
               onClick={() => setAmount(val)}
-              className={`rounded-full py-2 text-sm font-medium ${
-                amount === val ? 'bg-[#611192] text-white!' : 'bg-[#FCF2FF] text-[#611192]!'
+              className={`rounded-xl border py-2.5 text-sm font-medium transition ${
+                amount === val
+                  ? 'border-[#611192] bg-[#611192] text-white! shadow-[0_6px_16px_rgba(97,17,146,0.24)]'
+                  : 'border-[#ECE8EE] bg-white text-[#611192]! hover:border-[#611192]/50'
               }`}
             >
               ${val}
@@ -293,7 +296,7 @@ const DonationColumnCard = ({
           type="button"
           onClick={handleDonate}
           disabled={isDonating || !amount}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#611192] py-3 text-sm font-medium text-white! disabled:opacity-50"
+          className="mt-auto inline-flex h-[50px] items-center justify-center gap-2 rounded-full bg-[#611192] text-sm font-medium text-white! shadow-[0_10px_24px_rgba(97,17,146,0.24)] transition hover:bg-[#3B055C] disabled:opacity-50"
         >
           {isDonating ? 'Opening checkout' : `Give $${amount}`}
           <ArrowRight className="h-4 w-4" aria-hidden />
@@ -368,64 +371,81 @@ const PollColumnCard = ({
   return (
     <article
       onClick={() => onNavigate(event.slug)}
-      className="overflow-hidden rounded-[28px] bg-white"
+      className="group cursor-pointer overflow-hidden rounded-[28px] bg-white ring-1 ring-[#ECE8EE] transition duration-300 hover:shadow-[0_20px_44px_rgba(59,5,92,0.1)]"
     >
-      <div className="relative h-36">
-        <Image src={event.image} alt={event.title} fill className="object-cover" sizes="40vw" />
-        <div className="absolute inset-0 bg-linear-to-t from-[#0B0112]/70 to-transparent" />
-        <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
-          <div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-[#611192]!">
-              <TrendingUp className="h-3 w-3" aria-hidden />
-              Vote
-            </span>
-            <h3 className="font-primary mt-2 text-2xl leading-none text-white!">{event.title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onShare(event);
-            }}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#611192]"
-            aria-label="Share this vote"
-          >
-            <Share2 className="h-3.5 w-3.5" aria-hidden />
-          </button>
+      <div className="flex items-start gap-4 p-5 pb-4">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
+          <Image src={event.image} alt="" fill className="object-cover" sizes="64px" />
         </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="ap-chip h-6! px-2.5! text-[11px]!">
+              <TrendingUp className="h-3 w-3" aria-hidden />
+              Community vote
+            </span>
+            <CompactCountdown targetDate={event.targetDate} />
+          </div>
+          <h3 className="mt-2 font-primary text-[20px] leading-tight text-[#0B0112]">{event.title}</h3>
+        </div>
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onShare(event);
+          }}
+          className="ap-icon-btn h-9! w-9! shrink-0 ring-1 ring-[#ECE8EE]"
+          aria-label="Share this vote"
+        >
+          <Share2 className="h-3.5 w-3.5" aria-hidden />
+        </button>
       </div>
-      <div className="space-y-2 p-4" onClick={e => e.stopPropagation()}>
+      <div className="space-y-2 px-5 pb-5" onClick={e => e.stopPropagation()}>
         {event.pollOptions.map((option, index) => {
           const isVoted = votedOption === index;
           const currentVotes = votes[index] || 0;
           const pct = Math.round((currentVotes / totalVotes) * 100);
+          const revealed = votedOption !== null;
           return (
             <button
               key={option.id}
               type="button"
               onClick={e => handleVote(e, index)}
-              disabled={votedOption !== null || voting}
-              className={`relative flex w-full items-center justify-between overflow-hidden rounded-2xl px-3 py-2.5 text-left text-sm ${
-                isVoted ? 'bg-[#611192] text-white!' : 'bg-[#FCF2FF] text-[#0B0112]!'
+              disabled={revealed || voting}
+              className={`relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-xl border px-4 py-3 text-left text-sm transition ${
+                isVoted
+                  ? 'border-[#611192] bg-white text-[#0B0112]!'
+                  : revealed
+                    ? 'border-[#ECE8EE] bg-white text-[#0B0112]!'
+                    : 'border-[#ECE8EE] bg-[#FAF8FB] text-[#0B0112]! hover:border-[#611192]/50 hover:bg-[#FCF2FF]'
               }`}
             >
-              {votedOption !== null && !isVoted && (
+              {revealed && (
                 <motion.span
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
-                  className="absolute inset-y-0 left-0 bg-[#E8D4F4]"
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  className={`absolute inset-y-0 left-0 ${isVoted ? 'bg-[#F2E8F8]' : 'bg-[#F6F4F7]'}`}
                 />
               )}
-              <span className="relative z-10 pr-3">{option.text}</span>
-              <span className={`relative z-10 text-xs ${isVoted ? 'text-white!' : 'text-[#611192]!'}`}>
-                {votedOption !== null ? `${pct}%` : currentVotes}
+              <span className="relative z-10 flex items-center gap-2 pr-3">
+                <span
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                    isVoted ? 'border-[#611192] bg-[#611192]' : 'border-[#C9C8CA] bg-white'
+                  }`}
+                >
+                  {isVoted && <CheckCircle2 className="h-3 w-3 text-white" aria-hidden />}
+                </span>
+                {option.text}
+              </span>
+              <span className="relative z-10 text-xs font-semibold text-[#611192]!">
+                {revealed ? `${pct}%` : ''}
               </span>
             </button>
           );
         })}
-        {votedOption !== null && (
-          <p className="pt-1 text-center text-xs text-[#8A7E90]">{totalVotes} votes</p>
-        )}
+        <p className="pt-1 text-xs text-[#8A7E90]">
+          {votedOption !== null ? `${totalVotes} votes · thanks for voting` : 'Tap an option to cast your vote'}
+        </p>
       </div>
     </article>
   );
@@ -453,49 +473,72 @@ const LiveColumnCard = ({
   return (
     <article
       onClick={() => onNavigate(event.slug)}
-      className="overflow-hidden rounded-[28px] bg-[#3B055C]"
+      className="group relative flex-1 cursor-pointer overflow-hidden rounded-[28px] bg-[#0B0112] text-white"
     >
-      <div className="relative h-36">
-        <Image src={event.image} alt={event.title} fill className="object-cover" sizes="40vw" />
-        <div className="absolute inset-0 bg-[#3B055C]/35" />
-        <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-[#611192]!">
-          <Radio className="h-3 w-3" aria-hidden />
-          Live
-        </div>
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            onShare(event);
-          }}
-          className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#611192]"
-          aria-label="Share this live event"
-        >
-          <Share2 className="h-3.5 w-3.5" aria-hidden />
-        </button>
+      <div className="absolute inset-0">
+        <Image
+          src={event.image}
+          alt=""
+          fill
+          className="object-cover opacity-55 transition duration-700 group-hover:scale-105"
+          sizes="40vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0112] via-[#3B055C]/70 to-[#3B055C]/20" />
       </div>
-      <div className="p-4" onClick={e => e.stopPropagation()}>
-        <h3 className="font-primary text-2xl leading-none text-white!">{event.title}</h3>
-        <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/80!">{event.description}</p>
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-white/80!">
-          <User className="h-3.5 w-3.5" aria-hidden />
-          {event.authorName || 'Angelpage host'}
-          {event.category ? ` · ${event.category}` : ''}
-        </p>
-        <button
-          type="button"
-          onClick={handleRsvp}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white py-2.5 text-sm font-medium text-[#611192]!"
-        >
-          {rsvped ? (
-            <>
-              <CheckCircle2 className="h-4 w-4" aria-hidden />
-              Saved
-            </>
-          ) : (
-            'Remind me'
-          )}
-        </button>
+      <div className="relative flex h-full min-h-[300px] flex-col p-5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="ap-chip ap-chip--live h-7! text-[11px]! font-semibold! tracking-wide">
+            <span className="ap-live-dot" aria-hidden />
+            LIVE SESSION
+          </span>
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onShare(event);
+            }}
+            className="ap-arrow ap-arrow--dark h-9! w-9!"
+            aria-label="Share this live event"
+          >
+            <Share2 className="h-3.5 w-3.5" aria-hidden />
+          </button>
+        </div>
+        <div className="mt-auto pt-10" onClick={e => e.stopPropagation()}>
+          <div className="mb-3 flex items-center gap-2 text-[12px] font-medium text-white!">
+            <Radio className="h-3.5 w-3.5" aria-hidden />
+            Starts in
+            <CompactCountdown targetDate={event.targetDate} />
+          </div>
+          <h3 className="font-primary text-[26px] leading-tight text-white!">{event.title}</h3>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/75!">{event.description}</p>
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/15 pt-4">
+            <p className="flex min-w-0 items-center gap-2 text-xs text-white/85!">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
+                <User className="h-4 w-4" aria-hidden />
+              </span>
+              <span className="truncate text-white!">
+                {event.authorName || 'Angelpage host'}
+                {event.category ? <span className="block text-white/55!">{event.category}</span> : null}
+              </span>
+            </p>
+            <button
+              type="button"
+              onClick={handleRsvp}
+              className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition ${
+                rsvped ? 'bg-[#1FC430] text-white!' : 'bg-white text-[#611192]! hover:bg-[#F2E8F8]'
+              }`}
+            >
+              {rsvped ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" aria-hidden />
+                  Reminder set
+                </>
+              ) : (
+                'Remind me'
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </article>
   );
@@ -588,7 +631,7 @@ export default function HomeEventsSection() {
             <SkeletonLine className="h-3 w-40" />
             <SkeletonLine className="h-8 w-64" />
           </div>
-          <div className="grid grid-cols-3 gap-6 sm:grid-cols-1">
+          <div className="grid grid-cols-3 gap-6 max-[767px]:grid-cols-1">
             {Array.from({ length: 3 }).map((_, index) => (
               <EventCardSkeleton key={index} />
             ))}
@@ -599,31 +642,26 @@ export default function HomeEventsSection() {
   }
 
   return (
-    <section className="bg-[#FCF2FF] py-16">
+    <section className="ap-section relative overflow-hidden bg-gradient-to-b from-[#FCF2FF] to-[#FAF8FB]">
       <div className="custom-container">
-        <div className="mb-8 flex items-end justify-between gap-6 sm:flex-col sm:items-start">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#611192]">
-              Events
-            </p>
-            <h2 className="font-primary mt-2 text-[2.6rem] leading-none text-[#0B0112]">
-              Give beside the shop
-            </h2>
-            <p className="mt-3 max-w-md text-sm leading-6 text-[#5C5560]">
-              One appeal to support, one vote to shape, and one live moment to follow.
-            </p>
-          </div>
-          <Link
-            href="/events"
-            className="inline-flex items-center gap-2 rounded-full bg-[#611192] px-5 py-2.5 text-sm font-medium text-white!"
-          >
-            All events
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </div>
+        <SectionHeading
+          eyebrow="Events & live"
+          title="Give beside the shop"
+          description="Support an appeal, shape where funds go next, and join charities live from the ground."
+          className="mb-10 max-[767px]:mb-6"
+          actions={
+            <Link
+              href="/events"
+              className="group inline-flex items-center gap-2 rounded-full bg-[#611192] px-5 py-3 text-sm font-medium text-white! shadow-[0_8px_20px_rgba(97,17,146,0.22)] transition hover:bg-[#3B055C]"
+            >
+              All events
+              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+            </Link>
+          }
+        />
 
-        <div className="grid grid-cols-12 items-start gap-5 sm:grid-cols-1">
-          <div className="col-span-7 sm:col-span-full">
+        <div className="grid grid-cols-12 items-stretch gap-5 max-[991px]:grid-cols-1">
+          <div className="col-span-7 max-[991px]:col-span-full">
             <DonationColumnCard
               event={bento.donation}
               raisedAmount={donationRaised}
@@ -632,7 +670,7 @@ export default function HomeEventsSection() {
               onDonate={handleOpenDonation}
             />
           </div>
-          <div className="col-span-5 flex flex-col gap-5 sm:col-span-full">
+          <div className="col-span-5 flex flex-col gap-5 max-[991px]:col-span-full">
             <PollColumnCard
               event={bento.poll}
               onNavigate={handleNavigate}

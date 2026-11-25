@@ -19,10 +19,11 @@ import UserEarningsPanel from '@/components/account/UserEarningsPanel';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import SocialDashboard from '@/components/social/SocialDashboard';
 import GalleryPanel from '@/components/gallery/GalleryPanel';
-import AccountTabNav, {
+import {
   type AccountTab,
   type AccountTabGroup,
 } from '@/components/account/AccountTabNav';
+import DashboardLayout from '@/components/account/DashboardLayout';
 
 interface ProductResponse {
   products: Product[];
@@ -115,66 +116,51 @@ const UsersAccount = () => {
   return (
     <div className="charity-account-main-wrapper">
       <BannerSection />
-      <div className="charity-storefront-wrapper-area">
-        <div className="storefront-tabs-area">
-          <div className="storefront-tabs-box">
-            <div className="custom-container">
-              <div className="custom-container pt-[51px] pb-[17px] sm:pb-0 sm:pt-8">
-                <AccountTabNav
-                  tabs={tabsWithBadges}
-                  groups={USER_TAB_GROUPS}
-                  activeTabId={activeTabId}
-                  onTabChange={setActiveTabId}
-                  trailing={<LogoutButton />}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="charity-account-tabs-cont-area pb-20">
-            <div className="custom-container">
-              <ul className="tabs-content-area">
-                {activeTabId === 'analytics' && (
-                  <li className="tabs-cont-item"><AnalyticsPage /></li>
-                )}
-                {activeTabId === 'account' && (
-                  <li className="tabs-cont-item"><UsersAccountInfoMain /></li>
-                )}
-                {activeTabId === 'listings' && (
-                  <li className="tabs-cont-item"><UsersProductListingArea /></li>
-                )}
-                {activeTabId === 'affiliate' && (
-                  <li className="tabs-cont-item"><AffiliateDashboard /></li>
-                )}
-                {activeTabId === 'gallery' && (
-                  <li className="tabs-cont-item"><GalleryPanel /></li>
-                )}
-                {activeTabId === 'social' && (
-                  <li className="tabs-cont-item"><SocialDashboard /></li>
-                )}
-                {activeTabId === 'sold' && (
-                  <li className="tabs-cont-item"><SoldItemsPage /></li>
-                )}
-                {activeTabId === 'bought' && (
-                  <li className="tabs-cont-item"><BoughtItemsPage /></li>
-                )}
-                {activeTabId === 'messages' && (
-                  <li className="tabs-cont-item"><AccountMessagingPanel /></li>
-                )}
-                {activeTabId === 'notifications' && (
-                  <li className="tabs-cont-item"><NotificationsCentre /></li>
-                )}
-                {activeTabId === 'earnings' && (
-                  <li className="tabs-cont-item"><UserEarningsPanel /></li>
-                )}
-                {activeTabId === 'delete' && (
-                  <li className="tabs-cont-item"><DeleteAccount /></li>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardLayout
+        tabs={tabsWithBadges}
+        groups={USER_TAB_GROUPS}
+        activeTabId={activeTabId}
+        onTabChange={setActiveTabId}
+        trailing={<LogoutButton />}
+        title="Seller dashboard"
+      >
+            {activeTabId === 'analytics' && (
+              <li className="tabs-cont-item"><AnalyticsPage /></li>
+            )}
+            {activeTabId === 'account' && (
+              <li className="tabs-cont-item"><UsersAccountInfoMain /></li>
+            )}
+            {activeTabId === 'listings' && (
+              <li className="tabs-cont-item"><UsersProductListingArea /></li>
+            )}
+            {activeTabId === 'affiliate' && (
+              <li className="tabs-cont-item"><AffiliateDashboard /></li>
+            )}
+            {activeTabId === 'gallery' && (
+              <li className="tabs-cont-item"><GalleryPanel /></li>
+            )}
+            {activeTabId === 'social' && (
+              <li className="tabs-cont-item"><SocialDashboard /></li>
+            )}
+            {activeTabId === 'sold' && (
+              <li className="tabs-cont-item"><SoldItemsPage /></li>
+            )}
+            {activeTabId === 'bought' && (
+              <li className="tabs-cont-item"><BoughtItemsPage /></li>
+            )}
+            {activeTabId === 'messages' && (
+              <li className="tabs-cont-item"><AccountMessagingPanel /></li>
+            )}
+            {activeTabId === 'notifications' && (
+              <li className="tabs-cont-item"><NotificationsCentre /></li>
+            )}
+            {activeTabId === 'earnings' && (
+              <li className="tabs-cont-item"><UserEarningsPanel /></li>
+            )}
+            {activeTabId === 'delete' && (
+              <li className="tabs-cont-item"><DeleteAccount /></li>
+            )}
+      </DashboardLayout>
     </div>
   );
 };

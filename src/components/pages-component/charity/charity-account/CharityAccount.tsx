@@ -20,10 +20,11 @@ import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import SocialDashboard from '@/components/social/SocialDashboard';
 import GalleryPanel from '@/components/gallery/GalleryPanel';
 import LogoutButton from '@/components/elements/button/LogoutButton';
-import AccountTabNav, {
+import {
   type AccountTab,
   type AccountTabGroup,
 } from '@/components/account/AccountTabNav';
+import DashboardLayout from '@/components/account/DashboardLayout';
 import { getCharityTabsForSession } from '@/constants/charityPanels';
 
 const CHARITY_TAB_GROUP_DEFS: AccountTabGroup[] = [
@@ -124,100 +125,85 @@ const CharityAccount = () => {
           </p>
         </div>
       )}
-      <div className="charity-storefront-wrapper-area">
-        <div className="storefront-tabs-area">
-          <div className="storefront-tabs-box">
-            <div className="custom-container">
-              <div className="custom-container pt-[51px] pb-[17px] sm:pb-0 sm:pt-8">
-                <AccountTabNav
-                  tabs={charityNavTabs}
-                  groups={charityGroups}
-                  activeTabId={activeTabId}
-                  onTabChange={setActiveTabId}
-                  trailing={<LogoutButton />}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="charity-account-tabs-cont-area pb-20">
-            <div className="custom-container">
-              <ul className="tabs-content-area">
-                {activeTabId === 'analytics' && (
-                  <li className="tabs-cont-item">
-                    <AnalyticsPage />
-                  </li>
-                )}
-                {activeTabId === 'account' && (
-                  <li className="tabs-cont-item">
-                    <CharityAccountInfoMain />
-                  </li>
-                )}
-                {activeTabId === 'listings' && (
-                  <li className="tabs-cont-item">
-                    <CharityProductListingArea />
-                  </li>
-                )}
-                {activeTabId === 'product-sync' && (
-                  <li className="tabs-cont-item">
-                    <CharityProductIntegrationPanel />
-                  </li>
-                )}
-                {activeTabId === 'affiliate' && (
-                  <li className="tabs-cont-item">
-                    <AffiliateDashboard />
-                  </li>
-                )}
-                {activeTabId === 'gallery' && (
-                  <li className="tabs-cont-item">
-                    <GalleryPanel />
-                  </li>
-                )}
-                {activeTabId === 'social' && (
-                  <li className="tabs-cont-item">
-                    <SocialDashboard />
-                  </li>
-                )}
-                {activeTabId === 'sold' && (
-                  <li className="tabs-cont-item">
-                    <SoldItems />
-                  </li>
-                )}
-                {activeTabId === 'messages' && (
-                  <li className="tabs-cont-item">
-                    <AccountMessagingPanel />
-                  </li>
-                )}
-                {activeTabId === 'notifications' && (
-                  <li className="tabs-cont-item">
-                    <NotificationsCentre />
-                  </li>
-                )}
-                {activeTabId === 'payouts' && (
-                  <li className="tabs-cont-item">
-                    <CharityPayoutsPanel />
-                  </li>
-                )}
-                {activeTabId === 'community' && (
-                  <li className="tabs-cont-item">
-                    <CharityCommunityPanel />
-                  </li>
-                )}
-                {activeTabId === 'team' && (
-                  <li className="tabs-cont-item">
-                    <CharityStaffPanel />
-                  </li>
-                )}
-                {activeTabId === 'delete' && (
-                  <li className="tabs-cont-item">
-                    <DeleteAccount />
-                  </li>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardLayout
+        tabs={charityNavTabs}
+        groups={charityGroups}
+        activeTabId={activeTabId}
+        onTabChange={setActiveTabId}
+        trailing={<LogoutButton />}
+        title="Charity dashboard"
+      >
+            {activeTabId === 'analytics' && (
+              <li className="tabs-cont-item">
+                <AnalyticsPage />
+              </li>
+            )}
+            {activeTabId === 'account' && (
+              <li className="tabs-cont-item">
+                <CharityAccountInfoMain />
+              </li>
+            )}
+            {activeTabId === 'listings' && (
+              <li className="tabs-cont-item">
+                <CharityProductListingArea />
+              </li>
+            )}
+            {activeTabId === 'product-sync' && (
+              <li className="tabs-cont-item">
+                <CharityProductIntegrationPanel />
+              </li>
+            )}
+            {activeTabId === 'affiliate' && (
+              <li className="tabs-cont-item">
+                <AffiliateDashboard />
+              </li>
+            )}
+            {activeTabId === 'gallery' && (
+              <li className="tabs-cont-item">
+                <GalleryPanel />
+              </li>
+            )}
+            {activeTabId === 'social' && (
+              <li className="tabs-cont-item">
+                <SocialDashboard />
+              </li>
+            )}
+            {activeTabId === 'sold' && (
+              <li className="tabs-cont-item">
+                <SoldItems />
+              </li>
+            )}
+            {activeTabId === 'messages' && (
+              <li className="tabs-cont-item">
+                <AccountMessagingPanel />
+              </li>
+            )}
+            {activeTabId === 'notifications' && (
+              <li className="tabs-cont-item">
+                <NotificationsCentre />
+              </li>
+            )}
+            {activeTabId === 'payouts' && (
+              <li className="tabs-cont-item">
+                <CharityPayoutsPanel />
+              </li>
+            )}
+            {activeTabId === 'community' && (
+              <li className="tabs-cont-item">
+                <CharityCommunityPanel />
+              </li>
+            )}
+            {activeTabId === 'team' && (
+              <li className="tabs-cont-item">
+                <CharityStaffPanel />
+              </li>
+            )}
+            {activeTabId === 'delete' && (
+              <li className="tabs-cont-item">
+                <DeleteAccount />
+              </li>
+            )}
+      </DashboardLayout>
     </div>
   );
 };

@@ -57,56 +57,50 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     fetchData();
   }, [session, status]);
 
+  const stats = [
+    { label: 'Live items on platform', value: liveProductsCount },
+    { label: 'Items sold on platform', value: soldItemsCount },
+  ];
+
   return (
-    <section className="users-account-banner-section relative pt-0 pb-[50px] sm:pb-9">
+    <section className="users-account-banner-section bg-white pt-6 max-[767px]:pt-4">
       <div className="custom-container">
-        <div className="users-account-banner-wrapper pt-10 flex flex-col gap-2 items-start gap-8">
-          <div className="users-account-left-cont flex items-center gap-4">
-            {!loading && adminData ? (
-              <Image
-                src={
-                  adminData.profileImage ||
-                  '/images/icons/elisp-profile-default-img.svg'
-                }
-                alt="user profile image"
-                className="rounded-full w-10 h-10 object-cover"
-                width={40}
-                height={40}
-              />
-            ) : (
-              <div className="skeleton bg-mono-40 h-10 w-10 shrink-0 rounded-full"></div>
-            )}
-            <div className="users-info-cont">
-              <h1 className="h5 font-primary user-profile-name whitespace-nowrap text-mono-100 mb-[2px]">
-                {!loading && adminData ? (
-                  <>{adminData?.firstName || 'Unknown'}</>
-                ) : (
-                  <div className="skeleton bg-mono-40 h-3 w-[120px] shrink-0 rounded-full"></div>
-                )}
-              </h1>
-              <p className="user-username body-small">
-                {!loading && adminData ? (
-                  <> {adminData?.userName || 'Unknown'}</>
-                ) : (
-                  <span className="skeleton bg-mono-40 h-3 w-[120px] block rounded-full"></span>
-                )}
-              </p>
+        <div className="relative overflow-hidden rounded-[28px] bg-[#0B0112] p-8 max-[767px]:rounded-[22px] max-[767px]:p-5">
+          <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#611192]/50 blur-[90px]" aria-hidden />
+          <div className="relative flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-start max-[991px]:gap-6">
+            <div className="flex items-center gap-5 max-[767px]:gap-4">
+              {!loading && adminData ? (
+                <Image
+                  src={adminData.profileImage || '/images/icons/elisp-profile-default-img.svg'}
+                  alt="Profile photo"
+                  className="h-[72px] w-[72px] rounded-full bg-white object-cover ring-4 ring-white/15 max-[767px]:h-14 max-[767px]:w-14"
+                  width={72}
+                  height={72}
+                />
+              ) : (
+                <div className="skeleton h-[72px] w-[72px] shrink-0 rounded-full bg-white/10" />
+              )}
+              <div className="min-w-0">
+                <p className="ap-eyebrow ap-eyebrow--plain text-[#D9B8EE]!">Admin console</p>
+                <h1 className="ap-display user-profile-name mt-1.5 truncate text-[32px] text-white! max-[767px]:text-[24px]">
+                  {!loading && adminData ? adminData?.firstName || 'Admin' : (
+                    <span className="skeleton block h-6 w-[160px] rounded-full bg-white/10" />
+                  )}
+                </h1>
+                <p className="user-username mt-0.5 text-sm text-white/60!">
+                  {!loading && adminData ? `@${adminData?.userName || 'admin'}` : ''}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="users-account-right-cont flex flex-col">
-            <ul className="list-off-site-info flex items-center gap-3">
-              <li className="body-small text-mono-80 font-secondary font-normal leading-[150%]">
-                <span className="body-small text-mono-80 font-secondary leading-[150%] font-bold">
-                  {liveProductsCount}
-                </span>{' '}
-                total items for sale on platform
-              </li>
-              <li className="body-small text-mono-80 font-secondary font-normal leading-[150%]">
-                <span className="body-small text-mono-80 font-secondary leading-[150%] font-bold">
-                  {soldItemsCount}
-                </span>{' '}
-                items sold on platform
-              </li>
+            <ul className="list-off-site-info grid grid-cols-2 gap-3 max-[767px]:w-full">
+              {stats.map(stat => (
+                <li key={stat.label} className="min-w-[180px] rounded-2xl bg-white/8 px-5 py-4 ring-1 ring-white/10 max-[767px]:min-w-0">
+                  <p className="font-primary text-[28px] leading-none text-white!">
+                    {Number(stat.value || 0).toLocaleString()}
+                  </p>
+                  <p className="mt-2 text-xs text-white/60!">{stat.label}</p>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

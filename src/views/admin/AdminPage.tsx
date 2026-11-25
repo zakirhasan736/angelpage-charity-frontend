@@ -19,10 +19,11 @@ import AdminRoleBanner from '@/components/admin/AdminRoleBanner';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import SocialDashboard from '@/components/social/SocialDashboard';
 import GalleryPanel from '@/components/gallery/GalleryPanel';
-import AccountTabNav, {
+import {
   type AccountTab,
   type AccountTabGroup,
 } from '@/components/account/AccountTabNav';
+import DashboardLayout from '@/components/account/DashboardLayout';
 import { getTabsForRole } from '@/constants/adminPanels';
 
 const ADMIN_TAB_GROUP_DEFS: AccountTabGroup[] = [
@@ -252,129 +253,116 @@ const AdminAccount = () => {
   return (
     <div className="charity-account-main-wrapper">
       <BannerSection loading={loading} soldItemsCount={soldItemsCount} />
-      <div className="charity-storefront-wrapper-area">
-        <div className="storefront-tabs-area">
-          <div className="storefront-tabs-box">
-            <div className="custom-container">
-              <div className="custom-container pb-[17px] sm:pb-0 sm:pt-8">
-                <AccountTabNav
-                  tabs={adminNavTabs}
-                  groups={adminGroups}
-                  activeTabId={activeTabId}
-                  onTabChange={setActiveTabId}
-                  trailing={<LogoutButton />}
+      <DashboardLayout
+        tabs={adminNavTabs}
+        groups={adminGroups}
+        activeTabId={activeTabId}
+        onTabChange={setActiveTabId}
+        trailing={<LogoutButton />}
+        title="Admin console"
+        notice={
+          <AdminRoleBanner
+            role={session?.user?.role}
+            permissions={
+              (session?.user as { permissions?: string[] })?.permissions
+            }
+          />
+        }
+      >
+            {activeTabId === 'analytics' && (
+              <li className="tabs-cont-item">
+                <AnalyticsPage
+                  totalUsersLength={totalUsers}
+                  userChangePerchent={userChangePercent}
+                  soldItemsCount={soldItemsCount}
+                  totalRevenue={totalRevenue}
+                  salesChange={salesChange}
+                  totalReturningUsers={totalReturningUser}
+                  returningUserPercent={returningUserPercent}
+                  totalUserSessions={totalUserSessions}
+                  sessionsUserPercent={sessionsUserPercent}
+                  productDetails={productDetails}
+                  salesChartData={salesChartData}
+                  loading={loading}
+                  onPeriodChange={p =>
+                    fetchSalesStats(
+                      p === 'Week' ? 'week' : p === 'Year' ? 'year' : 'month'
+                    )
+                  }
                 />
-              </div>
-            </div>
-          </div>
-
-          <div className="charity-account-tabs-cont-area pb-20">
-            <div className="custom-container">
-              <AdminRoleBanner
-                role={session?.user?.role}
-                permissions={
-                  (session?.user as { permissions?: string[] })?.permissions
-                }
-              />
-              <ul className="tabs-content-area">
-                {activeTabId === 'analytics' && (
-                  <li className="tabs-cont-item">
-                    <AnalyticsPage
-                      totalUsersLength={totalUsers}
-                      userChangePerchent={userChangePercent}
-                      soldItemsCount={soldItemsCount}
-                      totalRevenue={totalRevenue}
-                      salesChange={salesChange}
-                      totalReturningUsers={totalReturningUser}
-                      returningUserPercent={returningUserPercent}
-                      totalUserSessions={totalUserSessions}
-                      sessionsUserPercent={sessionsUserPercent}
-                      productDetails={productDetails}
-                      salesChartData={salesChartData}
-                      loading={loading}
-                      onPeriodChange={p =>
-                        fetchSalesStats(
-                          p === 'Week' ? 'week' : p === 'Year' ? 'year' : 'month'
-                        )
-                      }
-                    />
-                  </li>
-                )}
-                {activeTabId === 'account' && (
-                  <li className="tabs-cont-item">
-                    <UsersAccountInfoMain />
-                  </li>
-                )}
-                {activeTabId === 'charity-import' && (
-                  <li className="tabs-cont-item">
-                    <UploadPage />
-                  </li>
-                )}
-                {activeTabId === 'affiliate-import' && (
-                  <li className="tabs-cont-item">
-                    <AffiliateDashboard allowEbayImport />
-                  </li>
-                )}
-                {activeTabId === 'gallery' && (
-                  <li className="tabs-cont-item">
-                    <GalleryPanel allowModeration />
-                  </li>
-                )}
-                {activeTabId === 'social-posting' && (
-                  <li className="tabs-cont-item">
-                    <SocialDashboard />
-                  </li>
-                )}
-                {activeTabId === 'review' && (
-                  <li className="tabs-cont-item">
-                    <PendingListings />
-                  </li>
-                )}
-                {activeTabId === 'product-reviews' && (
-                  <li className="tabs-cont-item">
-                    <ProductReviewsAdmin />
-                  </li>
-                )}
-                {activeTabId === 'promoted' && (
-                  <li className="tabs-cont-item">
-                    <PromotedListingsAdmin />
-                  </li>
-                )}
-                {activeTabId === 'blog' && (
-                  <li className="tabs-cont-item">
-                    <BlogAdmin />
-                  </li>
-                )}
-                {activeTabId === 'events' && (
-                  <li className="tabs-cont-item">
-                    <EventsAdmin />
-                  </li>
-                )}
-                {activeTabId === 'team' && (
-                  <li className="tabs-cont-item">
-                    <AdminTeamPanel />
-                  </li>
-                )}
-                {activeTabId === 'operations' && (
-                  <li className="tabs-cont-item">
-                    <OperationsPanel />
-                  </li>
-                )}
-                {activeTabId === 'finance' && (
-                  <li className="tabs-cont-item">
-                    <FinancePanel />
-                  </li>
-                )}
-                {activeTabId === 'audit' && (
-                  <li className="tabs-cont-item">
-                    <AdminAuditLogPanel />
-                  </li>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+              </li>
+            )}
+            {activeTabId === 'account' && (
+              <li className="tabs-cont-item">
+                <UsersAccountInfoMain />
+              </li>
+            )}
+            {activeTabId === 'charity-import' && (
+              <li className="tabs-cont-item">
+                <UploadPage />
+              </li>
+            )}
+            {activeTabId === 'affiliate-import' && (
+              <li className="tabs-cont-item">
+                <AffiliateDashboard allowEbayImport />
+              </li>
+            )}
+            {activeTabId === 'gallery' && (
+              <li className="tabs-cont-item">
+                <GalleryPanel allowModeration />
+              </li>
+            )}
+            {activeTabId === 'social-posting' && (
+              <li className="tabs-cont-item">
+                <SocialDashboard />
+              </li>
+            )}
+            {activeTabId === 'review' && (
+              <li className="tabs-cont-item">
+                <PendingListings />
+              </li>
+            )}
+            {activeTabId === 'product-reviews' && (
+              <li className="tabs-cont-item">
+                <ProductReviewsAdmin />
+              </li>
+            )}
+            {activeTabId === 'promoted' && (
+              <li className="tabs-cont-item">
+                <PromotedListingsAdmin />
+              </li>
+            )}
+            {activeTabId === 'blog' && (
+              <li className="tabs-cont-item">
+                <BlogAdmin />
+              </li>
+            )}
+            {activeTabId === 'events' && (
+              <li className="tabs-cont-item">
+                <EventsAdmin />
+              </li>
+            )}
+            {activeTabId === 'team' && (
+              <li className="tabs-cont-item">
+                <AdminTeamPanel />
+              </li>
+            )}
+            {activeTabId === 'operations' && (
+              <li className="tabs-cont-item">
+                <OperationsPanel />
+              </li>
+            )}
+            {activeTabId === 'finance' && (
+              <li className="tabs-cont-item">
+                <FinancePanel />
+              </li>
+            )}
+            {activeTabId === 'audit' && (
+              <li className="tabs-cont-item">
+                <AdminAuditLogPanel />
+              </li>
+            )}
+      </DashboardLayout>
     </div>
   );
 };
