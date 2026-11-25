@@ -2,7 +2,6 @@
 
 import { Footer, Header } from '@/components';
 import AuthProvider from '@utils/AuthProvider';
-import MobileFloatingSellCta from '@/components/homepage/MobileFloatingSellCta';
 import AdminBrowseBar from '@/components/admin/AdminBrowseBar';
 import MarketPreferenceDialog from '@/components/market/MarketPreferenceDialog';
 import CookieConsent from '@/components/cookies/CookieConsent';
@@ -13,6 +12,8 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   useSyncApiAuth();
   const pathname = usePathname();
   const isReelsPage = pathname === '/reels';
+  // app-like screens: no marketing footer on phones
+  const isAppScreen = /^\/(user\/account|charity\/account|admin|favourite|messaging)/.test(pathname || '');
 
   if (isReelsPage) {
     return (
@@ -27,9 +28,10 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     <div className="angelpage-main-wrapper">
       <AdminBrowseBar />
       <Header />
-      <main>{children}</main>
-      <MobileFloatingSellCta />
-      <Footer />
+      <main className="ap-app-main">{children}</main>
+      <div className={isAppScreen ? 'sm:hidden' : ''}>
+        <Footer />
+      </div>
       <MarketPreferenceDialog />
       <CookieConsent />
     </div>

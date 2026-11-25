@@ -336,3 +336,25 @@
     animation: none !important;
   }
 }
+
+/* ---------- App-like mobile shell ---------- */
+@media (max-width: 767px) {
+  /* room for the bottom tab bar */
+  .ap-app-main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .footer-section {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* tactile press feedback */
+  .ap-app-main a:active,
+  .ap-app-main button:active {
+    transform: scale(0.98);
+  }
+}
