@@ -66,7 +66,7 @@ export default function InlinePoll({
 
   return (
     <div>
-      {event.pollQuestion ? <p className={`text-[15px] font-medium ${dark ? 'text-white' : 'text-[#0B0112]'}`}>{event.pollQuestion}</p> : null}
+      {event.pollQuestion ? <p className={`font-primary text-[18px] leading-snug ${dark ? 'text-white' : 'text-[#0B0112]'}`}>{event.pollQuestion}</p> : null}
       <ul className="mt-3 space-y-2">
         {options.map((o, i) => {
           const pct = total ? Math.round(((o.votes || 0) / total) * 100) : 0;
@@ -81,7 +81,7 @@ export default function InlinePoll({
                 className={`relative flex min-h-11 w-full items-center justify-between gap-3 overflow-hidden rounded-xl px-4 py-2.5 text-left text-[14px] transition ${
                   dark
                     ? `bg-white/[0.07] text-white ${showResults ? '' : 'hover:bg-white/[0.14]'} ${mine ? 'ring-1 ring-[#D9B8F0]' : ''}`
-                    : `bg-[#F6F3F7] text-[#0B0112] ${showResults ? '' : 'hover:bg-[#F2E8F8] hover:text-[#611192]'} ${mine ? 'ring-1 ring-[#611192]' : ''}`
+                    : `bg-white text-[#0B0112] ring-1 ${showResults ? 'ring-[#ECE8EE]' : 'ring-[#E2DCE6] hover:ring-[#611192] hover:text-[#611192]'} ${mine ? 'ring-[#611192]!' : ''}`
                 }`}
               >
                 {showResults ? (
@@ -104,7 +104,7 @@ export default function InlinePoll({
         })}
       </ul>
       <p className={`mt-3 text-[12px] ${dark ? 'text-white/55' : 'text-[#8A888C]'}`} aria-live="polite">
-        {voted !== null ? `Thanks for voting · ${total.toLocaleString()} votes` : disabled ? `Voting closed · ${total.toLocaleString()} votes` : `${total.toLocaleString()} votes so far · tap to vote`}
+        {voted !== null ? `Thanks for voting · ${total.toLocaleString()} votes` : disabled ? `Voting closed · ${total.toLocaleString()} votes` : `Tap to vote · ${total.toLocaleString()} votes so far`}
       </p>
     </div>
   );
