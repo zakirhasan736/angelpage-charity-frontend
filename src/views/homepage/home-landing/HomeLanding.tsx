@@ -1,10 +1,8 @@
 'use client';
 import HomeLandingBanner from '@/components/banner/HomeLandingBanner';
 import HomeValueStrip from '@/components/homepage/HomeValueStrip';
-import AboutSection from '@/components/homepage/AboutSection';
-import AngelPageInfoSection from '@/components/homepage/AngelPageInfoSection';
+import HomeMissionSection from '@/components/homepage/HomeMissionSection';
 // import CharitySection from '@/components/homepage/CharitySection'
-import CtaSection from '@/components/homepage/CtaSection';
 import HowItWorkSection from '@/components/homepage/HowItWorkSection';
 import OurPlatformSection from '@/components/homepage/OurPlatformSection';
 import TopCategoryProduct from '@/components/product/TopCategoryProducts';
@@ -25,9 +23,7 @@ const HomeLanding = () => {
       <HowItWorkSection />
       <HomeEventsSection />
       {/* <CharitySection /> */}
-      <CtaSection />
-      <AboutSection />
-      <AngelPageInfoSection />
+      <HomeMissionSection />
       <OurPlatformSection />
       <LatestBlogsSection />
     </div>
