@@ -1,23 +1,45 @@
 'use client';
-import { Button, Input } from '@/components/elements';
-import Image from 'next/image';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { signIn, getProviders } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  ToastService,
-} from '@/components/elements/notifications/ToastService';
+import { AtSign, BadgeCheck, Building2, Hash, HandHeart, Lock, Mail, Store, User, Wallet } from 'lucide-react';
+import { ToastService } from '@/components/elements/notifications/ToastService';
 import { UK_DEFAULT_COUNTRY } from '@/utils/ukValidation';
 import CaptchaWidget from '@/components/auth/CaptchaWidget';
+import { AuthAlert, AuthDivider, AuthField, AuthShell, AuthSubmit, OAuthButtons, PasswordStrength, RoleSwitch } from '@/components/auth/AuthKit';
+import { CHARITY_SHARE_PERCENT } from '@/constants/brand';
+
+type Tab = 'individual' | 'charity';
+type Errors = Partial<Record<'userName' | 'firstName' | 'lastName' | 'email' | 'password' | 'charityNumber', string>>;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const ASIDE = {
+  individual: {
+    title: 'Sell what you don’t need. Choose who it helps.',
+    points: [
+      { icon: Store, text: 'List an item in minutes from your phone' },
+      { icon: HandHeart, text: `Give up to ${CHARITY_SHARE_PERCENT}% of each sale to a charity you pick` },
+      { icon: Wallet, text: 'Keep the rest, paid out once the order arrives' },
+    ],
+  },
+  charity: {
+    title: 'A free storefront that raises money while you work.',
+    points: [
+      { icon: Store, text: 'Sell donated and new stock from your own storefront' },
+      { icon: HandHeart, text: 'Receive a share of supporters’ sales automatically' },
+      { icon: BadgeCheck, text: 'Verified badge once your charity number is checked' },
+    ],
+  },
+};
 
 const Register = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromGuestCheckout = searchParams?.get('from') === 'guest-checkout';
   // ?type=charity opens the charity form (used by "Are you a charity?" links)
-  const [activeTab, setActiveTab] = useState<'individual' | 'charity'>(
-    searchParams?.get('type') === 'charity' ? 'charity' : 'individual'
-  );
+  const [activeTab, setActiveTab] = useState<Tab>(searchParams?.get('type') === 'charity' ? 'charity' : 'individual');
   const [formData, setFormData] = useState({
     userName: '',
     firstName: '',
@@ -26,6 +48,7 @@ const Register = () => {
     email: '',
     password: '',
   });
+  const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
@@ -34,340 +57,201 @@ const Register = () => {
   useEffect(() => {
     getProviders().then(providers => {
       if (!providers) return;
-      setOauthProviders(
-        Object.keys(providers).filter(p => p !== 'credentials')
-      );
+      setOauthProviders(Object.keys(providers).filter(p => p !== 'credentials'));
     });
   }, []);
 
+  useEffect(() => {
+    const emailParam = searchParams?.get('email');
+    if (emailParam) setFormData(prev => ({ ...prev, email: emailParam }));
+  }, [searchParams]);
+
   const handleOAuthSignIn = async (provider: 'google' | 'facebook') => {
     if (!oauthProviders.includes(provider)) {
-      ToastService.error(
-        `${provider === 'google' ? 'Google' : 'Facebook'} sign-up is not set up yet. Please register with email and password.`
-      );
+      ToastService.error(`${provider === 'google' ? 'Google' : 'Facebook'} sign-up is not set up yet. Please register with email and password.`);
       return;
     }
-
     try {
       await fetch('/api/auth/oauth-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: activeTab === 'charity' ? 'CHARITY' : 'USER',
-        }),
+        body: JSON.stringify({ role: activeTab === 'charity' ? 'CHARITY' : 'USER' }),
       });
     } catch {
       /* continue */
     }
-
     signIn(provider, { callbackUrl: '/product/post-product' });
   };
 
-  useEffect(() => {
-    const emailParam = searchParams?.get('email');
-    if (emailParam) {
-      setFormData(prev => ({ ...prev, email: emailParam }));
-    }
-  }, [searchParams]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name as keyof Errors]) setErrors(prev => ({ ...prev, [name]: undefined }));
+  };
+
+  const validate = (): Errors => {
+    const next: Errors = {};
+    if (!formData.firstName.trim()) next.firstName = 'Enter your first name';
+    if (!formData.lastName.trim()) next.lastName = 'Enter your last name';
+    if (!EMAIL_RE.test(formData.email.trim())) next.email = 'Enter a valid email address';
+    if (formData.password.length < 8) next.password = 'Use at least 8 characters';
+    if (formData.userName && !/^@?[A-Za-z0-9._-]{3,30}$/.test(formData.userName.trim())) next.userName = '3–30 letters, numbers, dots or dashes';
+    if (activeTab === 'charity' && !formData.charityNumber.trim()) next.charityNumber = 'Enter your registered charity number';
+    return next;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+    const found = validate();
+    setErrors(found);
+    if (Object.keys(found).length) return;
     setIsSubmitting(true);
 
     const endpoint = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/register`;
     const userRole = activeTab === 'individual' ? 'USER' : 'CHARITY';
-
     const payload = {
       ...formData,
+      email: formData.email.trim(),
+      userName: formData.userName.trim(),
       role: userRole,
       country: UK_DEFAULT_COUNTRY,
-      ...(activeTab === 'charity' && { userName: formData.userName }),
+      ...(activeTab === 'individual' ? { charityNumber: undefined } : {}),
       ...(captchaToken ? { captchaToken } : {}),
     };
 
     try {
-const response = await fetch(endpoint, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(payload),
-});
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => ({}));
 
-// Read JSON once
-const data = await response.json();
-
-if (!response.ok) {
-  ToastService.error(data.message || 'Registration failed');
-  setIsSubmitting(false);
-  return; // ⛔ Stop execution here
-}
-
-// Success path — log in immediately
-ToastService.success('Welcome to Angelpage! Setting up your account...');
-
-const signInResult = await signIn('credentials', {
-  redirect: false,
-  email: formData.email,
-  password: formData.password,
-  role: userRole,
-});
-
-if (signInResult?.ok) {
-  const destination =
-    userRole === 'CHARITY'
-      ? '/charity/complete-registrations'
-      : '/product/post-product';
-  router.push(destination);
-} else {
-  setTimeout(() => {
-    window.location.href = '/auth/login';
-  }, 1500);
-}
-
-    } catch (err) {
-      if (err instanceof Error) {
-        ToastService.error(err.message);
-        setError(err.message);
-      } else {
-        ToastService.error('An unknown error occurred');
-        setError('An unknown error occurred');
+      if (!response.ok) {
+        setError(data.message || 'We couldn’t create your account. Please try again.');
+        setIsSubmitting(false);
+        return;
       }
+
+      ToastService.success('Welcome to Angelpage! Setting up your account…');
+      const signInResult = await signIn('credentials', {
+        redirect: false,
+        email: payload.email,
+        password: formData.password,
+        role: userRole,
+      });
+
+      if (signInResult?.ok) {
+        router.push(userRole === 'CHARITY' ? '/charity/complete-registrations' : '/product/post-product');
+      } else {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(payload.email)}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const aside = ASIDE[activeTab];
+
   return (
-    <div className="flex md:flex-col gap-[143px] lg:gap-14 md:gap-0">
-      <div
-        className="w-1/2 md:w-full sm:order-2 bg-cover bg-center md:h-[510px] sm:h-[250px]"
-        style={{ backgroundImage: "url('/images/auth/hero.png')" }}
-      >
-        <div className="flex -mt-36 sm:-mt-16 md:-mt-28 justify-center h-full">
-          <Image
-            src="/images/auth/logo.svg"
-            alt="Logo"
-            width={367}
-            height={100}
-            className="md:w-72 sm:w-56"
+    <AuthShell
+      wide
+      eyebrow={activeTab === 'charity' ? 'For charities' : 'Join free'}
+      title={activeTab === 'charity' ? 'Register your charity' : 'Create your account'}
+      subtitle={activeTab === 'charity' ? 'Open a free storefront and start raising money from sales.' : 'Shop, sell and give, all from one account. It takes under a minute.'}
+      asideTitle={aside.title}
+      asidePoints={aside.points}
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link href={activeTab === 'charity' ? '/auth/login?type=charity' : '/auth/login'} className="font-semibold text-[#611192] hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      {fromGuestCheckout ? (
+        <div className="mb-5">
+          <AuthAlert tone="info">Use the same email you used at checkout to save your order to your new account.</AuthAlert>
+        </div>
+      ) : null}
+
+      <RoleSwitch<Tab>
+        value={activeTab}
+        onChange={v => {
+          setActiveTab(v);
+          setErrors({});
+          setError('');
+        }}
+        options={[
+          { value: 'individual', label: 'Individual', icon: User },
+          { value: 'charity', label: 'Charity or brand', icon: Building2 },
+        ]}
+      />
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+        {error ? <AuthAlert>{error}</AuthAlert> : null}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+          <AuthField label="First name" name="firstName" autoComplete="given-name" placeholder="Jane" value={formData.firstName} onChange={handleChange} error={errors.firstName} />
+          <AuthField label="Last name" name="lastName" autoComplete="family-name" placeholder="Doe" value={formData.lastName} onChange={handleChange} error={errors.lastName} />
+        </div>
+        <AuthField
+          label="Username (optional)"
+          name="userName"
+          icon={AtSign}
+          autoComplete="username"
+          autoCapitalize="none"
+          placeholder={activeTab === 'charity' ? 'yourcharity' : 'janedoe'}
+          value={formData.userName}
+          onChange={handleChange}
+          error={errors.userName}
+          hint="Shown on your listings and profile."
+        />
+        <AuthField label="Email address" name="email" type="email" icon={Mail} autoComplete="email" inputMode="email" placeholder="you@example.com" value={formData.email} onChange={handleChange} error={errors.email} />
+        <div>
+          <AuthField label="Password" name="password" type="password" icon={Lock} autoComplete="new-password" placeholder="Create a password" value={formData.password} onChange={handleChange} error={errors.password} />
+          <PasswordStrength password={formData.password} />
+        </div>
+        {activeTab === 'charity' ? (
+          <AuthField
+            label="Registered charity number"
+            name="charityNumber"
+            icon={Hash}
+            placeholder="e.g. 12-3456789 or 1234567"
+            value={formData.charityNumber}
+            onChange={handleChange}
+            error={errors.charityNumber}
+            hint="EIN (USA), BN (Canada) or Charity Commission number (UK). We use it to verify you."
           />
-        </div>
-      </div>
+        ) : null}
 
-      <div className="w-1/2 sm:order-1 sm:pt-14 sm:pb-20 md:w-full md:flex md:justify-center md:px-10 pt-[103px] pb-[260px] md:pb-[160px]">
-        <div className="w-full max-w-md">
-          <h4 className="text-center mb-[18px]">Register</h4>
+        <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken('')} />
+        <AuthSubmit loading={isSubmitting} loadingText="Creating account…" className="mt-2">
+          {activeTab === 'charity' ? 'Register charity' : 'Create account'}
+        </AuthSubmit>
+        <p className="text-center text-[12px] leading-relaxed text-[#8A888C]">
+          By continuing you agree to our{' '}
+          <Link href="/terms-of-service" className="underline hover:text-[#611192]">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy-policy" className="underline hover:text-[#611192]">
+            Privacy Policy
+          </Link>
+          . Angelpage operates in the USA, Canada and the UK.
+        </p>
+      </form>
 
-          {fromGuestCheckout && (
-            <p className="text-body-small text-mono-80 text-center mb-6 rounded-xl border border-[#611192]/20 bg-[#FCF2FF] p-4">
-              Create an account with the same email you used at checkout to save
-              your order and manage it from your account.
-            </p>
-          )}
-
-          <div className="flex space-x-2 justify-center mb-[54px] sm:mb-9">
-            <button
-              className={`p-2 text-body-small rounded-3xl ${activeTab === 'individual' ? 'bg-[#FAF2FF] text-primary-color-100 font-semibold' : 'bg-transparent text-mono-100'}`}
-              onClick={() => setActiveTab('individual')}
-            >
-              Individual
-            </button>
-            <button
-              className={`text-body-small p-2 rounded-3xl ${activeTab === 'charity' ? 'bg-[#FAF2FF] text-primary-color-100 font-semibold' : 'bg-transparent text-mono-100'}`}
-              onClick={() => setActiveTab('charity')}
-            >
-              Charity/Brand
-            </button>
-          </div>
-
-          {error && <p className="text-error text-body-small  mb-4">{error}</p>}
-
-          <form onSubmit={handleSubmit}>
-            {activeTab === 'individual' ? (
-              <>
-                <div className="w-full my-2">
-                  <Input
-                    label="User name"
-                    name="userName"
-                    placeholder="@angelpage"
-                    id="userName"
-                    className="flex-col"
-                    value={formData.userName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="flex space-x-5 md:flex-col md:space-x-0 md:space-y-2">
-                  <div className="w-1/2 md:w-full">
-                    <Input
-                      label="First name"
-                      name="firstName"
-                      placeholder="Jane"
-                      id="firstName"
-                      className="flex-col"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="w-1/2 md:w-full">
-                    <Input
-                      label="Last name"
-                      name="lastName"
-                      placeholder="Doe"
-                      id="lastName"
-                      className="flex-col"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="w-full my-2">
-                  <Input
-                    label="User name"
-                    name="userName"
-                    placeholder="@angelpage"
-                    id="userName"
-                    className="flex-col"
-                    value={formData.userName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="flex space-x-5 md:flex-col md:space-x-0 md:space-y-2">
-                  <div className="w-1/2 md:w-full">
-                    <Input
-                      label="First name"
-                      name="firstName"
-                      placeholder="Jane"
-                      id="firstName"
-                      className="flex-col"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="w-1/2 md:w-full">
-                    <Input
-                      label="Last name"
-                      name="lastName"
-                      placeholder="Doe"
-                      id="lastName"
-                      className="flex-col"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="w-full my-2">
-              <Input
-                label="Email address"
-                name="email"
-                placeholder="janed@angelpage.org"
-                type="email"
-                id="email"
-                className="flex-col"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="w-full my-2">
-              <Input
-                label="Password"
-                name="password"
-                placeholder="•••••••••"
-                type="password"
-                id="password"
-                className="flex-col"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-              {activeTab === 'individual' ? '' : (
-            <div className="w-full">
-              <Input
-                label="Charity Number"
-                name="charityNumber"
-                placeholder="000 000 00"
-                id="charityNumber"
-                className="flex-col"
-                value={formData.charityNumber}
-                onChange={handleChange}
-              />
-            </div>
-              ) }
-            <p className="text-body-small text-mono-70 mb-4">
-              Angelpage starts in the United States. We also sell in Canada and
-              the United Kingdom.
-            </p>
-            <CaptchaWidget
-              onVerify={setCaptchaToken}
-              onExpire={() => setCaptchaToken('')}
-            />
-            <Button
-              type="submit"
-              variant="tertiary"
-              className="w-full my-6"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Registering...' : 'Register'}
-            </Button>
-
-            {activeTab === 'individual' && (
-              <>
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-mono-40" />
-                  </div>
-                  <p className="relative flex justify-center text-body-small text-mono-70 bg-white px-3">
-                    Or continue with
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => handleOAuthSignIn('google')}
-                  >
-                    Continue with Google
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => handleOAuthSignIn('facebook')}
-                  >
-                    Continue with Facebook
-                  </Button>
-                </div>
-              </>
-            )}
-
-            <p className="text-body-small">
-              Already have an account?{' '}
-              <a
-                href="/auth/login"
-                className="text-primary-color-100 underline"
-              >
-                Login
-              </a>
-            </p>
-          </form>
-        </div>
-      </div>
-    </div>
+      {activeTab === 'individual' ? (
+        <>
+          <AuthDivider>or sign up with</AuthDivider>
+          <OAuthButtons onSelect={handleOAuthSignIn} />
+        </>
+      ) : null}
+    </AuthShell>
   );
 };
 

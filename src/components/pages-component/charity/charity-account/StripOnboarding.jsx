@@ -1,65 +1,68 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
+import { ArrowUpRight, Landmark, Loader2 } from 'lucide-react';
 
-const StripeOnboarding = () => {
+/** Starts (or resumes) Stripe Connect onboarding and sends the charity straight to Stripe. */
+const StripeOnboarding = ({ compact = false }) => {
   const { data: session } = useSession() || {};
   const [onboardingUrl, setOnboardingUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-const handleOnboard = async () => {
-  setLoading(true);
-  setError('');
-
-  // Debugging: Log the session token
-  console.log('Session token:', session?.token);
-
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/charity/stripe/onboard`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${session?.token}`,
-        },
-      }
-    );
-    setOnboardingUrl(response.data.onboardingUrl);
-  } catch (err) {
-    setError('Failed to create Stripe account. Please try again.');
-    console.error('Error onboarding charity:', err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  const handleOnboard = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/charity/stripe/onboard`,
+        {},
+        { headers: { Authorization: `Bearer ${session?.token}` } }
+      );
+      const url = response.data?.onboardingUrl;
+      if (!url) throw new Error('No onboarding link returned');
+      setOnboardingUrl(url);
+      window.location.assign(url);
+    } catch (err) {
+      setError('We couldn’t open Stripe right now. Please try again.');
+      console.error('Error onboarding charity:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="stripe-onboarding-container">
+    <div className={compact ? '' : 'rounded-2xl bg-white p-5 ring-1 ring-[#ECE8EE]'}>
+      {!compact && (
+        <div className="mb-4 flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F2E8F8] text-[#611192]">
+            <Landmark className="h-5 w-5" aria-hidden />
+          </span>
+          <div>
+            <p className="text-[15px] font-semibold text-[#0B0112]">Payouts with Stripe</p>
+            <p className="text-[13px] leading-snug text-[#6B686E]">Stripe checks your details and sends sale proceeds to your bank. It takes about 5 minutes.</p>
+          </div>
+        </div>
+      )}
       <button
-        className="stripe-onboard-btn"
+        type="button"
         onClick={handleOnboard}
         disabled={loading}
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0B0112] px-5 text-[14.5px] font-semibold text-white transition hover:bg-[#2A1A35] disabled:opacity-60"
       >
-        {loading ? 'Processing...' : 'Start Stripe Onboarding'}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+        {loading ? 'Opening Stripe…' : 'Connect with Stripe'}
+        {!loading && <ArrowUpRight className="h-4 w-4" aria-hidden />}
       </button>
-
-      {error && <p className="error-message">{error}</p>}
-
+      {error && <p className="mt-2 text-[13px] text-[#C0143C]" role="alert">{error}</p>}
       {onboardingUrl && (
-        <div className="onboarding-link">
-          <a
-            href={onboardingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="stripe-link"
-          >
-            Complete your Stripe setup
+        <p className="mt-2 text-[12.5px] text-[#6B686E]">
+          Not redirected?{' '}
+          <a href={onboardingUrl} className="font-medium text-[#611192] underline">
+            Open Stripe setup
           </a>
-        </div>
+        </p>
       )}
     </div>
   );
