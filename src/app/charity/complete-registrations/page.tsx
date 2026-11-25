@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
-import { Button, Input } from '@/components/elements';
+import { Building2, CheckCircle2, Globe, HandHeart, Landmark, Phone, Store } from 'lucide-react';
+import { AuthField, AuthShell, AuthSubmit, AuthTextarea } from '@/components/auth/AuthKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import { getAccountPathForRole } from '@/utils/navigationPaths';
 import StripOnboarding from '@/components/pages-component/charity/charity-account/StripOnboarding';
@@ -91,90 +92,72 @@ const CharityRegistrationPage = () => {
     }
   };
 
+  const steps = [
+    { label: 'Account created', done: true },
+    { label: 'Public profile', done: Boolean(charityName && description) },
+    { label: 'Payouts', done: false },
+  ];
+
   if (status === 'loading' || !loaded) {
     return (
-      <div className="max-w-lg mx-auto p-8 text-center text-mono-80">
-        Loading your charity setup…
-      </div>
+      <AuthShell wide eyebrow="Charity setup" title="Set up your storefront">
+        <div className="space-y-4" aria-busy="true">
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="h-[52px] animate-pulse rounded-2xl bg-[#F1ECF4]" />
+          ))}
+        </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 sm:p-8 my-10 border border-[#611192]/15 rounded-2xl bg-white">
-      <h2 className="text-2xl font-semibold mb-2 text-[#611192]">
-        Complete your charity registration
-      </h2>
-      <p className="text-sm text-mono-80 mb-6">
-        Add a few public details, then connect Stripe so you can receive payouts
-        from sales.
-      </p>
+    <AuthShell
+      wide
+      eyebrow="Charity setup"
+      title="Set up your storefront"
+      subtitle="Two quick steps: tell supporters who you are, then connect Stripe to receive payouts."
+      asideTitle="Your storefront is almost ready."
+      asidePoints={[
+        { icon: Store, text: 'Your profile appears on your storefront and every listing' },
+        { icon: HandHeart, text: 'Supporters can list items for you and pick your charity' },
+        { icon: Landmark, text: 'Stripe pays sale proceeds straight to your bank' },
+      ]}
+      footer={
+        <Link href={`${accountPath}?tab=account`} className="font-semibold text-[#611192] hover:underline">
+          Skip for now, go to my dashboard
+        </Link>
+      }
+    >
+      <ol className="mb-8 grid grid-cols-3 gap-2" aria-label="Setup progress">
+        {steps.map((st, i) => (
+          <li key={st.label} className="flex flex-col gap-2">
+            <span className={`h-1.5 rounded-full ${st.done ? 'bg-[#611192]' : 'bg-[#E7E0EB]'}`} />
+            <span className={`flex items-center gap-1.5 text-[12px] font-medium ${st.done ? 'text-[#611192]' : 'text-[#8A888C]'}`}>
+              {st.done ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full ring-1 ring-current text-[9px]">{i + 1}</span>}
+              {st.label}
+            </span>
+          </li>
+        ))}
+      </ol>
 
-      <form onSubmit={handleSave} className="space-y-4 mb-8">
-        <div>
-          <label htmlFor="charityName" className="block text-sm mb-1">
-            Charity name
-          </label>
-          <Input
-            id="charityName"
-            value={charityName}
-            onChange={e => setCharityName(e.target.value)}
-            required
-            className="w-full"
-          />
+      <form onSubmit={handleSave} className="space-y-4">
+        <p className="text-[15px] font-semibold text-[#0B0112]">1. Public profile</p>
+        <AuthField label="Charity name" icon={Building2} value={charityName} onChange={e => setCharityName(e.target.value)} required />
+        <AuthTextarea label="What your charity does" rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="One or two sentences supporters will see on your storefront." hint={`${description.trim().length}/300 · Aim for 120+ characters`} maxLength={300} />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+          <AuthField label="Website" icon={Globe} type="url" inputMode="url" value={websiteLink} onChange={e => setWebsiteLink(e.target.value)} placeholder="https://" />
+          <AuthField label="Phone" icon={Phone} type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
         </div>
-        <div>
-          <label htmlFor="description" className="block text-sm mb-1">
-            Short description
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={4}
-            className="w-full p-2 border rounded-md"
-          />
-        </div>
-        <div>
-          <label htmlFor="websiteLink" className="block text-sm mb-1">
-            Website
-          </label>
-          <Input
-            id="websiteLink"
-            type="text"
-            value={websiteLink}
-            onChange={e => setWebsiteLink(e.target.value)}
-            className="w-full"
-            placeholder="https://"
-          />
-        </div>
-        <div>
-          <label htmlFor="phoneNumber" className="block text-sm mb-1">
-            Phone
-          </label>
-          <Input
-            id="phoneNumber"
-            value={phoneNumber}
-            onChange={e => setPhoneNumber(e.target.value)}
-            className="w-full"
-          />
-        </div>
-        <Button type="submit" variant="primary" className="w-full" disabled={isSaving}>
-          {isSaving ? 'Saving…' : 'Save profile'}
-        </Button>
+        <AuthSubmit loading={isSaving} loadingText="Saving…">
+          Save profile
+        </AuthSubmit>
       </form>
 
-      <div className="border-t pt-6 mb-6">
-        <h3 className="font-semibold mb-3">Connect Stripe for payouts</h3>
+      <div className="mt-8 border-t border-[#F0EBF2] pt-6">
+        <p className="mb-3 text-[15px] font-semibold text-[#0B0112]">2. Payouts</p>
         <StripOnboarding />
       </div>
-
-      <Link
-        href={`${accountPath}?tab=account`}
-        className="text-sm text-[#611192] underline"
-      >
-        Continue to charity account dashboard
-      </Link>
-    </div>
+    </AuthShell>
   );
 };
 
