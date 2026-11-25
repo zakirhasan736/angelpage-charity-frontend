@@ -42,12 +42,26 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.ebayimg.com', pathname: '/**' },
     ],
   },
+  async redirects() {
+    const site = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.angelpage.shop');
+    if (site.origin !== 'https://www.angelpage.shop') return [];
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'angelpage\\.shop' }],
+        destination: site.origin + '/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
+    const global = [...SECURITY_HEADERS];
+    if (process.env.NODE_ENV === 'production') global.push({ key: 'Strict-Transport-Security', value: 'max-age=31536000' });
     if (!allowIndexing) {
-      return [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, ...SECURITY_HEADERS] }];
+      return [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, ...global] }];
     }
     return [
-      { source: '/(.*)', headers: SECURITY_HEADERS },
+      { source: '/(.*)', headers: global },
       ...PRIVATE_SOURCES.map(source => ({ source, headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] })),
       { source: '/:file(llms|llms-full|llm|ai|humans)\\.txt', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600' }] },
     ];
