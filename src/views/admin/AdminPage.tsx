@@ -28,23 +28,10 @@ import DashboardLayout from '@/components/account/DashboardLayout';
 import { getTabsForRole } from '@/constants/adminPanels';
 
 const ADMIN_TAB_GROUP_DEFS: AccountTabGroup[] = [
-  {
-    id: 'listings',
-    label: 'Listings',
-    tabIds: ['review', 'product-reviews', 'promoted'],
-  },
-  {
-    id: 'content',
-    label: 'Content',
-    tabIds: [
-      'charity-import',
-      'affiliate-import',
-      'gallery',
-      'social-posting',
-      'blog',
-      'events',
-    ],
-  },
+  { id: 'marketplace', label: 'Marketplace', tabIds: ['review', 'product-reviews', 'promoted'] },
+  { id: 'content', label: 'Content', tabIds: ['blog', 'events', 'gallery', 'social-posting'] },
+  { id: 'imports', label: 'Imports', tabIds: ['charity-import', 'affiliate-import'] },
+  { id: 'platform', label: 'Platform', tabIds: ['operations', 'finance', 'team', 'audit'] },
 ];
 interface Order {
   createdAt: string;
@@ -270,7 +257,7 @@ const AdminAccount = () => {
         trailing={<LogoutButton />}
         title="Admin console"
         notice={
-          <AdminRoleBanner
+          activeTabId === 'analytics' && <AdminRoleBanner
             role={session?.user?.role}
             permissions={
               (session?.user as { permissions?: string[] })?.permissions

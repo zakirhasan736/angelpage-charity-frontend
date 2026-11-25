@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
   ChevronDown,
+  Search,
   X,
   Banknote,
   Bell,
@@ -98,6 +99,23 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
 
 const SETTINGS_IDS = ['account', 'delete'];
 
+/** Friendlier names in the nav (panel ids stay the same). */
+const LABEL_OVERRIDES: Record<string, string> = {
+  analytics: 'Overview',
+  account: 'Account settings',
+  review: 'Review queue',
+  'product-reviews': 'Buyer reviews',
+  'charity-import': 'Charity import',
+  'affiliate-import': 'Affiliate import',
+  'social-posting': 'Social posting',
+  social: 'Social posts',
+  community: 'Blog & events',
+  'product-sync': 'Product sync',
+  audit: 'Audit log',
+};
+const labelOf = (tab?: AccountTab) => (tab ? LABEL_OVERRIDES[tab.id] || tab.label : 'Overview');
+const JUMP_THRESHOLD = 10;
+
 interface DashboardLayoutProps {
   tabs: AccountTab[];
   groups?: AccountTabGroup[];
@@ -137,6 +155,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const chipRailRef = useRef<HTMLDivElement>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [jump, setJump] = useState('');
   const byId = (id: string) => tabs.find(t => t.id === id);
   const grouped = new Set(groups.flatMap(g => g.tabIds));
 
@@ -152,6 +171,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     })),
     { id: 'settings', label: 'Settings', items: settings },
   ].filter(s => s.items.length > 0);
+
+  const showJump = tabs.length > JUMP_THRESHOLD;
+  const jq = jump.trim().toLowerCase();
+  const visibleSections = jq
+    ? sections
+        .map(sec => ({ ...sec, items: sec.items.filter(t => `${labelOf(t)} ${sec.label} ${TAB_DESCRIPTIONS[t.id] || ''}`.toLowerCase().includes(jq)) }))
+        .filter(sec => sec.items.length > 0)
+    : sections;
 
   const activeTab = byId(activeTabId);
   const activeSection = sections.find(s => s.items.some(i => i.id === activeTabId));
@@ -181,6 +208,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const select = (id: string) => {
     onTabChange(id);
     setSheetOpen(false);
+    setJump('');
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 991px)').matches) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -200,7 +228,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <p className="px-3 pt-2 pb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A888C]">
               Menu
             </p>
-            {sections.map(section => (
+            {showJump ? (
+              <label className="relative mx-1 mb-2 block">
+                <span className="sr-only">Jump to a section</span>
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#8A888C]" aria-hidden />
+                <input
+                  type="search"
+                  value={jump}
+                  onChange={e => setJump(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && visibleSections[0]?.items[0]) select(visibleSections[0].items[0].id);
+                  }}
+                  placeholder="Jump to…"
+                  className="h-10 w-full rounded-xl bg-[#F6F3F7] pr-3 pl-9 text-[14px] outline-none placeholder:text-[#8A888C] focus:bg-white focus:ring-2 focus:ring-[#611192]/30"
+                />
+              </label>
+            ) : null}
+            {visibleSections.map(section => (
               <div key={section.id} className="border-t border-[#ECE8EE] py-2 first-of-type:border-t-0 first-of-type:pt-0">
                 {section.id !== 'general' && (
                   <p className="px-3 pt-2 pb-1.5 text-[11px] font-medium text-[#8A888C]">
@@ -229,7 +273,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                             strokeWidth={1.75}
                             aria-hidden
                           />
-                          <span className="truncate">{tab.label}</span>
+                          <span className="truncate">{labelOf(tab)}</span>
                           <Badge value={tab.badge} active={active} />
                         </button>
                       </li>
@@ -238,6 +282,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </ul>
               </div>
             ))}
+            {jq && visibleSections.length === 0 ? <p className="px-3 py-3 text-[13px] text-[#8A888C]">No section matches “{jump}”.</p> : null}
             {trailing ? (
               <div className="mt-1 border-t border-[#ECE8EE] px-3 pt-3 pb-2 text-sm">{trailing}</div>
             ) : null}
@@ -261,7 +306,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {activeSection && activeSection.id !== 'general' ? activeSection.label : title}
               </span>
               <span className="block truncate text-[15px] font-semibold text-[#0B0112]">
-                {activeTab?.label || 'Overview'}
+                {labelOf(activeTab)}
               </span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#F4F1F6] px-3 py-1.5 text-[12px] font-medium text-[#474648]">
@@ -292,7 +337,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
-                  {tab.label}
+                  {labelOf(tab)}
                   {tab.badge ? (
                     <span className={`rounded-full px-1.5 text-[10px] ${active ? 'bg-white/20' : 'bg-white text-[#611192]'}`}>
                       {tab.badge}
@@ -329,7 +374,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </div>
               </div>
               <div className="px-5">
-                {sections.map(section => (
+                {showJump ? (
+              <label className="relative mb-4 block">
+                <span className="sr-only">Jump to a section</span>
+                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#8A888C]" aria-hidden />
+                <input
+                  type="search"
+                  value={jump}
+                  onChange={e => setJump(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && visibleSections[0]?.items[0]) select(visibleSections[0].items[0].id);
+                  }}
+                  placeholder="Jump to…"
+                  className="h-10 w-full rounded-xl bg-[#F6F3F7] pr-3 pl-9 text-[14px] outline-none placeholder:text-[#8A888C] focus:bg-white focus:ring-2 focus:ring-[#611192]/30"
+                />
+              </label>
+            ) : null}
+            {visibleSections.map(section => (
                   <div key={section.id} className="mb-4">
                     <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A888C]">
                       {section.label}
@@ -353,7 +414,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                             }`}
                           >
                             <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-                            <span className="leading-tight">{tab.label}</span>
+                            <span className="leading-tight">{labelOf(tab)}</span>
                             {tab.badge ? (
                               <span className={`absolute top-2.5 right-2.5 rounded-full px-1.5 text-[10px] font-semibold ${active ? 'bg-white/20' : 'bg-[#611192] text-white'}`}>
                                 {tab.badge}
@@ -382,7 +443,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {activeSection && activeSection.id !== 'general' ? activeSection.label : 'Overview'}
               </p>
               <h2 className="ap-display truncate text-[28px] max-[767px]:text-[22px]">
-                {activeTab?.label || 'Overview'}
+                {labelOf(activeTab)}
               </h2>
               {TAB_DESCRIPTIONS[activeTabId] ? (
                 <p className="mt-0.5 text-sm text-[#6B686E] max-[767px]:hidden">

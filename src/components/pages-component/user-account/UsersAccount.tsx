@@ -45,21 +45,10 @@ const USER_TABS: AccountTab[] = [
 ];
 
 const USER_TAB_GROUPS: AccountTabGroup[] = [
-  {
-    id: 'selling',
-    label: 'Selling',
-    tabIds: ['listings', 'affiliate', 'sold', 'bought', 'earnings'],
-  },
-  {
-    id: 'content',
-    label: 'Content',
-    tabIds: ['gallery', 'social'],
-  },
-  {
-    id: 'inbox',
-    label: 'Inbox',
-    tabIds: ['messages', 'notifications'],
-  },
+  { id: 'selling', label: 'Selling', tabIds: ['listings', 'sold', 'earnings', 'affiliate'] },
+  { id: 'buying', label: 'Buying', tabIds: ['bought'] },
+  { id: 'inbox', label: 'Inbox', tabIds: ['messages', 'notifications'] },
+  { id: 'content', label: 'Content', tabIds: ['gallery', 'social'] },
 ];
 
 const UsersAccount = () => {
