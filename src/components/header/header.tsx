@@ -18,6 +18,7 @@ import { useSession } from 'next-auth/react';
 import { getHomePathForRole } from '@/utils/navigationPaths';
 import LanguageSwitch from './LanguageSwitch';
 import { useLocale } from '@/i18n/LocaleProvider';
+import { Plus } from 'lucide-react';
 
 const Header = () => {
   const { data: session } = useSession();

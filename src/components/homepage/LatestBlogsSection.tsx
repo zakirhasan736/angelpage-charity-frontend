@@ -7,6 +7,7 @@ import { Button } from '@/components/elements';
 import { blogData as staticBlogData } from '@/libs/blogs';
 import { mapBlogToCard } from '@/lib/server-api';
 import { useGetBlogPostsQuery } from '@/store/api/angelpageApi';
+import SectionHeading from '../common/product-slider/SectionHeading';
 
 interface LatestBlogsSectionProps {
   secClassName?: string;
@@ -24,28 +25,23 @@ const LatestBlogsSection: React.FC<LatestBlogsSectionProps> = ({
 
   return (
     <section
-      className={`Latest-blog-section ${secClassName || 'bg-mono-0 pt-10 pb-[34px]'}`}
+      className={`Latest-blog-section ${secClassName || 'bg-mono-0 ap-section'}`}
     >
       <div className="custom-container">
-        <div className="product-sec-title-box mb-10 flex sm:flex-col items-start justify-between gap-4">
-          <div className="product-title-box-left-cont">
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-[#611192] uppercase">
-              Journal
-            </p>
-            <h2 className="title h4 mt-2 font-primary">Blog</h2>
-            <p className="body-small mt-2 max-w-xl">
-              Stories from Angelpage, charities, and our community.
-            </p>
-          </div>
-          <Link href="/blog">
-            <Button variant="secondary" className="text-primary-color-100!">
-              Read all posts
-            </Button>
-          </Link>
-        </div>
+        <SectionHeading
+          eyebrow="Journal"
+          title="Stories from the community"
+          description="News and stories from Angelpage, our charities and the people who give."
+          className="mb-10 max-[767px]:mb-6"
+          actions={
+            <Link href="/blog">
+              <Button variant="secondary">Read all posts</Button>
+            </Link>
+          }
+        />
       </div>
-      <div className="custom-container md:pr-0!">
-        <div className="product-slides-area pr-[16px] pl-[10px] sm:pr-8 sm:pl-0 overflow-hidden">
+      <div className="custom-container max-[991px]:pr-0!">
+        <div className="product-slides-area pr-[16px] pl-[10px] max-[767px]:pr-8 max-[767px]:pl-0 overflow-hidden">
           <BlogList blogData={cardData} />
         </div>
       </div>

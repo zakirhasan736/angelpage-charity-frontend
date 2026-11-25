@@ -77,7 +77,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
       subtitle="AngelPage marketplace performance, revenue split, and user activity"
     >
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Platform revenue"
             value={`£${totalRevenue.toFixed(2)}`}
@@ -87,7 +87,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
             accent="purple"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Products sold"
             value={soldItemsCount}
@@ -97,7 +97,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
             accent="green"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Platform users"
             value={totalUsersLength.toLocaleString()}
@@ -107,7 +107,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
             accent="blue"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div className="col-span-12 min-[640px]:col-span-6 min-[1200px]:col-span-3">
           <StatCard
             label="Active sessions"
             value={totalUserSessions.toLocaleString()}
@@ -120,7 +120,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 xl:col-span-8">
+        <div className="col-span-12 min-[1200px]:col-span-8">
           <PerformanceChart
             title="Sales trend"
             period={period}
@@ -132,7 +132,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
             revenueLabel="all time"
           />
         </div>
-        <div className="col-span-12 xl:col-span-4">
+        <div className="col-span-12 min-[1200px]:col-span-4">
           <PlatformSplitChart
             totalRevenue={totalRevenue}
             charityShare={charityShare}
@@ -143,7 +143,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label="Returning users"
             value={totalReturningUsers.toLocaleString()}
@@ -152,7 +152,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
             loading={loading}
           />
         </div>
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label={`Charity share (${CHARITY_SHARE_PERCENT}%)`}
             value={`£${charityShare.toFixed(2)}`}
@@ -160,7 +160,7 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
             loading={loading}
           />
         </div>
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 min-[640px]:col-span-4">
           <StatCard
             label={`Platform fee (${PLATFORM_FEE_PERCENT}%)`}
             value={`£${platformFee.toFixed(2)}`}

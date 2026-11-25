@@ -51,21 +51,18 @@ const VALUE_POINTS = [
 
 export default function HomeValueStrip() {
   return (
-    <section className="border-b border-[#E8D4F4]/40 bg-white py-8 md:py-10">
+    <section className="bg-white pb-2">
       <div className="custom-container">
-        <div className="grid sm:grid-cols-1 gap-4 grid-cols-3 sm:gap-5">
+        <div className="grid grid-cols-3 divide-x divide-[#ECE8EE] rounded-[24px] bg-[#FAF8FB] ring-1 ring-[#ECE8EE] max-[991px]:grid-cols-1 max-[991px]:divide-x-0 max-[991px]:divide-y">
           {VALUE_POINTS.map(point => (
-            <div
-              key={point.id}
-              className="flex flex-col items-center rounded-2xl border border-[#E8D4F4]/50 bg-[#FAFAFA]/80 px-6 py-6 text-center transition-colors hover:border-[#E8D4F4] hover:bg-[#FCF2FF]/40 sm:py-7"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#611192] shadow-xs ring-1 ring-[#E8D4F4]/60">
+            <div key={point.id} className="flex items-center gap-4 px-7 py-5 max-[767px]:px-5 max-[767px]:py-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#611192] shadow-[0_2px_8px_rgba(59,5,92,0.08)] ring-1 ring-[#ECE8EE]">
                 {point.icon}
               </div>
-              <p className="mt-4 text-sm font-semibold text-mono-100">{point.title}</p>
-              <p className="mt-1.5 max-w-[220px] text-xs leading-relaxed text-mono-70">
-                {point.text}
-              </p>
+              <div>
+                <p className="text-sm font-semibold text-mono-100">{point.title}</p>
+                <p className="mt-0.5 text-[13px] leading-5 text-mono-70">{point.text}</p>
+              </div>
             </div>
           ))}
         </div>

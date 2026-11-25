@@ -128,87 +128,94 @@ const ProductCard = ({
       : t(fulfillmentKey(fulfillmentType));
 
   return (
-    <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#E6E3E7] bg-white">
-      <div className="relative aspect-[1/1] bg-[#FCF2FF]">
-        <Link href={`/product/${detailSlug}`} className="absolute inset-0">
+    <article className="ap-product-card group relative flex h-full w-full flex-col">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-[#F2E8F8] ring-1 ring-[#ECE8EE]">
+        <Link href={`/product/${detailSlug}`} className="absolute inset-0" aria-label={name || 'View product'}>
           <Image
             src={validatedImageSrc}
             alt={images[0]?.altText || name || 'Product'}
             fill
-            sizes="(max-width: 768px) 50vw, 280px"
-            className="object-cover transition duration-300 group-hover:scale-[1.03]"
+            sizes="(max-width: 768px) 60vw, 300px"
+            className="object-cover transition duration-700 ease-out group-hover:scale-[1.05]"
           />
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0B0112]/45 to-transparent opacity-80" />
         </Link>
-        <div className="absolute left-3 top-3 flex max-w-[75%] items-center gap-2 rounded-full bg-white/95 py-1 pr-3 pl-1">
+
+        <div className="absolute top-3 right-3 rounded-full bg-white/95 shadow-[0_2px_10px_rgba(11,1,18,0.1)] backdrop-blur">
+          <FavoriteButton itemId={id} type="Product" />
+        </div>
+
+        <span className="ap-chip ap-chip--glass absolute top-3 left-3 h-7! max-w-[calc(100%-64px)] truncate px-2.5! text-[11px]! text-[#3B055C]! max-[767px]:hidden">
+          {areaLabel}
+        </span>
+
+        <div className="pointer-events-none absolute right-3 bottom-3 left-3 flex items-center gap-2">
           <Image
             src={charitySrc}
-            alt={charityImageAlt}
+            alt=""
             width={28}
             height={28}
-            className="h-7 w-7 rounded-full object-cover"
+            className="h-7 w-7 shrink-0 rounded-full bg-white object-cover ring-2 ring-white"
           />
-          <span className="truncate text-[11px] font-medium text-[#611192]">
+          <span className="truncate text-[12px] font-medium text-white! drop-shadow">
             {charityImageAlt}
           </span>
         </div>
-        <div className="absolute top-2 right-2 rounded-full bg-white/95">
-          <FavoriteButton itemId={id} type="Product" />
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-4 pt-4 pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <p className="line-clamp-1 text-[11px] font-medium tracking-[0.14em] text-[#6B686E] uppercase">
-            {brand}
+      <div className="flex flex-1 flex-col px-1 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="line-clamp-1 text-[11px] font-semibold tracking-[0.14em] text-[#8A888C] uppercase">
+            {brand || '\u00A0'}
           </p>
-          <p className="shrink-0 text-[18px] leading-none font-medium text-[#611192]">
-            {priceNum > 0 ? formatMoney(priceNum, locale) : '—'}
-          </p>
+          {size ? (
+            <p className="shrink-0 text-[11px] text-[#8A888C]">{size}</p>
+          ) : null}
         </div>
-        <Link href={`/product/${detailSlug}`} className="mt-2">
-          <h3 className="line-clamp-2 min-h-11 font-primary text-[18px] leading-[1.25] text-[#0B0112]">
+        <Link href={`/product/${detailSlug}`} className="mt-1.5">
+          <h3 className="line-clamp-2 min-h-[46px] font-primary text-[17px] leading-[1.35] text-[#0B0112] transition group-hover:text-[#611192]">
             {name}
           </h3>
         </Link>
-        {size ? (
-          <p className="mt-1 line-clamp-1 text-[12px] text-[#8A888C]">{size}</p>
-        ) : null}
-
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-[#F2E8F8] px-2.5 py-1 text-[11px] font-medium text-[#611192]">
-            {areaLabel}
-          </span>
-          {showLocation ? (
-            <span className="line-clamp-1 text-[12px] text-[#6B686E]">
-              {displayLocation}
-            </span>
-          ) : null}
-        </div>
 
         {priceNum > 0 && (
-          <p className="mt-3 text-[12px] leading-snug text-[#3B055C]">
+          <p className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FCF2FF] px-2.5 py-1 text-[11.5px] font-medium text-[#611192]">
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden>
+              <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.4 1.1 4.2 2.3h2c.8-1.2 2.2-2.3 4.2-2.3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z" />
+            </svg>
             {t('card.toCharity', {
               amount: formatMoney(charityAmount, locale),
             })}
-            {split.sellerSharePercent > 0
-              ? ` · ${t('card.sellerKeeps', {
-                  percent: split.sellerSharePercent,
-                })}`
-              : ''}
           </p>
         )}
 
-        <div className="mt-auto pt-4">
+        <div className="ap-card-foot mt-auto flex items-end justify-between gap-3 pt-4">
+          <div className="min-w-0">
+            <p className="text-[20px] leading-none font-semibold text-[#0B0112]">
+              {priceNum > 0 ? formatMoney(priceNum, locale) : '—'}
+            </p>
+            {split.sellerSharePercent > 0 ? (
+              <p className="mt-1 whitespace-nowrap text-[11px] text-[#8A888C]">
+                {t('card.sellerKeeps', { percent: split.sellerSharePercent })}
+              </p>
+            ) : showLocation ? (
+              <p className="mt-1 line-clamp-1 text-[11px] text-[#8A888C]">{displayLocation}</p>
+            ) : null}
+          </div>
           {isAddedToCart ? (
             <Button
-              variant="primary"
-              className="flex w-full items-center justify-center gap-2"
+              variant="accent"
+              className="h-10! px-4! text-[13px]! inline-flex items-center gap-1.5"
               disabled
             >
               <Checkmark /> {t('card.added')}
             </Button>
           ) : (
-            <Button variant="primary" className="w-full" onClick={handleAddToCart}>
+            <Button
+              variant="primary"
+              className="h-10! px-4! text-[13px]!"
+              onClick={handleAddToCart}
+            >
               {t('card.add')}
             </Button>
           )}

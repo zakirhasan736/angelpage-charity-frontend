@@ -1,9 +1,8 @@
 'use client';
 import React, { useState, useMemo } from 'react';
-import Sorting from '@/components/elements/search/Sorting';
 import ProductList from '@/components/product/ProductList';
 import Pagination from '@/components/elements/Pagination';
-import SearchBar from '@/components/elements/search/SearchBar';
+import { Search } from 'lucide-react';
 import { Product } from '@/types/productTypes';
 
 interface FavoriteProductListingProps {
@@ -19,7 +18,7 @@ const FavoriteProductListing: React.FC<FavoriteProductListingProps> = ({
   const [sort, setSort] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const productsPerPage = 10;
+  const productsPerPage = 12;
 
   const filterAndSortProducts = (
     products: Product[],
@@ -86,55 +85,59 @@ const FavoriteProductListing: React.FC<FavoriteProductListingProps> = ({
     setCurrentPage(page);
   };
 
-  if (!products.length) return <p>No favorite products yet!</p>;
+  if (!products.length) return null;
 
   return (
-    <section className="products-lists-section pt-[31px] pb-[54px] md:pb-9 sm:pt-5 sm:pb-8 bg-[#F1F1F7]">
-      <div className="custom-container">
-        <div className="products-lists-wrapper">
-          <div className="products-lists-main-cont flex items-start md:flex-col gap-6">
-            <div className="products-list-main-right-cont">
-              <div className="product-list-header mb-4 flex items-center justify-between gap-5 md:w-full">
-                <div className="filter-area-box md:w-full flex items-center gap-8">
-                  <div className="filter-search-with-searchbar flex items-center md:justify-between gap-4">
-                    <SearchBar
-                      filteredProducts={filteredProducts.length}
-                      onSearch={handleSearch}
-                    />
-                  </div>
-                </div>
-                <div className="sorting-search md:hidden">
-                  <Sorting onSortChange={handleSortChange} />
-                </div>
-              </div>
-              <ProductList isLoggedIn={isLoggedin} products={currentProducts} />
-              <div className="product-lists-footer mt-[38px] md:mt-6 flex md:flex-row-reverse md:justify-between sm:flex-col sm:mt-4 items-center">
-                <div className="pagination-wrapper ml-auto mr-auto md:mx-0">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-                <div className="showing-current-product">
-                  <span className="caption pr-3 md:pr-1">Showing</span>
-                  <span className="caption">
-                    {startIndex + 1} to{' '}
-                    {Math.min(
-                      startIndex + productsPerPage,
-                      filteredProducts.length
-                    )}{' '}
-                    of{'  '}
-                  </span>
-                  <span className="caption-bold">
-                    {filteredProducts.length} products
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <section className="products-lists-section pb-10">
+      <div className="flex items-center gap-3 max-[767px]:flex-wrap">
+        <label className="relative flex-1 max-[767px]:basis-full">
+          <span className="sr-only">Search saved items</span>
+          <Search className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[#8A888C]" aria-hidden />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e => handleSearch(e.target.value)}
+            placeholder={`Search ${products.length} saved items`}
+            className="h-12 w-full rounded-full! border border-[#ECE8EE] bg-white pr-4 pl-11 text-[14px] outline-none transition focus:border-[#611192]/40 focus:shadow-[0_0_0_4px_rgba(97,17,146,0.08)] max-[767px]:text-[16px]"
+          />
+        </label>
+        <label className="relative max-[767px]:flex-1">
+          <span className="sr-only">Sort</span>
+          <select
+            value={sort}
+            onChange={e => handleSortChange(e.target.value)}
+            className="h-12 w-full appearance-none rounded-full! border border-[#ECE8EE]! bg-white py-0 pr-10 pl-5 text-[14px] font-medium outline-none"
+          >
+            <option value="">Recently saved</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+          </select>
+          <svg className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-[#6B686E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </label>
       </div>
+
+      <p className="mt-5 mb-4 text-[13px] text-[#6B686E]">
+        {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
+      </p>
+
+      {currentProducts.length === 0 ? (
+        <div className="rounded-[24px] bg-white px-6 py-14 text-center ring-1 ring-[#ECE8EE]">
+          <p className="font-primary text-[22px] text-[#0B0112]">Nothing matches “{searchQuery}”</p>
+          <p className="mt-2 text-[14px] text-[#6B686E]">Try another word.</p>
+        </div>
+      ) : (
+        <div className="ap-store-grid">
+          <ProductList isLoggedIn={isLoggedin} products={currentProducts} />
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-10 flex justify-center">
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+        </div>
+      )}
     </section>
   );
 };

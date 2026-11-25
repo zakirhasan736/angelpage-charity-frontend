@@ -58,10 +58,10 @@ const SoldItemsPage = () => {
     <div class="meta">Order: ${safe(item.orderId)} · ${new Date(item.orderDate || Date.now()).toLocaleString()}</div>
     <div class="card">
       <div class="row"><div class="label">Item</div><div class="value">${safe(item.productName)}</div></div>
-      <div class="row"><div class="label">Price</div><div class="value">£${safe(item.productPrice)}</div></div>
+      <div class="row"><div class="label">Price</div><div class="value">$${safe(item.productPrice)}</div></div>
       <div class="row"><div class="label">Fulfillment</div><div class="value">${safe(resolveFulfillmentType(item))}</div></div>
       <div class="row"><div class="label">Status</div><div class="value">${safe(item.status)}</div></div>
-      <div class="row"><div class="label">Shipping cost</div><div class="value">£${safe(item.shipmentCost || 0)}</div></div>
+      <div class="row"><div class="label">Shipping cost</div><div class="value">$${safe(item.shipmentCost || 0)}</div></div>
     </div>
     <script>
       window.onload = () => { window.print(); };
@@ -248,7 +248,7 @@ const handleConfirmShipment = async () => {
                                {/* {item.productName} */}
                              </span>
                              <span className="body-bold-small skeleton w-[90px] bg-mono-40 h-2 text-mono-100">
-                               {/* £{item.productPrice} */}
+                               {/* ${item.productPrice} */}
                              </span>
                            </div>
                          </div>
@@ -275,7 +275,7 @@ const handleConfirmShipment = async () => {
                                {/* {item.productName} */}
                              </span>
                              <span className="body-bold-small skeleton w-[90px] bg-mono-40 h-2 text-mono-100">
-                               {/* £{item.productPrice} */}
+                               {/* ${item.productPrice} */}
                              </span>
                            </div>
                          </div>
@@ -393,7 +393,7 @@ const handleConfirmShipment = async () => {
                               {item.productName}
                             </span>
                             <span className="body-bold-small text-mono-100">
-                              £{item.productPrice}
+                              ${item.productPrice}
                             </span>
                           </div>
                         </div>
@@ -723,7 +723,7 @@ const handleConfirmShipment = async () => {
                           {selectedItem.status === 'SalesProceeds' && (
                             <div className="">
                               <p className="body-bold-small text-mono-100 sold-product-90-percent-need-to-go-selected-charity">
-                                £{selectedItem.charityProfit}
+                                ${selectedItem.charityProfit}
                               </p>
                             </div>
                           )}
@@ -736,7 +736,7 @@ const handleConfirmShipment = async () => {
                   {selectedItem.status === 'SalesProceeds' && (
                     <div className="mt-4 pl-8">
                       <p className="body-small">
-                        The remaining £{selectedItem.adminFee} was donated as
+                        The remaining ${selectedItem.adminFee} was donated as
                         administration fees.
                       </p>
                     </div>

@@ -85,10 +85,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`product-card-item bg-mono-0 max-w-[289px] w-full px-[15px] py-4 flex flex-col gap-[33px] border ${status === 'REMOVED' ? 'opacity-80' : ''}`}
+      className={`product-card-item group flex w-full max-w-[289px] flex-col gap-4 rounded-[20px] border border-[#ECE8EE] bg-white p-3 transition duration-300 hover:border-[#DCD5E0] hover:shadow-[0_14px_32px_rgba(59,5,92,0.08)] ${status === 'REMOVED' ? 'opacity-70' : ''}`}
     >
-      <div className="product-head-cont flex justify-between">
-        <div className="donate-charity-img h-[46px] flex items-center">
+      <div className="product-head-cont flex items-center justify-between px-1">
+        <div className="donate-charity-img flex h-9 w-9 items-center overflow-hidden rounded-full ring-1 ring-[#ECE8EE]">
           <Image
             src={charityImageSrc ?? ''}
             alt={charityImageAlt ?? ''}
@@ -103,9 +103,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       <div className="product-body-cont">
-        <div className="product-image-modal px-8 sm:px-1 w-full flex justify-center items-center">
+        <div className="product-image-modal flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[14px] bg-[#FAF8FB]">
           <Image
-            className="max-w-[116px] h-[110px] w-full object-cover sm:object-contain sm:h-auto"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
             src={productImageSrc ?? ''}
             alt={productImageAlt ?? ''}
             width={180}
@@ -114,7 +114,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-      <div className="product-footer-cont">
+      <div className="product-footer-cont px-1 pb-1">
         <div className="product-info-box">
           <div className="product-info">
             <div className="prod-title-box flex justify-between items-start">
@@ -122,10 +122,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {productBrand ?? ''}
               </h6>
               <p className="product-price sm:hidden  body-bold-small">
-                £{productPrice || 'N/A'}
+                ${productPrice || 'N/A'}
               </p>
             </div>
-            <p className="product-title caption-bold mt-2 text-mono-60">
+            <p className="product-title mt-1.5 line-clamp-2 font-primary text-[15px] leading-snug text-mono-100">
               {productTitle ?? ''}
             </p>
             <div className="product-size mt-3 eyebrow-small">
@@ -133,7 +133,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
           </div>
           <p className="product-price mt-3 hidden sm:block body-bold-small">
-            £{productPrice || 'N/A'}
+            ${productPrice || 'N/A'}
           </p>
         </div>
 
