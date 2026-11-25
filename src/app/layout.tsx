@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import './globals.css';
 import '@/styles/styles.css';
+import '@/styles/ap-design.css';
 import ClientProviders from '@/utils/Provider';
 import AppShell from './AppShell';
 import GoogleTags from '@/components/seo/GoogleTags';

@@ -236,7 +236,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className }) => {
   return (
     <>
       <div
-        className={`global-search-bar relative w-full max-w-[300px] ${className}`}
+        className={`global-search-bar relative w-full ${className?.includes('w-full') ? '' : 'max-w-[300px]'} ${className}`}
       >
         <form className="global-search-form w-full" onSubmit={e => e.preventDefault()}>
           <div className="global-search-group-field relative w-full">
@@ -245,12 +245,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className }) => {
               type="search"
               value={query}
               onChange={handleInputChange}
-              className="search-input-filed h-10 w-full rounded-[24px] bg-primary-color-70 py-[11.5px] pl-8 pr-10 font-secondary text-body-form font-normal leading-[150%] text-primary-color-100 outline-hidden placeholder:text-primary-color-100"
-              placeholder="Search"
+              className="search-input-filed h-11 w-full rounded-[24px] border border-[#ECE8EE] bg-[#FAF8FB] py-[11.5px] pl-11 pr-12 font-secondary text-[13.5px] font-normal leading-[150%] text-mono-100 outline-hidden transition placeholder:text-mono-60 focus:border-[#611192]/40 focus:bg-white focus:shadow-[0_0_0_4px_rgba(97,17,146,0.08)]"
+              placeholder="Search items, brands or charities"
             />
             <label
               htmlFor="searchid1"
-              className="searchbtn absolute left-3 top-[13px]"
+              className="searchbtn absolute left-4 top-[15px]"
             >
               <Image
                 src="/images/Search-primary.svg"
@@ -263,7 +263,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className }) => {
               type="button"
               title="Search by photo"
               aria-label="Search by photo"
-              className={`absolute right-2 top-[9px] flex h-7 w-7 items-center justify-center rounded-full transition ${
+              className={`absolute right-2 top-[6px] flex h-8 w-8 items-center justify-center rounded-full transition ${
                 isImageSearching
                   ? 'bg-primary-color-100/20 text-primary-color-100'
                   : 'text-primary-color-100 hover:bg-primary-color-100/10'
@@ -281,7 +281,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className }) => {
         </form>
 
         {(query.length > 1 || suggestions.length > 0) && !isModalOpen && (
-          <div className="suggestions-dropdown absolute left-0 top-full z-10 mt-2 max-h-[300px] w-full overflow-y-auto rounded-xl border border-mono-20 bg-white shadow-lg">
+          <div className="suggestions-dropdown absolute left-0 top-full z-[90] mt-2 max-h-[340px] w-full overflow-y-auto rounded-2xl border border-[#ECE8EE] bg-white shadow-[0_24px_48px_rgba(11,1,18,0.12)]">
             {aiIntent && (
               <p className="rounded-t-xl border-b bg-[#FCF2FF] px-3 py-2 text-xs text-primary-color-100">
                 ✨ AI: {aiIntent}

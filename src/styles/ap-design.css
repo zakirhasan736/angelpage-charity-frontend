@@ -1,0 +1,338 @@
+/*
+  Angelpage design layer
+  Builds on the existing brand: Lustria (display) + Poppins (UI),
+  #611192 primary, #3B055C deep plum, #F2E8F8 / #FCF2FF tints,
+  #1B264F navy and the pill buttons in styles.css.
+  Nothing here changes the global button components.
+*/
+
+:root {
+  --ap-primary: #611192;
+  --ap-primary-deep: #3B055C;
+  --ap-primary-tint: #F2E8F8;
+  --ap-primary-wash: #FCF2FF;
+  --ap-navy: #1B264F;
+  --ap-ink: #0B0112;
+  --ap-ink-2: #474648;
+  --ap-muted: #6B686E;
+  --ap-line: #ECE8EE;
+  --ap-line-strong: #DCD5E0;
+  --ap-surface: #FFFFFF;
+  --ap-canvas: #FAF8FB;
+  --ap-radius-sm: 12px;
+  --ap-radius: 20px;
+  --ap-radius-lg: 28px;
+  --ap-shadow-sm: 0 1px 2px rgba(11, 1, 18, 0.04), 0 2px 8px rgba(11, 1, 18, 0.04);
+  --ap-shadow: 0 2px 6px rgba(11, 1, 18, 0.04), 0 12px 32px rgba(59, 5, 92, 0.08);
+  --ap-shadow-lg: 0 24px 60px rgba(59, 5, 92, 0.16);
+  --ap-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The global `* { color }` reset in globals.css (base layer) stops icons and inline
+   text from inheriting their parent's colour. Same layer, higher specificity:
+   inheritance works again, while utility classes on the element still win. */
+@layer base {
+  svg,
+  svg *,
+  span,
+  strong,
+  em,
+  b,
+  small {
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* ---------- Section rhythm ---------- */
+  .ap-section {
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+
+  @media (max-width: 767px) {
+    .ap-section {
+      padding-top: 44px;
+      padding-bottom: 44px;
+    }
+  }
+
+  .ap-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ap-primary);
+  }
+
+  .ap-eyebrow::before {
+    content: '';
+    width: 18px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: currentColor;
+    opacity: 0.6;
+  }
+
+  .ap-eyebrow--plain::before {
+    display: none;
+  }
+
+  .ap-display {
+    font-family: 'Lustria', serif;
+    font-weight: 400;
+    color: var(--ap-ink);
+    letter-spacing: -0.01em;
+    line-height: 1.08;
+  }
+
+  /* ---------- Surfaces ---------- */
+  .ap-card {
+    background: var(--ap-surface);
+    border: 1px solid var(--ap-line);
+    border-radius: var(--ap-radius);
+    box-shadow: var(--ap-shadow-sm);
+  }
+
+  .ap-card--hover {
+    transition: box-shadow 260ms var(--ap-ease), transform 260ms var(--ap-ease), border-color 260ms var(--ap-ease);
+  }
+
+  .ap-card--hover:hover {
+    box-shadow: var(--ap-shadow);
+    border-color: var(--ap-line-strong);
+    transform: translateY(-2px);
+  }
+
+  /* ---------- Slider arrows ---------- */
+  .ap-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1px solid var(--ap-line-strong);
+    background: var(--ap-surface);
+    color: var(--ap-primary);
+    box-shadow: var(--ap-shadow-sm);
+    transition: background-color 200ms var(--ap-ease), color 200ms var(--ap-ease),
+      border-color 200ms var(--ap-ease), box-shadow 200ms var(--ap-ease), opacity 200ms;
+  }
+
+  .ap-arrow:hover:not(:disabled) {
+    background: var(--ap-primary);
+    border-color: var(--ap-primary);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(97, 17, 146, 0.24);
+  }
+
+  .ap-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .ap-arrow:focus-visible {
+    outline: 2px solid var(--ap-primary);
+    outline-offset: 3px;
+  }
+
+  .ap-arrow--dark {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.24);
+    color: #fff;
+    backdrop-filter: blur(8px);
+  }
+
+  .ap-arrow--dark:hover:not(:disabled) {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ap-primary);
+  }
+
+  .ap-progress {
+    position: relative;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ap-line);
+    overflow: hidden;
+  }
+
+  .ap-progress > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 2px;
+    background: var(--ap-primary);
+    transition: width 400ms var(--ap-ease), left 400ms var(--ap-ease);
+  }
+
+  /* ---------- Chips ---------- */
+  .ap-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--ap-primary-tint);
+    color: var(--ap-primary);
+    white-space: nowrap;
+  }
+
+  .ap-chip--glass {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 10px rgba(11, 1, 18, 0.08);
+  }
+
+  .ap-chip--live {
+    background: #E50035;
+    color: #fff;
+  }
+
+  .ap-live-dot {
+    position: relative;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .ap-live-dot::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 999px;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: ap-pulse 1.6s var(--ap-ease) infinite;
+  }
+
+  /* ---------- Header ---------- */
+  /* In-flow header: no sticky/backdrop-filter, so the daisyUI drawers
+     (fixed-position children) keep working. */
+  .ap-header {
+    position: relative;
+    background: #fff;
+  }
+
+  .ap-header.is-dark {
+    background: var(--ap-ink);
+  }
+
+  .ap-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    color: var(--ap-ink);
+    transition: background-color 200ms var(--ap-ease), color 200ms;
+  }
+
+  .ap-icon-btn:hover {
+    background: var(--ap-primary-wash);
+    color: var(--ap-primary);
+  }
+
+  /* ---------- Mega menu ---------- */
+  .ap-mega-enter {
+    animation: ap-mega-in 220ms var(--ap-ease);
+  }
+
+  .ap-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 44px;
+    padding: 0 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ap-ink-2);
+    white-space: nowrap;
+    transition: color 180ms;
+  }
+
+  .ap-nav-link::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--ap-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 260ms var(--ap-ease);
+  }
+
+  .ap-nav-link:hover,
+  .ap-nav-link[aria-expanded='true'],
+  .ap-nav-link.is-current {
+    color: var(--ap-primary);
+  }
+
+  .ap-nav-link:hover::after,
+  .ap-nav-link[aria-expanded='true']::after,
+  .ap-nav-link.is-current::after {
+    transform: scaleX(1);
+  }
+
+  .ap-nav-link:focus-visible {
+    outline: 2px solid var(--ap-primary);
+    outline-offset: -2px;
+    border-radius: 8px;
+  }
+
+  .ap-no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .ap-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes ap-pulse {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes ap-mega-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ap-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes ap-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-card--hover,
+  .ap-arrow,
+  .ap-nav-link::after,
+  .ap-mega-enter,
+  .ap-live-dot::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -8,6 +8,30 @@ layer(base);
 @config '../../tailwind.config.mjs';
 
 /*
+  Desktop-first max-width breakpoints. Declared widest -> narrowest so the
+  narrower variant comes later in the CSS and wins (e.g. sm: beats md:).
+  Tailwind 4 sorted the old config `screens: { max }` entries ascending,
+  which made md: override sm: on phones.
+*/
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-2xl: 1921px;
+}
+
+@custom-variant xxxl (@media (max-width: 3019px));
+@custom-variant xxl (@media (max-width: 2560px));
+@custom-variant xl (@media (max-width: 1920px));
+@custom-variant desktop-l (@media (max-width: 1880px));
+@custom-variant desktop-m (@media (max-width: 1680px));
+@custom-variant laptop-x (@media (max-width: 1440px));
+@custom-variant laptop-m (@media (max-width: 1280px));
+@custom-variant lg (@media (max-width: 1170px));
+@custom-variant md (@media (max-width: 991px));
+@custom-variant sm (@media (max-width: 767px));
+@custom-variant xs (@media (max-width: 414px));
+@custom-variant xxs (@media (max-width: 375px));
+
+/*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
   looks the same as it did with Tailwind CSS v3.
