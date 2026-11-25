@@ -3,7 +3,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/elements';
+import { CalendarDays, Newspaper, Send, ShieldCheck } from 'lucide-react';
+import { AuthField, AuthTextarea } from '@/components/auth/AuthKit';
+import { Btn, SectionCard, StatusPill } from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import AiAssistButton from '@/components/ai/AiAssistButton';
 import TagPills from '@/components/ai/TagPills';
@@ -187,164 +189,121 @@ const CharityCommunityPanel = () => {
     }
   };
 
-  return (
-    <div className="charity-community-panel max-w-2xl">
-      <p className="body-small text-mono-70 mb-6">
-        Share stories and run donation or live events. Posts are reviewed by Angelpage before going live on the blog and homepage.
-      </p>
+  const submissions = tab === 'blog' ? myPosts : myEvents;
 
-      <div className="flex gap-2 mb-6">
-        {(['blog', 'events'] as const).map(t => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-full body-caption capitalize ${
-              tab === t
-                ? 'bg-primary-color-100 text-white'
-                : 'bg-mono-20 hover:bg-[#FCF2FF]'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
+  return (
+    <div className="charity-community-panel space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Content type" className="grid grid-cols-2 gap-1 rounded-2xl bg-[#F1ECF4] p-1 sm:w-full">
+          {([
+            { id: 'blog', label: 'Blog post', icon: Newspaper },
+            { id: 'events', label: 'Event or appeal', icon: CalendarDays },
+          ] as const).map(t => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-[13.5px] font-medium transition ${tab === t.id ? 'bg-white text-[#611192] shadow-[0_4px_14px_rgba(59,5,92,0.12)]' : 'text-[#6B686E]'}`}
+            >
+              <t.icon className="h-4 w-4" aria-hidden /> {t.label}
+            </button>
+          ))}
+        </div>
+        <p className="inline-flex items-center gap-1.5 text-[12.5px] text-[#8A888C]">
+          <ShieldCheck className="h-4 w-4 text-[#611192]" aria-hidden /> Reviewed by Angelpage before it goes live
+        </p>
       </div>
 
       {tab === 'blog' ? (
-        <div className="space-y-4 rounded-xl border bg-white p-6">
-          <div className="flex flex-wrap justify-between gap-3 items-center">
-            <h3 className="body-bold-small">New blog post</h3>
-            <AiAssistButton
-              label="✨ AI SEO assist"
-              loading={aiLoading}
-              onClick={aiBlog}
-            />
-          </div>
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Title"
-            value={blogForm.title}
-            onChange={e => setBlogForm(f => ({ ...f, title: e.target.value }))}
-          />
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Excerpt"
-            rows={2}
-            value={blogForm.excerpt}
-            onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))}
-          />
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Article content"
-            rows={6}
-            value={blogForm.content}
-            onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))}
-          />
-          <TagPills tags={blogForm.tags} />
-          <Button variant="primary" onClick={submitBlog}>
-            Submit for review
-          </Button>
-          {myPosts.length > 0 && (
-            <div className="pt-4 border-t">
-              <p className="caption text-mono-70 mb-2">Your posts</p>
-              <ul className="space-y-1">
-                {myPosts.map((p, i) => (
-                  <li key={i} className="body-caption">
-                    {p.title} — <span className="text-mono-70">{p.status}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-4 rounded-xl border bg-white p-6">
-          <div className="flex flex-wrap justify-between gap-3 items-center">
-            <h3 className="body-bold-small">New event</h3>
-            <AiAssistButton
-              label="✨ AI suggest event"
-              loading={aiLoading}
-              onClick={aiEvent}
-            />
-          </div>
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Topic or theme (optional)"
-            value={eventForm.topic}
-            onChange={e => setEventForm(f => ({ ...f, topic: e.target.value }))}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Title"
-            value={eventForm.title}
-            onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))}
-          />
-          <select
-            className="w-full border rounded-lg px-3 py-2"
-            value={eventForm.eventType}
-            onChange={e =>
-              setEventForm(f => ({ ...f, eventType: e.target.value }))
-            }
-          >
-            <option value="donation">Donation drive</option>
-            <option value="live_session">Live session</option>
-            <option value="general">Community event</option>
-          </select>
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Short summary"
-            rows={2}
-            value={eventForm.excerpt}
-            onChange={e => setEventForm(f => ({ ...f, excerpt: e.target.value }))}
-          />
-          <textarea
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Details"
-            rows={4}
-            value={eventForm.description}
-            onChange={e =>
-              setEventForm(f => ({ ...f, description: e.target.value }))
-            }
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Donation goal (£)"
-            value={eventForm.donationGoal}
-            onChange={e =>
-              setEventForm(f => ({ ...f, donationGoal: e.target.value }))
-            }
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Donation or live URL"
-            value={eventForm.donationUrl || eventForm.liveStreamUrl}
-            onChange={e => {
-              const v = e.target.value;
-              setEventForm(f => ({
-                ...f,
-                donationUrl: f.eventType === 'donation' ? v : f.donationUrl,
-                liveStreamUrl:
-                  f.eventType === 'live_session' ? v : f.liveStreamUrl,
-              }));
+        <SectionCard icon={Newspaper} title="Write a blog post" description="Share a story, a thank-you or an update. Good posts appear on the journal and homepage." action={<AiAssistButton label="✨ AI assist" loading={aiLoading} onClick={aiBlog} />}>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              submitBlog();
             }}
-          />
-          <Button variant="primary" onClick={submitEvent}>
-            Submit for review
-          </Button>
-          {myEvents.length > 0 && (
-            <div className="pt-4 border-t">
-              <p className="caption text-mono-70 mb-2">Your events</p>
-              <ul className="space-y-1">
-                {myEvents.map((e, i) => (
-                  <li key={i} className="body-caption">
-                    {e.title} — <span className="text-mono-70">{e.status}</span>
-                  </li>
-                ))}
-              </ul>
+            className="space-y-4"
+          >
+            <AuthField label="Title" value={blogForm.title} onChange={e => setBlogForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. How your sales funded 40 warm meals" />
+            <AuthTextarea label="Summary" rows={2} value={blogForm.excerpt} onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))} hint="One or two sentences shown on the blog card." />
+            <AuthTextarea label="Article" rows={8} value={blogForm.content} onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))} />
+            <TagPills tags={blogForm.tags} />
+            <div className="flex justify-end">
+              <Btn type="submit" icon={Send} className="sm:w-full">
+                Submit for review
+              </Btn>
             </div>
-          )}
-        </div>
+          </form>
+        </SectionCard>
+      ) : (
+        <SectionCard icon={CalendarDays} title="Create an event or appeal" description="Run a donation drive, a live session or a community event." action={<AiAssistButton label="✨ AI suggest" loading={aiLoading} onClick={aiEvent} />}>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              submitEvent();
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <p className="mb-1.5 text-[13px] font-medium text-[#2A2730]">Type</p>
+              <div role="radiogroup" className="grid grid-cols-3 gap-1 rounded-xl bg-[#F4F1F6] p-1 sm:grid-cols-1">
+                {[
+                  { v: 'donation', l: 'Donation drive' },
+                  { v: 'live_session', l: 'Live session' },
+                  { v: 'general', l: 'Community event' },
+                ].map(o => (
+                  <button key={o.v} type="button" role="radio" aria-checked={eventForm.eventType === o.v} onClick={() => setEventForm(f => ({ ...f, eventType: o.v }))} className={`h-10 rounded-lg text-[13px] font-medium ${eventForm.eventType === o.v ? 'bg-white text-[#611192] shadow-sm' : 'text-[#6B686E]'}`}>
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <AuthField label="Topic or theme (optional)" value={eventForm.topic} onChange={e => setEventForm(f => ({ ...f, topic: e.target.value }))} hint="Helps AI suggest a title and copy." />
+            <AuthField label="Title" value={eventForm.title} onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))} />
+            <AuthTextarea label="Short summary" rows={2} value={eventForm.excerpt} onChange={e => setEventForm(f => ({ ...f, excerpt: e.target.value }))} />
+            <AuthTextarea label="Details" rows={5} value={eventForm.description} onChange={e => setEventForm(f => ({ ...f, description: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+              <AuthField label="Donation goal" inputMode="decimal" value={eventForm.donationGoal} onChange={e => setEventForm(f => ({ ...f, donationGoal: e.target.value }))} placeholder="e.g. 2500" />
+              <AuthField
+                label={eventForm.eventType === 'live_session' ? 'Live stream link' : 'Donation link'}
+                type="url"
+                inputMode="url"
+                placeholder="https://"
+                value={eventForm.donationUrl || eventForm.liveStreamUrl}
+                onChange={e => {
+                  const v = e.target.value;
+                  setEventForm(f => ({
+                    ...f,
+                    donationUrl: f.eventType === 'donation' ? v : f.donationUrl,
+                    liveStreamUrl: f.eventType === 'live_session' ? v : f.liveStreamUrl,
+                  }));
+                }}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Btn type="submit" icon={Send} className="sm:w-full">
+                Submit for review
+              </Btn>
+            </div>
+          </form>
+        </SectionCard>
       )}
+
+      <SectionCard title={tab === 'blog' ? 'Your posts' : 'Your events'} description="Status updates once our team has reviewed them.">
+        {submissions.length === 0 ? (
+          <p className="rounded-2xl bg-[#FAF8FB] px-4 py-5 text-center text-[13.5px] text-[#6B686E]">Nothing submitted yet.</p>
+        ) : (
+          <ul className="divide-y divide-[#F3EFF5]">
+            {submissions.map((p, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 py-3">
+                <span className="min-w-0 truncate text-[14px] text-[#0B0112]">{p.title || 'Untitled'}</span>
+                <StatusPill status={p.status} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </SectionCard>
     </div>
   );
 };

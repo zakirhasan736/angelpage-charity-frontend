@@ -3,7 +3,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/elements';
+import { Camera, Circle, Clapperboard, FileText, Film, Image as ImageIcon, Send, Square, UploadCloud, Video, X } from 'lucide-react';
+import Image from '@/components/common/SafeImage';
+import { AuthField, AuthTextarea } from '@/components/auth/AuthKit';
+import { Btn, EmptyState, SectionCard, StatusPill } from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import SocialPostingToggles, {
   defaultSocialPostingPrefs,
@@ -247,214 +250,170 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
     document: 'image/*,application/pdf',
   };
 
+  const MODES = [
+    { id: 'photo', label: 'Photo', icon: ImageIcon },
+    { id: 'camera', label: 'Camera', icon: Camera },
+    { id: 'reel', label: 'Reel', icon: Film },
+    { id: 'record', label: 'Record', icon: Video },
+    { id: 'document', label: 'Document', icon: FileText },
+  ] as const;
+
   return (
-    <div className="gallery-panel max-w-3xl space-y-8">
-      <div>
-        <h3 className="body-bold-large text-mono-100">Gallery & reels</h3>
-        <p className="caption text-mono-70 mt-2">
-          Post photos, record or upload reels, and share to social media. Published items appear on{' '}
-          <a href="/reels" className="underline text-primary-color-100" target="_blank" rel="noreferrer">
-            /reels
-          </a>
-          .
-        </p>
-      </div>
+    <div className="gallery-panel space-y-5">
+      <SectionCard
+        icon={Clapperboard}
+        title="Post to your gallery"
+        description={
+          <>
+            Share photos, reels and thank-you stories. Published items appear on{' '}
+            <a href="/reels" className="font-medium text-[#611192] underline" target="_blank" rel="noreferrer">
+              Reels
+            </a>
+            .
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div role="tablist" aria-label="What are you posting?" className="grid grid-cols-5 gap-1 rounded-2xl bg-[#F1ECF4] p-1 sm:grid-cols-5">
+            {MODES.map(m => (
+              <button
+                key={m.id}
+                type="button"
+                role="tab"
+                aria-selected={mode === m.id}
+                onClick={() => {
+                  setMode(m.id);
+                  setSelectedFile(null);
+                }}
+                className={`flex flex-col items-center gap-1 rounded-xl py-2.5 text-[12px] font-medium transition ${mode === m.id ? 'bg-white text-[#611192] shadow-[0_4px_14px_rgba(59,5,92,0.12)]' : 'text-[#6B686E]'}`}
+              >
+                <m.icon className="h-[18px] w-[18px]" aria-hidden />
+                {m.label}
+              </button>
+            ))}
+          </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ['photo', 'Upload photo'],
-            ['camera', 'Take photo'],
-            ['reel', 'Upload reel'],
-            ['record', 'Record reel'],
-            ['document', 'Document'],
-          ] as const
-        ).map(([m, label]) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => {
-              setMode(m);
-              setSelectedFile(null);
-            }}
-            className={`px-3 py-1.5 rounded-full text-xs capitalize ${
-              mode === m
-                ? 'bg-primary-color-100 text-white'
-                : 'bg-mono-20 hover:bg-[#FCF2FF]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="rounded-xl border border-mono-40 bg-white p-6 space-y-4">
-        {(mode === 'camera' || mode === 'record') && (
-          <div className="space-y-3">
-            <video
-              ref={videoRef}
-              className="w-full max-h-80 rounded-lg bg-black object-contain"
-              playsInline
-              muted={mode === 'camera'}
-            />
-            <div className="flex gap-2">
-              {mode === 'camera' ? (
-                <Button type="button" variant="primary" onClick={capturePhoto}>
-                  Capture photo
-                </Button>
-              ) : recording ? (
-                <Button type="button" variant="primary" onClick={stopRecording}>
-                  Stop recording
-                </Button>
-              ) : (
-                <Button type="button" variant="primary" onClick={startRecording}>
-                  Start recording
-                </Button>
-              )}
+          {mode === 'camera' || mode === 'record' ? (
+            <div className="space-y-3">
+              <video ref={videoRef} className="aspect-video w-full rounded-2xl bg-[#0B0112] object-contain" playsInline muted={mode === 'camera'} />
+              <div className="flex justify-center">
+                {mode === 'camera' ? (
+                  <Btn icon={Camera} onClick={capturePhoto}>
+                    Capture photo
+                  </Btn>
+                ) : recording ? (
+                  <Btn variant="danger" icon={Square} onClick={stopRecording}>
+                    Stop recording
+                  </Btn>
+                ) : (
+                  <Btn icon={Circle} onClick={startRecording}>
+                    Start recording
+                  </Btn>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        {mode !== 'camera' && mode !== 'record' && (
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={acceptMap[mode]}
-              className="hidden"
-              onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Choose file
-            </Button>
-          </div>
-        )}
-
-        {preview && (
-          <div className="rounded-lg overflow-hidden border border-mono-40">
-            {file?.type.startsWith('video/') ? (
-              <video src={preview} controls className="w-full max-h-96" />
-            ) : (
-              <img src={preview} alt="Preview" className="w-full max-h-96 object-contain" />
-            )}
-          </div>
-        )}
-
-        <input
-          className="input w-full"
-          placeholder="Title"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-        <textarea
-          className="textarea w-full"
-          placeholder="Caption (optional)"
-          rows={2}
-          value={caption}
-          onChange={e => setCaption(e.target.value)}
-        />
-        <input
-          className="input w-full"
-          placeholder="Tags (comma-separated, e.g. impact, thank-you)"
-          value={tags}
-          onChange={e => setTags(e.target.value)}
-        />
-        <p className="caption text-mono-70 -mt-2">
-          Use tag <strong>impact</strong> for thank-you stories donors can find on the reels page.
-        </p>
-
-        <SocialPostingToggles value={socialPosting} onChange={setSocialPosting} />
-
-        <div className="flex flex-wrap gap-3">
-          <Button
-            type="button"
-            variant="primary"
-            disabled={uploading}
-            onClick={() => submitItem(allowModeration)}
-          >
-            {uploading ? 'Uploading…' : allowModeration ? 'Publish now' : 'Submit for review'}
-          </Button>
-          {allowModeration && (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={uploading}
-              onClick={() => submitItem(false)}
-            >
-              Save as pending
-            </Button>
+          ) : (
+            <div>
+              <input ref={fileInputRef} type="file" accept={acceptMap[mode]} className="hidden" onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
+              {!preview ? (
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#DCD3E1] bg-[#FAF8FB] px-6 py-10 text-center transition hover:border-[#611192] hover:bg-[#F6EEFA]">
+                  <UploadCloud className="h-8 w-8 text-[#611192]" aria-hidden />
+                  <span className="text-[14px] font-medium text-[#0B0112]">Choose a file</span>
+                  <span className="text-[12px] text-[#8A888C]">{mode === 'reel' ? 'MP4 or MOV' : mode === 'document' ? 'PDF' : 'JPG, PNG or WebP'}</span>
+                </button>
+              ) : null}
+            </div>
           )}
-        </div>
-      </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <p className="body-small font-medium">
-            {allowModeration ? 'Moderation queue' : 'Your gallery'} ({items.length})
-          </p>
-          {allowModeration && (
-            <select
-              className="border rounded-lg px-2 py-1 text-sm"
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-            >
+          {preview ? (
+            <div className="relative overflow-hidden rounded-2xl bg-[#0B0112]">
+              {file?.type.startsWith('video/') ? (
+                <video src={preview} controls className="max-h-96 w-full" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={preview} alt="Preview" className="max-h-96 w-full object-contain" />
+              )}
+              <button type="button" onClick={() => setSelectedFile(null)} className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0B0112]" aria-label="Remove file">
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          ) : null}
+
+          <AuthField label="Title" value={title} onChange={e => setTitle(e.target.value)} />
+          <AuthTextarea label="Caption (optional)" rows={2} value={caption} onChange={e => setCaption(e.target.value)} />
+          <AuthField label="Tags" value={tags} onChange={e => setTags(e.target.value)} placeholder="impact, thank-you" hint="Separate with commas. Use “impact” for thank-you stories donors can find on Reels." />
+
+          <div className="rounded-2xl bg-[#FAF8FB] p-4">
+            <SocialPostingToggles value={socialPosting} onChange={setSocialPosting} />
+          </div>
+
+          <div className="flex flex-wrap justify-end gap-2 border-t border-[#F3EFF5] pt-4 sm:flex-col-reverse">
+            {allowModeration ? (
+              <Btn variant="secondary" loading={uploading} onClick={() => submitItem(false)}>
+                Save as pending
+              </Btn>
+            ) : null}
+            <Btn icon={Send} loading={uploading} onClick={() => submitItem(allowModeration)}>
+              {allowModeration ? 'Publish now' : 'Submit for review'}
+            </Btn>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title={`${allowModeration ? 'Moderation queue' : 'Your gallery'} (${items.length})`}
+        action={
+          allowModeration ? (
+            <select aria-label="Filter by status" className="h-9! w-auto! py-0! text-[13px]!" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
               <option value="pending_review">Pending</option>
               <option value="published">Published</option>
               <option value="">All</option>
             </select>
-          )}
-        </div>
-
-        <div className="grid gap-4">
-          {items.map(item => (
-            <div
-              key={item._id}
-              className="flex gap-4 rounded-lg border border-mono-40 p-4 items-start"
-            >
-              <img
-                src={item.media.thumbnailUrl || item.media.url}
-                alt=""
-                className="w-20 h-20 object-cover rounded-sm"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="body-small font-medium truncate">{item.title}</p>
-                <p className="caption text-mono-70">
-                  {item.kind} · {item.status}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {item.status === 'published' && (
-                    <a
-                      href={`/reels?item=${item.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="caption underline text-primary-color-100"
-                    >
-                      View
-                    </a>
-                  )}
-                  {item.status === 'published' && (
-                    <Button type="button" variant="secondary" onClick={() => shareItem(item._id)}>
-                      Share to socials
-                    </Button>
-                  )}
-                  {allowModeration && item.status === 'pending_review' && (
-                    <Button type="button" variant="primary" onClick={() => publishItem(item._id)}>
-                      Approve
-                    </Button>
-                  )}
-                  <Button type="button" variant="secondary" onClick={() => deleteItem(item._id)}>
-                    Remove
-                  </Button>
+          ) : null
+        }
+      >
+        {items.length === 0 ? (
+          <EmptyState icon={ImageIcon} title="Nothing here yet" body="Your photos and reels will appear here." />
+        ) : (
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-2 sm:grid-cols-1">
+            {items.map(item => (
+              <li key={item._id} className="flex gap-3 rounded-2xl p-3 ring-1 ring-[#ECE8EE]">
+                <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F4F1F6]">
+                  <Image src={item.media.thumbnailUrl || item.media.url} alt="" fill sizes="80px" className="object-cover" />
+                  {item.kind === 'reel' ? <Film className="absolute right-1.5 bottom-1.5 h-4 w-4 text-white drop-shadow" aria-hidden /> : null}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-semibold text-[#0B0112]">{item.title || 'Untitled'}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <StatusPill status={item.status === 'pending_review' ? 'In review' : item.status} tone={item.status === 'published' ? 'green' : item.status === 'pending_review' ? 'amber' : 'grey'} />
+                    <span className="text-[11.5px] text-[#8A888C] capitalize">{item.kind}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {item.status === 'published' ? (
+                      <a href={`/reels?item=${item.slug}`} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12.5px] font-medium text-[#611192] hover:bg-[#F6EEFA]">
+                        View
+                      </a>
+                    ) : null}
+                    {item.status === 'published' ? (
+                      <Btn size="sm" variant="ghost" onClick={() => shareItem(item._id)} className="h-8!">
+                        Share
+                      </Btn>
+                    ) : null}
+                    {allowModeration && item.status === 'pending_review' ? (
+                      <Btn size="sm" onClick={() => publishItem(item._id)} className="h-8!">
+                        Approve
+                      </Btn>
+                    ) : null}
+                    <Btn size="sm" variant="ghost" onClick={() => deleteItem(item._id)} className="h-8! text-[#B0002A]! hover:bg-[#FFF1F4]!">
+                      Remove
+                    </Btn>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </SectionCard>
     </div>
   );
 };

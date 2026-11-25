@@ -6,10 +6,10 @@ import FullScreenLoader from '@/components/common/loading/FullScreenLoader';
 import axios from 'axios';
 import BannerSection from './Banner';
 import CharityAccountInfoMain from './account';
-import DeleteAccount from './delete-account';
-import CharityProductListingArea from './listing';
+import DeleteAccountPanel from '@/components/account/DeleteAccountPanel';
+import ListingsManager from '@/components/account/ListingsManager';
 import { Product } from '@/types/productTypes';
-import SoldItems from './sold';
+import OrdersWorkspace from '@/components/account/OrdersWorkspace';
 import AnalyticsPage from './Analytics';
 import CharityCommunityPanel from '@/components/charity/account/CharityCommunityPanel';
 import CharityStaffPanel from '@/components/charity/account/CharityStaffPanel';
@@ -90,9 +90,6 @@ const CharityAccount = () => {
   }, [session?.token]);
 
   if (!session) {
-    return <p>Please log in to view your charity account.</p>;
-  }
-  if (loading) {
     return <FullScreenLoader />;
   }
 
@@ -100,7 +97,7 @@ const CharityAccount = () => {
     ...visibleTabs.map(tab => ({
       id: tab.id,
       label: tab.label,
-      badge: tab.id === 'listings' ? productsCount : undefined,
+      badge: tab.id === 'listings' && !loading ? productsCount : undefined,
     })),
     ...(role === 'CHARITY'
       ? [{ id: 'delete', label: 'Delete account' }]
@@ -120,9 +117,9 @@ const CharityAccount = () => {
       </div>
       {role === 'CHARITY_STAFF' && (
         <div className="custom-container mt-4">
-          <p className="body-caption text-mono-70 rounded-lg bg-[#FCF2FF] px-4 py-2">
-            Charity staff mode — listings, orders, and community only.
-            {staffRole === 'MANAGER' ? ' Manager access includes analytics.' : ''}
+          <p className="flex items-center gap-2 rounded-2xl bg-[#F6EEFA] px-4 py-3 text-[13px] text-[#3B055C] ring-1 ring-[#EBDDF5]">
+            <span className="rounded-full bg-[#611192] px-2 py-0.5 text-[11px] font-semibold text-white">Staff</span>
+            You can manage listings, orders and community.{staffRole === 'MANAGER' ? ' As a manager you also see analytics.' : ''}
           </p>
         </div>
       )}
@@ -146,7 +143,7 @@ const CharityAccount = () => {
             )}
             {activeTabId === 'listings' && (
               <li className="tabs-cont-item">
-                <CharityProductListingArea />
+                <ListingsManager role="CHARITY" />
               </li>
             )}
             {activeTabId === 'product-sync' && (
@@ -171,7 +168,7 @@ const CharityAccount = () => {
             )}
             {activeTabId === 'sold' && (
               <li className="tabs-cont-item">
-                <SoldItems />
+                <OrdersWorkspace mode="sold" />
               </li>
             )}
             {activeTabId === 'messages' && (
@@ -201,7 +198,7 @@ const CharityAccount = () => {
             )}
             {activeTabId === 'delete' && (
               <li className="tabs-cont-item">
-                <DeleteAccount />
+                <DeleteAccountPanel isCharity />
               </li>
             )}
       </DashboardLayout>

@@ -70,7 +70,14 @@ const BannerSection = () => {
 
 
   if (!profileData) {
-    return <p>Failed to load profile data.</p>;
+    if (!loading) return null;
+    return (
+      <section className="bg-white pt-6 max-[767px]:pt-3" aria-busy="true">
+        <div className="custom-container">
+          <div className="h-[136px] animate-pulse rounded-[28px] bg-[#F4F1F6] max-[767px]:h-[120px] max-[767px]:rounded-[22px]" />
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -125,7 +132,7 @@ const BannerSection = () => {
                   <p className="text-xs text-[#B0002A]">Your email is not verified yet.</p>
                   <Button
                     variant="accend-link"
-                    onClick={() => router.push('/auth/verify-email')}
+                    onClick={() => router.push(`/auth/verify-email?email=${encodeURIComponent(session?.user?.email || '')}`)}
                     className="text-xs! text-[#B0002A]! [-webkit-text-fill-color:#B0002A]! underline!"
                   >
                     Verify email

@@ -5,13 +5,12 @@ import FullScreenLoader from '@/components/common/loading/FullScreenLoader';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import BannerSection from './Banner';
-import DeleteAccount from './delete-account';
+import DeleteAccountPanel from '@/components/account/DeleteAccountPanel';
 import { Product } from '@/types/productTypes';
 import AnalyticsPage from './Analytics';
 import UsersAccountInfoMain from './Account';
-import UsersProductListingArea from './listing';
-import SoldItemsPage from './sold';
-import BoughtItemsPage from './bought';
+import ListingsManager from '@/components/account/ListingsManager';
+import OrdersWorkspace from '@/components/account/OrdersWorkspace';
 import LogoutButton from '@/components/elements/button/LogoutButton';
 import AccountMessagingPanel from '@/components/account/AccountMessagingPanel';
 import NotificationsCentre from '@/components/account/NotificationsCentre';
@@ -92,14 +91,11 @@ const UsersAccount = () => {
   }, [session?.token]);
 
   if (!session) {
-    return <p>Please log in to view your account listing products.</p>;
-  }
-  if (loading) {
     return <FullScreenLoader />;
   }
 
   const tabsWithBadges: AccountTab[] = USER_TABS.map(tab =>
-    tab.id === 'listings' ? { ...tab, badge: productsCount } : tab,
+    tab.id === 'listings' && !loading ? { ...tab, badge: productsCount } : tab,
   );
 
   return (
@@ -122,7 +118,7 @@ const UsersAccount = () => {
               <li className="tabs-cont-item"><UsersAccountInfoMain /></li>
             )}
             {activeTabId === 'listings' && (
-              <li className="tabs-cont-item"><UsersProductListingArea /></li>
+              <li className="tabs-cont-item"><ListingsManager role="USER" /></li>
             )}
             {activeTabId === 'affiliate' && (
               <li className="tabs-cont-item"><AffiliateDashboard /></li>
@@ -134,10 +130,10 @@ const UsersAccount = () => {
               <li className="tabs-cont-item"><SocialDashboard /></li>
             )}
             {activeTabId === 'sold' && (
-              <li className="tabs-cont-item"><SoldItemsPage /></li>
+              <li className="tabs-cont-item"><OrdersWorkspace mode="sold" /></li>
             )}
             {activeTabId === 'bought' && (
-              <li className="tabs-cont-item"><BoughtItemsPage /></li>
+              <li className="tabs-cont-item"><OrdersWorkspace mode="bought" /></li>
             )}
             {activeTabId === 'messages' && (
               <li className="tabs-cont-item"><AccountMessagingPanel /></li>
@@ -149,7 +145,7 @@ const UsersAccount = () => {
               <li className="tabs-cont-item"><UserEarningsPanel /></li>
             )}
             {activeTabId === 'delete' && (
-              <li className="tabs-cont-item"><DeleteAccount /></li>
+              <li className="tabs-cont-item"><DeleteAccountPanel /></li>
             )}
       </DashboardLayout>
     </div>
