@@ -169,7 +169,7 @@ export function mapBlogToCard(post: BlogPostRecord) {
     image: post.coverImage || '/images/blog/blog1.jpg',
     date: post.publishedAt,
     author: post.authorName,
-    readMins: readingMinutes(post.content || post.excerpt),
+    readMins: post.content ? readingMinutes(post.content) : undefined,
   };
 }
 
