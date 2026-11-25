@@ -1,188 +1,235 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
-import 'swiper/css/effect-fade';
-import { EffectFade, Autoplay, A11y } from 'swiper/modules';
-import { Swiper as SwiperType } from 'swiper';
-import { ArrowLeft, ArrowRight, HeartHandshake, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/elements';
+import { ArrowLeft, ArrowRight, BadgeCheck, Globe2, Lock, Pause, Play } from 'lucide-react';
+import { CHARITY_SHARE_PERCENT, PLATFORM_FEE_PERCENT } from '@/constants/brand';
+import { formatMoney } from '@/lib/money';
 
-const SLIDE_DELAY = 6000;
+const SLIDE_MS = 6500;
 
-const slides = [
+const SLIDES = [
   {
+    tab: 'Choose your split',
     eyebrow: 'Giving has never been easier',
-    title: 'You choose the split. Give 100% or share the sale.',
-    body: 'Sell what you no longer need and decide how much of every sale goes to the charity you care about.',
+    title: `You choose the split. Give up to ${CHARITY_SHARE_PERCENT}% of every sale.`,
+    body: 'Sell what you no longer need and decide how much of each sale goes to the charity you care about. Buyers see the split before they pay.',
     imageSrc: '/images/home/home-banner-modal-1.jpg',
     alt: 'Smiling woman holding a pre-loved jacket',
-    stat: { value: 'Up to 100%', label: 'of each sale to charity' },
   },
   {
-    eyebrow: 'Join the movement',
-    title: 'Together, we can make a real difference.',
-    body: 'A marketplace built around verified charities in the United States, Canada and the United Kingdom.',
+    tab: 'Verified charities',
+    eyebrow: 'Charities you can trust',
+    title: 'Shop pre-loved from charities that are checked first.',
+    body: 'Every charity is reviewed before its storefront opens. Browse their shops in the United States, Canada and the United Kingdom.',
     imageSrc: '/images/home/home-banner-modal-3.jpg',
     alt: 'Volunteers sorting donated clothing',
-    stat: { value: '3 markets', label: 'USA, Canada & UK' },
   },
   {
+    tab: 'Every sale counts',
     eyebrow: 'Your impact matters',
     title: 'Every purchase counts toward a better tomorrow.',
-    body: 'Buy pre-loved, see exactly how much reaches the cause, and follow the impact you help create.',
+    body: 'Buy something you love, see exactly how much reaches the cause, and relax: your payment is held until the item arrives.',
     imageSrc: '/images/home/home-banner-modal-2.jpg',
-    alt: 'Hands holding a gift box',
-    stat: { value: 'Pre-loved', label: 'good for people and planet' },
+    alt: 'Hands holding a wrapped gift box',
   },
 ];
 
+/** Example sale shown on the floating card (uses the real fee and maximum share). */
+const EXAMPLE_PRICE = 40;
+const exampleCharity = (EXAMPLE_PRICE * CHARITY_SHARE_PERCENT) / 100;
+const exampleFee = (EXAMPLE_PRICE * PLATFORM_FEE_PERCENT) / 100;
+
+/**
+ * Guest hero. No layout shift between slides:
+ *  - all slide texts sit in one grid cell (stacked), so the copy block is
+ *    always as tall as the longest slide; only opacity changes
+ *  - images cross-fade inside a fixed aspect-ratio box
+ * Autoplay pauses on hover, keyboard focus, hidden tab and reduced motion.
+ */
 const HomeLandingBanner = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [swiper, setSwiper] = useState<SwiperType | null>(null);
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [userPaused, setUserPaused] = useState(false);
   const [cycle, setCycle] = useState(0);
+  const reduced = useRef(false);
+  // market currency after mount (server renders USD, so hydration matches)
+  const [money, setMoney] = useState<(n: number) => string>(() => (n: number) => `$${n.toFixed(2)}`);
+  useEffect(() => setMoney(() => (n: number) => formatMoney(n)), []);
 
   useEffect(() => {
-    setCycle(c => c + 1);
-  }, [activeIndex]);
+    reduced.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced.current) setUserPaused(true);
+    const onVisibility = () => setPaused(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
-  const slide = slides[activeIndex];
+  const go = useCallback((i: number) => {
+    setActive((i + SLIDES.length) % SLIDES.length);
+    setCycle(c => c + 1);
+  }, []);
+
+  const running = !paused && !userPaused;
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setTimeout(() => go(active + 1), SLIDE_MS);
+    return () => window.clearTimeout(id);
+  }, [active, running, cycle, go]);
 
   return (
-    <section className="banner-section bg-white pt-5 pb-4 max-[767px]:pt-3">
+    <section className="banner-section bg-white pt-5 pb-4 sm:pt-3" aria-roledescription="carousel" aria-label="Angelpage highlights">
       <div className="custom-container">
-        <div className="relative overflow-hidden rounded-[32px] bg-[#0B0112] max-[767px]:rounded-[24px]">
-          {/* soft brand glow */}
-          <div
-            className="pointer-events-none absolute -left-40 -top-40 h-[480px] w-[480px] rounded-full bg-[#611192]/45 blur-[120px]"
-            aria-hidden
-          />
-          <div className="relative grid grid-cols-12 items-stretch max-[991px]:grid-cols-1">
+        <div
+          className="relative isolate overflow-hidden rounded-[32px] bg-[#0B0112] sm:rounded-[24px]"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={() => setPaused(false)}
+        >
+          <div className="pointer-events-none absolute -top-40 -left-40 -z-10 h-[480px] w-[480px] rounded-full bg-[#611192]/50 blur-[120px]" aria-hidden />
+
+          <div className="grid grid-cols-[1fr_1.15fr] md:grid-cols-1">
             {/* copy */}
-            <div className="col-span-5 flex flex-col justify-between gap-10 p-12 max-[1280px]:p-10 max-[991px]:order-2 max-[991px]:col-span-full max-[767px]:gap-6 max-[767px]:p-6">
-              <div key={`copy-${activeIndex}`} className="ap-mega-enter">
-                <p className="ap-eyebrow text-[#D9B8EE]!">{slide.eyebrow}</p>
-                <h1 className="ap-display mt-5 text-[52px] text-white! max-[1440px]:text-[44px] max-[1280px]:text-[38px] max-[767px]:mt-3 max-[767px]:text-[28px]">
-                  {slide.title}
-                </h1>
-                <p className="mt-5 max-w-[440px] text-[15px] leading-7 text-white/70! max-[767px]:mt-3 max-[767px]:text-sm max-[767px]:leading-6">
-                  {slide.body}
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3 max-[767px]:mt-5">
-                  <Link href="/auth/register?intent=sell">
-                    <Button variant="primary" className="h-[50px]! px-7! bg-white! border-white! text-[#611192]! [-webkit-text-fill-color:#611192]! hover:bg-[#F2E8F8]!">
-                      Start selling
-                      <ArrowRight className="h-4 w-4" aria-hidden />
-                    </Button>
-                  </Link>
-                  <Link href="/product">
-                    <Button
-                      variant="secondary"
-                      className="h-[50px]! px-7! bg-transparent! border-white/35! text-white! [-webkit-text-fill-color:#fff]! hover:bg-white/10!"
+            <div className="flex flex-col justify-between gap-8 p-12 laptop-m:p-10 md:order-2 md:p-8 sm:gap-6 sm:p-5">
+              <div className="grid" aria-live="polite">
+                {SLIDES.map((s, i) => {
+                  const on = i === active;
+                  return (
+                    <div
+                      key={s.tab}
+                      aria-hidden={!on}
+                      className={`col-start-1 row-start-1 transition-all duration-700 ease-out ${on ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0'}`}
                     >
-                      Shop to give
-                    </Button>
-                  </Link>
-                </div>
+                      <p className="ap-eyebrow text-[#D9B8EE]!">{s.eyebrow}</p>
+                      {/* one real H1 (first slide); the others are visual headings */}
+                      {i === 0 ? (
+                        <h1 className="ap-display mt-5 text-[50px] leading-[1.08] text-white! laptop-x:text-[44px] laptop-m:text-[40px] sm:mt-3 sm:text-[29px]">{s.title}</h1>
+                      ) : (
+                        <p className="ap-display mt-5 text-[50px] leading-[1.08] text-white! laptop-x:text-[44px] laptop-m:text-[40px] sm:mt-3 sm:text-[29px]">{s.title}</p>
+                      )}
+                      <p className="mt-5 max-w-[460px] text-[15px] leading-7 text-white/70! sm:mt-3 sm:text-[14px] sm:leading-6">{s.body}</p>
+                    </div>
+                  );
+                })}
               </div>
 
-              <div className="flex items-center justify-between gap-6 max-[767px]:flex-col max-[767px]:items-start">
-                <div className="flex flex-1 items-center gap-2" role="tablist" aria-label="Banner slides">
-                  {slides.map((s, idx) => (
-                    <button
-                      key={s.title}
-                      type="button"
-                      role="tab"
-                      aria-selected={activeIndex === idx}
-                      aria-label={`Show slide ${idx + 1}`}
-                      onClick={() => swiper?.slideToLoop(idx)}
-                      className="relative h-1 flex-1 max-w-[64px] overflow-hidden rounded-full bg-white/20"
-                    >
-                      {activeIndex === idx && (
-                        <span
-                          key={cycle}
-                          className="absolute inset-y-0 left-0 rounded-full bg-white"
-                          style={{ animation: `ap-hero-progress ${SLIDE_DELAY}ms linear forwards` }}
-                        />
-                      )}
-                    </button>
-                  ))}
+              <div>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/auth/register?intent=sell"
+                    className="inline-flex h-[50px] items-center gap-2 rounded-full bg-white px-7 text-[15px] font-semibold text-[#611192] transition hover:bg-[#F2E8F8] sm:h-12 sm:px-6"
+                  >
+                    Start selling <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                  <Link
+                    href="/product"
+                    className="inline-flex h-[50px] items-center rounded-full px-7 text-[15px] font-medium text-white ring-1 ring-white/35 transition hover:bg-white/10 sm:h-12 sm:px-6"
+                  >
+                    Shop to give
+                  </Link>
                 </div>
-                <div className="flex items-center gap-2 max-[767px]:hidden">
-                  <button
-                    type="button"
-                    className="ap-arrow ap-arrow--dark"
-                    onClick={() => swiper?.slidePrev()}
-                    aria-label="Previous slide"
-                  >
-                    <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    className="ap-arrow ap-arrow--dark"
-                    onClick={() => swiper?.slideNext()}
-                    aria-label="Next slide"
-                  >
-                    <ArrowRight className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
-                  </button>
+                <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-white/70 sm:mt-5">
+                  <li className="inline-flex items-center gap-1.5">
+                    <BadgeCheck className="h-4 w-4 text-[#7FE0C5]" aria-hidden /> Verified charities
+                  </li>
+                  <li className="inline-flex items-center gap-1.5">
+                    <Lock className="h-4 w-4 text-[#D9B8EE]" aria-hidden /> Payment held until delivery
+                  </li>
+                  <li className="inline-flex items-center gap-1.5">
+                    <Globe2 className="h-4 w-4 text-[#D9B8EE]" aria-hidden /> USA · Canada · UK
+                  </li>
+                </ul>
+
+                {/* story tabs with progress */}
+                <div className="mt-8 flex items-center gap-3 border-t border-white/10 pt-5 sm:mt-6">
+                  <div className="grid flex-1 grid-cols-3 gap-2" role="tablist" aria-label="Choose a highlight">
+                    {SLIDES.map((s, i) => {
+                      const on = i === active;
+                      return (
+                        <button
+                          key={s.tab}
+                          type="button"
+                          role="tab"
+                          aria-selected={on}
+                          onClick={() => go(i)}
+                          className={`group min-w-0 text-left text-[12px] font-medium transition ${on ? 'text-white' : 'text-white/45 hover:text-white/80'}`}
+                        >
+                          <span className="relative block h-[3px] overflow-hidden rounded-full bg-white/15">
+                            {on ? (
+                              <span
+                                key={`${cycle}-${running}`}
+                                className="absolute inset-y-0 left-0 rounded-full bg-white"
+                                style={running ? { animation: `ap-hero-progress ${SLIDE_MS}ms linear forwards` } : { width: '100%' }}
+                              />
+                            ) : null}
+                          </span>
+                          <span className="mt-2 block truncate sm:hidden">{s.tab}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button type="button" onClick={() => go(active - 1)} aria-label="Previous highlight" className="ap-arrow ap-arrow--dark h-9! w-9! sm:hidden">
+                      <ArrowLeft className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button type="button" onClick={() => go(active + 1)} aria-label="Next highlight" className="ap-arrow ap-arrow--dark h-9! w-9! sm:hidden">
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserPaused(p => !p)}
+                      aria-label={userPaused ? 'Play slideshow' : 'Pause slideshow'}
+                      className="ap-arrow ap-arrow--dark h-9! w-9!"
+                    >
+                      {userPaused ? <Play className="h-3.5 w-3.5" aria-hidden /> : <Pause className="h-3.5 w-3.5" aria-hidden />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* imagery */}
-            <div className="relative col-span-7 min-h-[520px] max-[1280px]:min-h-[460px] max-[991px]:order-1 max-[991px]:col-span-full max-[991px]:min-h-[300px] max-[767px]:min-h-[220px]">
-              <Swiper
-                modules={[EffectFade, Autoplay, A11y]}
-                slidesPerView={1}
-                effect="fade"
-                fadeEffect={{ crossFade: true }}
-                loop
-                speed={900}
-                onSlideChange={s => setActiveIndex(s.realIndex)}
-                autoplay={{
-                  delay: SLIDE_DELAY,
-                  disableOnInteraction: false,
-                  pauseOnMouseEnter: false,
-                }}
-                onSwiper={setSwiper}
-                className="absolute! inset-0 h-full w-full"
-              >
-                {slides.map((s, index) => (
-                  <SwiperSlide key={s.imageSrc} className="h-full!">
-                    <div className="relative h-full w-full">
-                      <Image
-                        className="object-cover"
-                        fill
-                        priority={index === 0}
-                        sizes="(max-width: 991px) 100vw, 60vw"
-                        src={s.imageSrc}
-                        alt={s.alt}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#0B0112] via-[#0B0112]/10 to-transparent max-[991px]:bg-gradient-to-t max-[991px]:from-[#0B0112] max-[991px]:via-[#0B0112]/10" />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+            {/* imagery: fixed box, cross-fade only */}
+            <div className="relative min-h-[560px] laptop-m:min-h-[520px] md:order-1 md:aspect-[16/9] md:min-h-0 sm:aspect-[4/3]">
+              {SLIDES.map((s, i) => (
+                <div key={s.imageSrc} className={`absolute inset-0 transition-opacity duration-1000 ease-out ${i === active ? 'opacity-100' : 'opacity-0'}`} aria-hidden={i !== active}>
+                  <Image
+                    src={s.imageSrc}
+                    alt={s.alt}
+                    fill
+                    priority={i === 0}
+                    sizes="(max-width: 991px) 100vw, 55vw"
+                    className={`object-cover transition-transform duration-[7000ms] ease-out ${i === active && running ? 'scale-[1.06]' : 'scale-100'}`}
+                  />
+                </div>
+              ))}
+              <span className="absolute inset-0 bg-gradient-to-r from-[#0B0112] via-[#0B0112]/10 to-transparent md:bg-gradient-to-t md:from-[#0B0112] md:via-transparent" aria-hidden />
 
-              {/* floating impact card */}
-              <div className="absolute right-6 bottom-6 z-10 w-[260px] rounded-[20px] bg-white/95 p-5 shadow-[0_24px_60px_rgba(11,1,18,0.3)] backdrop-blur max-[991px]:hidden">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F2E8F8] text-[#611192]">
-                    <HeartHandshake className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div>
-                    <p key={slide.stat.value} className="ap-mega-enter font-primary text-[22px] leading-none text-[#0B0112]">
-                      {slide.stat.value}
-                    </p>
-                    <p className="mt-1 text-xs text-[#6B686E]">{slide.stat.label}</p>
+              {/* example split card */}
+              <div className="absolute right-6 bottom-6 w-[290px] rounded-[22px] bg-white/95 p-5 shadow-[0_24px_60px_rgba(11,1,18,0.3)] backdrop-blur md:hidden">
+                <p className="text-[11px] font-semibold tracking-[0.14em] text-[#8A888C] uppercase">Example: a {money(EXAMPLE_PRICE).replace(/\.00$/, '')} sale</p>
+                <div className="mt-3 flex h-2.5 overflow-hidden rounded-full" aria-hidden>
+                  <span className="bg-[#C2771A]" style={{ width: `${PLATFORM_FEE_PERCENT}%` }} />
+                  <span className="ml-[2px] flex-1 bg-[#8A3FC7]" />
+                </div>
+                <dl className="mt-3 space-y-1.5 text-[13px]">
+                  <div className="flex justify-between">
+                    <dt className="flex items-center gap-2 text-[#474648]">
+                      <span className="h-2.5 w-2.5 rounded-[3px] bg-[#8A3FC7]" aria-hidden />
+                      To charity (up to)
+                    </dt>
+                    <dd className="font-semibold text-[#0B0112]">{money(exampleCharity)}</dd>
                   </div>
-                </div>
-                <div className="mt-4 flex items-center gap-2 border-t border-[#ECE8EE] pt-3 text-[11px] text-[#474648]">
-                  <ShieldCheck className="h-3.5 w-3.5 text-[#1FC430]" aria-hidden />
-                  Verified charities only
-                </div>
+                  <div className="flex justify-between">
+                    <dt className="flex items-center gap-2 text-[#474648]">
+                      <span className="h-2.5 w-2.5 rounded-[3px] bg-[#C2771A]" aria-hidden />
+                      Platform fee
+                    </dt>
+                    <dd className="text-[#474648]">{money(exampleFee)}</dd>
+                  </div>
+                </dl>
+                <p className="mt-3 border-t border-[#ECE8EE] pt-3 text-[11px] leading-snug text-[#6B686E]">Sellers can keep part of the sale; the split is shown on every listing.</p>
               </div>
             </div>
           </div>

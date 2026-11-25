@@ -20,8 +20,8 @@ const VALUE_POINTS = [
   },
   {
     id: 'charity',
-    title: 'Flexible giving',
-    text: 'Choose how much of each sale supports charity',
+    title: 'You choose the split',
+    text: 'Up to 90% of each sale can go to charity',
     icon: (
       <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
         <path
@@ -34,8 +34,8 @@ const VALUE_POINTS = [
   },
   {
     id: 'trusted',
-    title: 'Trusted sellers',
-    text: 'Verified charities and community members',
+    title: 'Buyer protection',
+    text: 'Payment is held until your order arrives',
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path
