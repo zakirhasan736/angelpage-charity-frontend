@@ -115,7 +115,9 @@ const UsersAccount = () => {
 
   return (
     <div className="charity-account-main-wrapper">
-      <BannerSection />
+      <div className={activeTabId === 'analytics' ? '' : 'max-[991px]:hidden'}>
+        <BannerSection />
+      </div>
       <DashboardLayout
         tabs={tabsWithBadges}
         groups={USER_TAB_GROUPS}

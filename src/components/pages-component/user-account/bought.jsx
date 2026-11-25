@@ -136,7 +136,7 @@ const handleConfirmDelivery = async () => {
                               {/* {item.productName} */}
                             </span>
                             <span className="body-bold-small skeleton w-[90px] bg-mono-40 h-2 text-mono-100">
-                              {/* £{item.productPrice} */}
+                              {/* ${item.productPrice} */}
                             </span>
                           </div>
                         </div>
@@ -163,7 +163,7 @@ const handleConfirmDelivery = async () => {
                               {/* {item.productName} */}
                             </span>
                             <span className="body-bold-small skeleton w-[90px] bg-mono-40 h-2 text-mono-100">
-                              {/* £{item.productPrice} */}
+                              {/* ${item.productPrice} */}
                             </span>
                           </div>
                         </div>
@@ -277,7 +277,7 @@ const handleConfirmDelivery = async () => {
                               {item.productName}
                             </span>
                             <span className="body-bold-small text-mono-100">
-                              £{item.productPrice}
+                              ${item.productPrice}
                             </span>
                           </div>
                         </div>
@@ -476,7 +476,7 @@ const handleConfirmDelivery = async () => {
                             {/* Display dynamic charity and admin fee calculation */}
                             <div>
                               <p className="body-bold-small">
-                                £{selectedItem.charityProfit}
+                                ${selectedItem.charityProfit}
                               </p>
                             </div>
                           </div>
@@ -488,7 +488,7 @@ const handleConfirmDelivery = async () => {
                   {selectedItem.status === 'SalesProceeds' && (
                     <div className="mt-4 pl-8">
                       <p className="body-small">
-                        The remaining £{selectedItem.adminFee} was donated as
+                        The remaining ${selectedItem.adminFee} was donated as
                         administration fees.
                       </p>
                     </div>

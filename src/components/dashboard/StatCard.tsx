@@ -2,8 +2,6 @@
 
 import React from 'react';
 
-type Trend = 'up' | 'down' | 'neutral';
-
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -14,32 +12,12 @@ interface StatCardProps {
   accent?: 'purple' | 'green' | 'blue' | 'amber';
 }
 
-const accentMap = {
-  purple: {
-    gradient: 'from-[#611192] to-[#8B3AB8]',
-    border: 'border-l-[#611192]',
-    glow: 'group-hover:shadow-[#611192]/10',
-  },
-  green: {
-    gradient: 'from-emerald-600 to-emerald-400',
-    border: 'border-l-emerald-500',
-    glow: 'group-hover:shadow-emerald-500/10',
-  },
-  blue: {
-    gradient: 'from-sky-600 to-sky-400',
-    border: 'border-l-sky-500',
-    glow: 'group-hover:shadow-sky-500/10',
-  },
-  amber: {
-    gradient: 'from-amber-500 to-amber-300',
-    border: 'border-l-amber-500',
-    glow: 'group-hover:shadow-amber-500/10',
-  },
-};
-
-const getTrend = (change?: number): Trend => {
-  if (change == null || change === 0) return 'neutral';
-  return change > 0 ? 'up' : 'down';
+// Icon tints only; numbers and labels stay in text inks.
+const tint = {
+  purple: 'bg-[#F2E8F8] text-[#611192]',
+  green: 'bg-[#E9F8EC] text-[#137A22]',
+  blue: 'bg-[#EAF2FD] text-[#1D5FB8]',
+  amber: 'bg-[#FFF6E5] text-[#8A5A00]',
 };
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -51,60 +29,43 @@ const StatCard: React.FC<StatCardProps> = ({
   loading,
   accent = 'purple',
 }) => {
-  const trend = getTrend(change);
-
   if (loading) {
     return (
-      <div className="rounded-[18px] border border-[#ECE8EE] bg-white p-5 animate-pulse">
-        <div className="h-3 w-24 bg-mono-40 rounded-sm mb-4" />
-        <div className="h-8 w-32 bg-mono-40 rounded-sm mb-3" />
-        <div className="h-3 w-20 bg-mono-40 rounded-sm" />
+      <div className="h-full animate-pulse rounded-[18px] border border-[#ECE8EE] bg-white p-5">
+        <div className="mb-5 h-9 w-9 rounded-xl bg-[#F1EEF3]" />
+        <div className="mb-3 h-7 w-28 rounded bg-[#F1EEF3]" />
+        <div className="h-3 w-20 rounded bg-[#F1EEF3]" />
       </div>
     );
   }
 
-  const accentStyle = accentMap[accent];
+  const trend = change == null || change === 0 ? 'flat' : change > 0 ? 'up' : 'down';
 
   return (
-    <div
-      className={`group relative h-full overflow-hidden rounded-[18px] border border-[#ECE8EE] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#DCD5E0] hover:shadow-[0_14px_32px_rgba(59,5,92,0.08)] ${accentStyle.glow}`}
-    >
-      <span
-        className={`pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-linear-to-r ${accentStyle.gradient} opacity-80`}
-        aria-hidden
-      />
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-mono-70">
-          {label}
-        </p>
-        {icon && (
-          <div
-            className={`w-9 h-9 rounded-xl bg-linear-to-br ${accentStyle.gradient} flex items-center justify-center text-white shrink-0 shadow-xs`}
-          >
-            {icon}
-          </div>
-        )}
-      </div>
-      <p className="mb-2 font-primary text-[30px] leading-none text-mono-100">{value}</p>
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="group relative h-full rounded-[18px] border border-[#ECE8EE] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#DCD5E0] hover:shadow-[0_14px_32px_rgba(59,5,92,0.08)] max-[767px]:p-4">
+      <div className="flex items-start justify-between gap-3">
+        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tint[accent]}`}>
+          {icon ?? <span className="h-2 w-2 rounded-full bg-current" aria-hidden />}
+        </span>
         {change != null && (
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
               trend === 'up'
-                ? 'bg-emerald-50 text-emerald-700'
+                ? 'bg-[#E9F8EC] text-[#137A22]'
                 : trend === 'down'
-                  ? 'bg-red-50 text-red-600'
-                  : 'bg-mono-40 text-mono-80'
+                  ? 'bg-[#FFEEF2] text-[#B0002A]'
+                  : 'bg-[#F4F1F6] text-mono-70'
             }`}
           >
-            {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '•'}
-            {Math.abs(Number(change)).toFixed(1)}%
+            {trend === 'up' ? '▲' : trend === 'down' ? '▼' : '–'} {Math.abs(Number(change)).toFixed(1)}%
           </span>
         )}
-        {subtitle && (
-          <span className="caption text-mono-70">{subtitle}</span>
-        )}
       </div>
+      <p className="mt-4 text-[13px] text-mono-70">{label}</p>
+      <p className="mt-1 font-primary text-[28px] leading-none tabular-nums text-mono-100 max-[767px]:text-[24px]">
+        {value}
+      </p>
+      {subtitle && <p className="mt-2 text-[12px] text-mono-70">{subtitle}</p>}
     </div>
   );
 };

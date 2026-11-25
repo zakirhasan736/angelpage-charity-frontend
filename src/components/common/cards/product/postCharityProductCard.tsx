@@ -122,7 +122,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {productBrand ?? ''}
               </h6>
               <p className="product-price sm:hidden  body-bold-small">
-                £{productPrice || 'N/A'}
+                ${productPrice || 'N/A'}
               </p>
             </div>
             <p className="product-title mt-1.5 line-clamp-2 font-primary text-[15px] leading-snug text-mono-100">
@@ -133,7 +133,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
           </div>
           <p className="product-price mt-3 hidden sm:block body-bold-small">
-            £{productPrice || 'N/A'}
+            ${productPrice || 'N/A'}
           </p>
         </div>
 

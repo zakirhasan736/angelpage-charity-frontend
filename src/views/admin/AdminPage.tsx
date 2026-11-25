@@ -5,6 +5,7 @@ import AnalyticsPage from './Analytics';
 import UsersAccountInfoMain from './Account';
 import LogoutButton from '@/components/elements/button/LogoutButton';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import UploadPage from './UploadCharityLists';
 import PendingListings from './PendingListings';
 import ProductReviewsAdmin from './ProductReviewsAdmin';
@@ -55,7 +56,13 @@ const AdminAccount = () => {
     session?.user?.role,
     (session?.user as { permissions?: string[] })?.permissions
   );
-  const [activeTabId, setActiveTabId] = useState('analytics');
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams?.get('tab');
+  const [activeTabId, setActiveTabId] = useState(tabFromUrl || 'analytics');
+
+  useEffect(() => {
+    if (tabFromUrl) setActiveTabId(tabFromUrl);
+  }, [tabFromUrl]);
   const [soldItemsCount, setSoldItemsCount] = useState<number>(0);
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
   const [salesChange, setSalesChange] = useState<number>(0);
@@ -252,7 +259,9 @@ const AdminAccount = () => {
 
   return (
     <div className="charity-account-main-wrapper">
-      <BannerSection loading={loading} soldItemsCount={soldItemsCount} />
+      <div className={activeTabId === 'analytics' ? '' : 'max-[991px]:hidden'}>
+        <BannerSection loading={loading} soldItemsCount={soldItemsCount} />
+      </div>
       <DashboardLayout
         tabs={adminNavTabs}
         groups={adminGroups}

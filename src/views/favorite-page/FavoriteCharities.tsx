@@ -6,31 +6,21 @@ interface FavoriteCharityListingProps {
   charities: Array<{
     id: string;
     charityName: string;
-    storefrontId: string; // Ensure storefrontId is included in the charity object
-    listedProducts?: Array<string | object>; // Assuming this is an array of products
+    storefrontId: string;
+    listedProducts?: Array<string | object>;
     profileImage: string;
     description?: string;
   }>;
 }
 
-const FavoriteCharityListing: React.FC<FavoriteCharityListingProps> = ({
-  charities = [],
-}) => {
-  return (
-    <section className="products-lists-section pt-[56px] pb-[54px] md:pb-9 sm:pt-10 sm:pb-12 bg-[#F1F1F7]">
-      <div className="custom-container">
-        <div className="charity-favorite-lists-wrapper grid grid-cols-12 gap-x-5 gap-y-6 sm:gap-y-8">
-          {charities.length === 0 ? (
-            <p>No favorite charities yet!</p>
-          ) : (
-            charities.map(charity => (
-              <FavoriteCharityCard key={charity.id} charity={charity} />
-            ))
-          )}
-        </div>
-      </div>
-    </section>
-  );
-};
+const FavoriteCharityListing: React.FC<FavoriteCharityListingProps> = ({ charities = [] }) => (
+  <section className="pb-10">
+    <div className="grid grid-cols-3 gap-5 max-[1170px]:grid-cols-2 max-[767px]:grid-cols-1 max-[767px]:gap-3">
+      {charities.map(charity => (
+        <FavoriteCharityCard key={charity.id} charity={charity} />
+      ))}
+    </div>
+  </section>
+);
 
 export default FavoriteCharityListing;

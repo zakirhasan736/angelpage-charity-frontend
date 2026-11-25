@@ -128,7 +128,7 @@ const ProductCard = ({
       : t(fulfillmentKey(fulfillmentType));
 
   return (
-    <article className="group relative flex h-full w-full flex-col">
+    <article className="ap-product-card group relative flex h-full w-full flex-col">
       <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-[#F2E8F8] ring-1 ring-[#ECE8EE]">
         <Link href={`/product/${detailSlug}`} className="absolute inset-0" aria-label={name || 'View product'}>
           <Image
@@ -145,7 +145,7 @@ const ProductCard = ({
           <FavoriteButton itemId={id} type="Product" />
         </div>
 
-        <span className="ap-chip ap-chip--glass absolute top-3 left-3 h-7! px-2.5! text-[11px]! text-[#3B055C]!">
+        <span className="ap-chip ap-chip--glass absolute top-3 left-3 h-7! max-w-[calc(100%-64px)] truncate px-2.5! text-[11px]! text-[#3B055C]! max-[767px]:hidden">
           {areaLabel}
         </span>
 
@@ -189,13 +189,13 @@ const ProductCard = ({
           </p>
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+        <div className="ap-card-foot mt-auto flex items-end justify-between gap-3 pt-4">
           <div className="min-w-0">
             <p className="text-[20px] leading-none font-semibold text-[#0B0112]">
               {priceNum > 0 ? formatMoney(priceNum, locale) : '—'}
             </p>
             {split.sellerSharePercent > 0 ? (
-              <p className="mt-1 text-[11px] text-[#8A888C]">
+              <p className="mt-1 whitespace-nowrap text-[11px] text-[#8A888C]">
                 {t('card.sellerKeeps', { percent: split.sellerSharePercent })}
               </p>
             ) : showLocation ? (

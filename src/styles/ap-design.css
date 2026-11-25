@@ -28,6 +28,7 @@
   --ap-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@layer components {
 /* ---------- Section rhythm ---------- */
 .ap-section {
   padding-top: 72px;
@@ -317,6 +318,8 @@
   color: #fff;
 }
 
+}
+
 /* Inner dashboard panels: softer, consistent surfaces */
 .ap-dash-main .tabs-cont-item > * {
   max-width: 100%;
@@ -379,4 +382,468 @@
 .ap-dash-main .product-handle-listing-wrapper {
   background: transparent;
   padding: 0;
+}
+
+/* ======================================================================
+   Dashboard panels: modern treatment of the legacy building blocks
+   used across Listings, Sold, Bought, Account, Earnings, Payouts, etc.
+   Scoped to .ap-dash-main so marketing pages are untouched.
+   ====================================================================== */
+
+/* Form fields (global Input keeps its behaviour; we only soften the shape) */
+.ap-dash-main .input-wrapper label,
+.ap-dash-main label.font-secondary {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ap-ink-2);
+}
+
+.ap-dash-main .input-field,
+.ap-dash-main input[type='text'],
+.ap-dash-main input[type='email'],
+.ap-dash-main input[type='tel'],
+.ap-dash-main input[type='number'],
+.ap-dash-main input[type='url'],
+.ap-dash-main input[type='password'],
+.ap-dash-main input[type='date'],
+.ap-dash-main input[type='search'] {
+  height: 46px;
+  padding-left: 14px;
+  padding-right: 14px;
+  border-radius: 12px !important;
+  background: #fff;
+  font-size: 14px;
+  color: var(--ap-ink);
+  transition: box-shadow 160ms, border-color 160ms;
+}
+
+.ap-dash-main select,
+.ap-dash-main textarea {
+  border-radius: 12px !important;
+  border: 1px solid var(--ap-line-strong) !important;
+  background-color: #fff;
+  font-size: 14px;
+  padding: 11px 14px;
+}
+
+.ap-dash-main select {
+  height: 46px;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B686E' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.ap-dash-main input:focus,
+.ap-dash-main select:focus,
+.ap-dash-main textarea:focus {
+  outline: none;
+  border-color: rgba(97, 17, 146, 0.5) !important;
+  box-shadow: 0 0 0 4px rgba(97, 17, 146, 0.1);
+}
+
+/* Legacy grey wrappers -> soft canvas */
+.ap-dash-main [class^='bg-[#F1F1F7]'],
+.ap-dash-main [class*=' bg-[#F1F1F7]'],
+.ap-dash-main [class^='bg-[#F1F1F8]'],
+.ap-dash-main [class*=' bg-[#F1F1F8]'],
+.ap-dash-main [class*=' bg-[#f1f1f7]'] {
+  background-color: var(--ap-canvas) !important;
+  border-radius: 16px;
+}
+
+/* Section titles inside panels */
+.ap-dash-main .sold-item-wrapper-head h3,
+.ap-dash-main .bought-item-wrapper-head h3,
+.ap-dash-main .product-listing-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ap-muted);
+}
+
+/* Master-detail order lists (Sold / Bought) */
+.ap-dash-main .sold-item-wrapper-cont-box,
+.ap-dash-main .bought-item-wrapper-cont-box {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  gap: 20px;
+}
+
+.ap-dash-main .sold-product-states-items ul,
+.ap-dash-main .bought-product-states-items ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ap-dash-main .sold-product-states-item,
+.ap-dash-main .bought-product-states-item {
+  border: 1px solid var(--ap-line) !important;
+  border-radius: 16px;
+  background: #fff;
+  transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+}
+
+.ap-dash-main .sold-product-states-item:hover,
+.ap-dash-main .bought-product-states-item:hover {
+  border-color: var(--ap-line-strong) !important;
+  box-shadow: 0 8px 20px rgba(59, 5, 92, 0.06);
+  background: #fff !important;
+}
+
+.ap-dash-main .sold-product-states-item[class*=' bg-[#F1F1'],
+.ap-dash-main .bought-product-states-item[class*=' bg-[#F1F1'] {
+  border-color: var(--ap-primary) !important;
+  background: var(--ap-primary-wash) !important;
+}
+
+.ap-dash-main .sold-item-img img,
+.ap-dash-main .bought-item-img img,
+.ap-dash-main .sold-item-img,
+.ap-dash-main .bought-item-img {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Status text in order rows -> pill */
+.ap-dash-main .sold-product-states-item .forms-bold,
+.ap-dash-main .bought-product-states-item .forms-bold {
+  border-radius: 999px;
+  padding: 4px 10px !important;
+  font-size: 11px;
+}
+
+/* Detail pane (right column) */
+.ap-dash-main .sold-product-states-item-cont,
+.ap-dash-main .bought-product-states-item-cont {
+  border-radius: 20px;
+  height: auto !important;
+}
+
+/* Detail panes in master-detail views */
+.ap-dash-main [class*='sold-product-details'],
+.ap-dash-main [class*='bought-product-details'],
+.ap-dash-main .create-label-area {
+  border-radius: 18px;
+  border: 1px solid var(--ap-line);
+}
+
+/* Empty states */
+.ap-dash-main .not-found-screen-design {
+  margin: 8px 0;
+  padding: 56px 24px !important;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(97, 17, 146, 0.08), transparent 60%),
+    var(--ap-canvas);
+}
+
+.ap-dash-main .not-found-screen-design::before {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 18px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='%23611192' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8 12 3 3 8v8l9 5 9-5V8z'/%3E%3Cpath d='m3 8 9 5 9-5M12 13v8'/%3E%3C/svg%3E") center / 26px no-repeat,
+    #fff;
+  box-shadow: 0 8px 20px rgba(59, 5, 92, 0.1);
+}
+
+/* Generic legacy boxes with hard square borders */
+.ap-dash-main .border:not(table *):not(input):not(select):not(textarea) {
+  border-color: var(--ap-line);
+}
+
+.ap-dash-main .rounded-lg {
+  border-radius: 14px;
+}
+
+/* Tables: rounded frame, comfortable rows */
+.ap-dash-main .overflow-x-auto > table,
+.ap-dash-main table.w-full {
+  font-size: 13px;
+}
+
+.ap-dash-main th,
+.ap-dash-main td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.ap-dash-main .overflow-x-auto {
+  border-radius: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: panels lose their outer card so content gets full width */
+@media (max-width: 767px) {
+  .ap-dash-main .sold-item-wrapper-cont-box,
+  .ap-dash-main .bought-item-wrapper-cont-box {
+    gap: 12px;
+  }
+
+  .ap-dash-main .input-field,
+  .ap-dash-main select,
+  .ap-dash-main input {
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+}
+
+/* ---------- App-like mobile shell ---------- */
+@media (max-width: 767px) {
+  /* room for the bottom tab bar */
+  .ap-app-main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .footer-section {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* tactile press feedback */
+  .ap-app-main a:active,
+  .ap-app-main button:active {
+    transform: scale(0.98);
+  }
+}
+
+.ap-sheet {
+  animation: ap-sheet-in 280ms var(--ap-ease);
+}
+
+@keyframes ap-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Storefront grid uses the shared ProductList; give it a responsive grid */
+.ap-store-grid .product-list {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 28px 20px !important;
+}
+
+@media (max-width: 1170px) {
+  .ap-store-grid .product-list { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 767px) {
+  .ap-store-grid .product-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 20px 12px !important; }
+}
+
+.ap-drawer {
+  animation: ap-drawer-in 300ms var(--ap-ease);
+}
+
+@keyframes ap-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 767px) {
+  .ap-drawer { animation-name: ap-sheet-in; }
+}
+
+/* Range slider (How it works split demo) */
+.ap-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #ECE8EE;
+  outline: none;
+}
+.ap-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #611192;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(97, 17, 146, 0.35);
+  cursor: pointer;
+}
+.ap-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #611192;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(97, 17, 146, 0.35);
+  cursor: pointer;
+}
+.ap-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid #611192;
+  outline-offset: 2px;
+}
+
+/* Article typography (blog detail) */
+.ap-prose {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #2B2530;
+}
+.ap-prose > * + * { margin-top: 1.25em; }
+.ap-prose p:first-of-type::first-letter {
+  float: left;
+  font-family: 'Lustria', serif;
+  font-size: 3.4em;
+  line-height: 0.9;
+  margin: 0.08em 0.1em 0 0;
+  color: var(--ap-primary);
+}
+.ap-prose h2 { margin-top: 2em; font-family: 'Lustria', serif; font-size: 30px; line-height: 1.25; color: var(--ap-ink); }
+.ap-prose h3 { margin-top: 1.6em; font-size: 21px; font-weight: 600; color: var(--ap-ink); }
+.ap-prose a { color: var(--ap-primary); text-decoration: underline; text-underline-offset: 3px; }
+.ap-prose strong { color: var(--ap-ink); }
+.ap-prose ul, .ap-prose ol { padding-left: 1.3em; }
+.ap-prose ul { list-style: disc; }
+.ap-prose ol { list-style: decimal; }
+.ap-prose li + li { margin-top: 0.4em; }
+.ap-prose li::marker { color: var(--ap-primary); }
+.ap-prose blockquote {
+  margin: 2em 0;
+  padding: 4px 0 4px 24px;
+  border-left: 3px solid var(--ap-primary);
+  font-family: 'Lustria', serif;
+  font-size: 24px;
+  line-height: 1.5;
+  color: var(--ap-ink);
+}
+.ap-prose img { border-radius: 20px; width: 100%; height: auto; margin: 2em 0; }
+.ap-prose hr { border: 0; height: 1px; background: var(--ap-line); margin: 2.5em 0; }
+@media (max-width: 767px) {
+  .ap-prose { font-size: 17px; line-height: 1.75; }
+  .ap-prose h2 { font-size: 24px; }
+  .ap-prose blockquote { font-size: 20px; }
+}
+
+/* Account settings: each form section becomes a card */
+.ap-dash-main .Users-account-info-wrapper,
+.ap-dash-main .charity-account-info-wrapper {
+  max-width: 760px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ap-dash-main .profile-img-section,
+.ap-dash-main .personal-info-section,
+.ap-dash-main .charity-info-section,
+.ap-dash-main .admin-info-section,
+.ap-dash-main .address-section,
+.ap-dash-main .payment-section {
+  padding: 22px 24px !important;
+  border: 1px solid var(--ap-line);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.ap-dash-main .title-line-area-section {
+  border-bottom: 1px solid var(--ap-line) !important;
+  margin-bottom: 18px !important;
+}
+
+.ap-dash-main .title-line-area-section > p,
+.ap-dash-main .title-line-area-section .body-bold-regular {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+
+.ap-dash-main .states-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--ap-primary-wash);
+  font-weight: 500;
+  transition: background-color 160ms;
+}
+
+.ap-dash-main .states-btn:hover {
+  background: var(--ap-primary-tint);
+}
+
+.ap-dash-main .payment-section .btn-states-box,
+.ap-dash-main .address-section .btn-states-box,
+.ap-dash-main .payment-section .payment-details,
+.ap-dash-main .address-section .address-details {
+  border-radius: 14px;
+  border-color: var(--ap-line);
+}
+
+@media (max-width: 767px) {
+  .ap-dash-main .profile-img-section,
+  .ap-dash-main .personal-info-section,
+  .ap-dash-main .charity-info-section,
+  .ap-dash-main .admin-info-section,
+  .ap-dash-main .address-section,
+  .ap-dash-main .payment-section {
+    padding: 18px 16px !important;
+    border-radius: 18px;
+  }
+}
+
+/* Product card: stack price over a full-width button whenever the card is narrow */
+.ap-product-card {
+  container-type: inline-size;
+}
+
+@container (max-width: 250px) {
+  .ap-card-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .ap-card-foot .btn-styles {
+    width: 100%;
+    height: 40px !important;
+  }
+}
+
+/* The global `* { color }` reset in globals.css (base layer) stops icons from
+   inheriting their parent's colour. Same layer, higher specificity: icons inherit
+   again, while utility classes on the svg itself still win. */
+@layer base {
+  svg,
+  svg *,
+  span,
+  strong,
+  em,
+  b,
+  small {
+    color: inherit;
+  }
+}
+
+.ap-prose p,
+.ap-prose li {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+@media (max-width: 767px) {
+  .ap-dash-main .product-listing-list-area {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .ap-dash-main .product-card-item {
+    max-width: none !important;
+    padding: 8px !important;
+    gap: 10px !important;
+  }
+}
+
+.ap-dash-main .product-listing-type-item {
+  padding-bottom: 32px !important;
 }

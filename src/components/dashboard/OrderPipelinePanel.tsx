@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import React from 'react';
+import { formatMoney } from '@/lib/money';
 import StatusBadge from './StatusBadge';
 
 interface StatusSummary {
@@ -32,7 +32,8 @@ interface OrderPipelinePanelProps {
   loading?: boolean;
 }
 
-const PIPELINE_COLORS = ['#F59E0B', '#3B82F6', '#6366F1', '#10B981'];
+// Ordinal stages -> one hue, light to dark (later stage = darker). Labels + counts always visible.
+const PIPELINE_COLORS = ['#C9A3E6', '#9B5CCF', '#7424AE', '#4A0A73'];
 
 const statusDefs = [
   { key: 'pending', label: 'Pending' },
@@ -47,164 +48,112 @@ const OrderPipelinePanel: React.FC<OrderPipelinePanelProps> = ({
   activity = [],
   loading,
 }) => {
-  const total = summary.total || 0;
-
-  const pieData = useMemo(
-    () =>
-      statusDefs
-        .map((s, i) => ({
-          name: s.label,
-          value: Number(summary[s.key as keyof StatusSummary] || 0),
-          color: PIPELINE_COLORS[i],
-        }))
-        .filter(d => d.value > 0),
-    [summary]
-  );
+  const counts = statusDefs.map(s => Number(summary[s.key as keyof StatusSummary] || 0));
+  const stageTotal = counts.reduce((a, b) => a + b, 0);
+  const total = summary.total || stageTotal;
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-[#E6E3E7] bg-white p-6 shadow-xs animate-pulse h-full min-h-[360px]">
-        <div className="h-4 w-40 bg-mono-40 rounded-sm mb-6" />
-        <div className="grid grid-cols-2 gap-4">
-          <div className="h-40 bg-mono-40 rounded-full mx-auto w-40" />
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-10 bg-mono-40 rounded-xl" />
-            ))}
-          </div>
+      <div className="h-full min-h-[360px] animate-pulse rounded-[20px] border border-[#ECE8EE] bg-white p-6">
+        <div className="mb-6 h-4 w-40 rounded bg-[#F1EEF3]" />
+        <div className="mb-6 h-3 w-full rounded-full bg-[#F1EEF3]" />
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-9 rounded-xl bg-[#F6F3F8]" />
+          ))}
         </div>
       </div>
     );
   }
 
+  const payments = [
+    { label: 'Paid', value: summary.paymentPaid || 0, icon: '✓', cls: 'bg-[#E9F8EC] text-[#137A22]' },
+    { label: 'Pending', value: summary.paymentPending || 0, icon: '◷', cls: 'bg-[#FFF6E5] text-[#8A5A00]' },
+    { label: 'Failed', value: summary.paymentFailed || 0, icon: '!', cls: 'bg-[#FFEEF2] text-[#B0002A]' },
+  ];
+
   return (
-    <div className="rounded-2xl border border-[#E6E3E7] bg-white p-5 sm:p-6 shadow-xs h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="body-bold-medium text-mono-100">{title}</h3>
-        <span className="caption bg-[#FCF2FF] text-[#611192] px-3 py-1 rounded-full font-semibold">
-          {total} orders
+    <section className="flex h-full flex-col rounded-[20px] border border-[#ECE8EE] bg-white p-6 max-[767px]:p-4" aria-label={title}>
+      <header className="flex items-center justify-between">
+        <h3 className="text-[15px] font-semibold text-mono-100">{title}</h3>
+        <span className="rounded-full bg-[#F4F1F6] px-2.5 py-1 text-[12px] font-medium text-mono-90">
+          {total} {total === 1 ? 'order' : 'orders'}
         </span>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 min-[768px]:grid-cols-2 gap-4 mb-5">
-        <div className="h-[180px] flex items-center justify-center">
-          {pieData.length === 0 ? (
-            <p className="text-mono-70 body-small">No orders yet</p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={52}
-                  outerRadius={78}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value, name) => [Number(value ?? 0), String(name ?? '')]}
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: '1px solid #E6E3E7',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          {statusDefs.map((s, i) => {
-            const count = Number(summary[s.key as keyof StatusSummary] || 0);
-            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-            return (
-              <div
+      {/* segmented stage bar */}
+      <div className="mt-5 flex h-3 w-full gap-[2px] overflow-hidden rounded-full bg-[#F4F1F6]" role="img" aria-label={statusDefs.map((s, i) => `${s.label} ${counts[i]}`).join(', ')}>
+        {stageTotal > 0 &&
+          statusDefs.map((s, i) =>
+            counts[i] > 0 ? (
+              <span
                 key={s.key}
-                className="rounded-xl border border-[#F0EEF2] bg-[#FAFAFB] px-3 py-2.5"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="flex items-center gap-2 caption text-mono-80">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: PIPELINE_COLORS[i] }}
-                    />
-                    {s.label}
-                  </span>
-                  <span className="forms-bold text-mono-100 text-sm">
-                    {count}
-                    <span className="text-mono-70 font-normal ml-1">({pct}%)</span>
-                  </span>
-                </div>
-                <div className="h-1.5 rounded-full bg-mono-40 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${pct}%`,
-                      backgroundColor: PIPELINE_COLORS[i],
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                title={`${s.label}: ${counts[i]}`}
+                className="h-full first:rounded-l-full last:rounded-r-full transition-all duration-700"
+                style={{ width: `${(counts[i] / stageTotal) * 100}%`, background: PIPELINE_COLORS[i] }}
+              />
+            ) : null,
+          )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-        {[
-          { label: 'Paid', value: summary.paymentPaid || 0, color: 'text-emerald-600' },
-          { label: 'Pending', value: summary.paymentPending || 0, color: 'text-amber-600' },
-          { label: 'Failed', value: summary.paymentFailed || 0, color: 'text-red-600' },
-        ].map(item => (
-          <div
-            key={item.label}
-            className="rounded-xl bg-[#FCF2FF]/50 py-2 px-1 border border-[#F0EEF2]"
-          >
-            <p className={`text-lg font-semibold ${item.color}`}>{item.value}</p>
-            <p className="caption text-mono-70">{item.label}</p>
-          </div>
+      <ul className="mt-4 grid grid-cols-2 gap-2">
+        {statusDefs.map((s, i) => {
+          const pct = stageTotal > 0 ? Math.round((counts[i] / stageTotal) * 100) : 0;
+          return (
+            <li key={s.key} className="rounded-xl bg-[#FAF8FB] px-3 py-2.5">
+              <p className="flex items-center gap-2 text-[12px] text-mono-70">
+                <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: PIPELINE_COLORS[i] }} aria-hidden />
+                {s.label}
+              </p>
+              <p className="mt-1 text-[18px] font-semibold tabular-nums text-mono-100">
+                {counts[i]}
+                <span className="ml-1 text-[12px] font-normal text-mono-70">{pct}%</span>
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {payments.map(p => (
+          <span key={p.label} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium ${p.cls}`}>
+            <span aria-hidden>{p.icon}</span>
+            {p.label} <strong className="font-semibold tabular-nums">{p.value}</strong>
+          </span>
         ))}
       </div>
 
-      {activity.length > 0 && (
-        <div className="flex-1 border-t border-[#F0EEF2] pt-4">
-          <p className="eyebrow-small text-mono-70 uppercase mb-3">Recent activity</p>
-          <ul className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+      <div className="mt-5 flex-1 border-t border-[#F1EEF3] pt-4">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-mono-70">Recent activity</p>
+        {activity.length === 0 ? (
+          <p className="py-6 text-center text-[13px] text-mono-70">No orders yet. New orders will appear here.</p>
+        ) : (
+          <ul className="max-h-[200px] space-y-1 overflow-y-auto pr-1">
             {activity.map(item => (
-              <li
-                key={item.id}
-                className="flex items-center justify-between gap-2 p-2.5 rounded-xl hover:bg-[#FCF2FF]/60 transition-colors"
-              >
-                <div className="min-w-0">
-                  <p className="forms-bold text-mono-100 text-sm truncate">
-                    {item.productName || 'Order'}
-                  </p>
-                  <p className="caption text-mono-70">
-                    {new Date(item.createdAt).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </p>
+              <li key={item.id} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[#FAF8FB]">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F2E8F8] text-[12px] font-semibold text-[#611192]">
+                    {(item.productName || 'O').charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-mono-100">{item.productName || 'Order'}</p>
+                    <p className="text-[11px] text-mono-70">
+                      {new Date(item.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <StatusBadge status={item.status} />
+                <div className="flex shrink-0 flex-col items-end gap-1">
                   {item.totalAmount != null && (
-                    <span className="caption text-[#611192] font-semibold">
-                      £{Number(item.totalAmount).toFixed(2)}
-                    </span>
+                    <span className="text-[13px] font-semibold tabular-nums text-mono-100">{formatMoney(item.totalAmount)}</span>
                   )}
+                  <StatusBadge status={item.status} />
                 </div>
               </li>
             ))}
           </ul>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </section>
   );
 };
 

@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
+  ChevronDown,
+  X,
   Banknote,
   Bell,
   CalendarDays,
@@ -134,6 +136,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
 }) => {
   const chipRailRef = useRef<HTMLDivElement>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const byId = (id: string) => tabs.find(t => t.id === id);
   const grouped = new Set(groups.flatMap(g => g.tabIds));
 
@@ -163,8 +166,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }
   }, [activeTabId]);
 
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheetOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [sheetOpen]);
+
   const select = (id: string) => {
     onTabChange(id);
+    setSheetOpen(false);
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 991px)').matches) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.set('tab', id);
@@ -173,8 +192,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
 
   return (
-    <div className="custom-container pb-20 pt-6 max-[767px]:pt-4">
-      <div className="grid grid-cols-[264px_minmax(0,1fr)] items-start gap-8 max-[1280px]:grid-cols-[232px_minmax(0,1fr)] max-[1280px]:gap-6 max-[991px]:grid-cols-1">
+    <div className="custom-container pb-20 pt-6 max-[991px]:pt-2 max-[767px]:pb-6">
+      <div className="grid grid-cols-[264px_minmax(0,1fr)] items-start gap-8 max-[1280px]:grid-cols-[232px_minmax(0,1fr)] max-[1280px]:gap-6 max-[991px]:grid-cols-1 max-[991px]:gap-4">
         {/* sidebar (desktop) */}
         <aside className="sticky top-6 max-[991px]:hidden">
           <nav className="ap-card p-3" aria-label={title}>
@@ -225,15 +244,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </nav>
         </aside>
 
-        {/* chip rail (tablet / mobile) */}
-        <div className="hidden max-[991px]:block">
+        {/* app bar + quick chips (tablet / mobile) */}
+        <div className="sticky top-0 z-40 -mx-4 hidden bg-white/90 px-4 pt-2 pb-3 backdrop-blur-xl max-[991px]:block">
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-2.5 text-left ring-1 ring-[#ECE8EE] shadow-[0_6px_18px_rgba(59,5,92,0.06)]"
+            aria-haspopup="dialog"
+            aria-expanded={sheetOpen}
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#611192] text-white">
+              <ActiveIcon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] text-[#8A888C]">
+                {activeSection && activeSection.id !== 'general' ? activeSection.label : title}
+              </span>
+              <span className="block truncate text-[15px] font-semibold text-[#0B0112]">
+                {activeTab?.label || 'Overview'}
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#F4F1F6] px-3 py-1.5 text-[12px] font-medium text-[#474648]">
+              Menu <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+            </span>
+          </button>
           <div
             ref={chipRailRef}
-            className="ap-no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+            className="ap-no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4"
             role="tablist"
             aria-label={title}
           >
-            {sections.flatMap(s => s.items).map(tab => {
+            {sections.flatMap(sec => sec.items).map(tab => {
               const Icon = TAB_ICONS[tab.id] || LayoutGrid;
               const active = tab.id === activeTabId;
               return (
@@ -244,16 +285,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   data-tab={tab.id}
                   aria-selected={active}
                   onClick={() => select(tab.id)}
-                  className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[13px] font-medium transition ${
+                  className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[12.5px] font-medium transition ${
                     active
-                      ? 'bg-[#611192] text-white shadow-[0_6px_16px_rgba(97,17,146,0.24)]'
-                      : 'bg-white text-[#474648] ring-1 ring-[#ECE8EE]'
+                      ? 'bg-[#0B0112] text-white'
+                      : 'bg-[#F4F1F6] text-[#474648]'
                   }`}
                 >
-                  <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                  <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
                   {tab.label}
                   {tab.badge ? (
-                    <span className={`rounded-full px-1.5 text-[10px] ${active ? 'bg-white/20' : 'bg-[#F2E8F8] text-[#611192]'}`}>
+                    <span className={`rounded-full px-1.5 text-[10px] ${active ? 'bg-white/20' : 'bg-white text-[#611192]'}`}>
                       {tab.badge}
                     </span>
                   ) : null}
@@ -261,12 +302,78 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               );
             })}
           </div>
-          {trailing ? <div className="mt-3 flex justify-end text-sm">{trailing}</div> : null}
         </div>
+
+        {/* bottom sheet with every section */}
+        {sheetOpen && (
+          <div className="fixed inset-0 z-[1000] hidden max-[991px]:block" role="dialog" aria-modal="true" aria-label={`${title} menu`}>
+            <button
+              type="button"
+              aria-label="Close menu"
+              className="absolute inset-0 bg-[#0B0112]/40 backdrop-blur-[2px]"
+              onClick={() => setSheetOpen(false)}
+            />
+            <div className="ap-sheet absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto rounded-t-[28px] bg-white pb-[calc(20px+env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgba(11,1,18,0.2)]">
+              <div className="sticky top-0 z-10 bg-white px-5 pt-3 pb-3">
+                <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[#DCD5E0]" aria-hidden />
+                <div className="flex items-center justify-between">
+                  <p className="font-primary text-[22px] text-[#0B0112]">{title}</p>
+                  <button
+                    type="button"
+                    onClick={() => setSheetOpen(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4F1F6]"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+              </div>
+              <div className="px-5">
+                {sections.map(section => (
+                  <div key={section.id} className="mb-4">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A888C]">
+                      {section.label}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 max-[374px]:grid-cols-2">
+                      {section.items.map(tab => {
+                        const Icon = TAB_ICONS[tab.id] || LayoutGrid;
+                        const active = tab.id === activeTabId;
+                        const danger = tab.id === 'delete';
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => select(tab.id)}
+                            className={`relative flex flex-col items-start gap-3 rounded-2xl p-3 text-left text-[12.5px] font-medium transition ${
+                              active
+                                ? 'bg-[#611192] text-white'
+                                : danger
+                                  ? 'bg-[#FFF1F4] text-[#B0002A]'
+                                  : 'bg-[#FAF8FB] text-[#0B0112] ring-1 ring-[#ECE8EE]'
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+                            <span className="leading-tight">{tab.label}</span>
+                            {tab.badge ? (
+                              <span className={`absolute top-2.5 right-2.5 rounded-full px-1.5 text-[10px] font-semibold ${active ? 'bg-white/20' : 'bg-[#611192] text-white'}`}>
+                                {tab.badge}
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {trailing ? <div className="mt-2 border-t border-[#ECE8EE] pt-4">{trailing}</div> : null}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* main panel */}
         <main className="ap-dash-main min-w-0">
-          <div className="mb-6 flex items-center gap-4 max-[767px]:mb-4">
+          <div className="mb-6 flex items-center gap-4 max-[991px]:hidden">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F2E8F8] text-[#611192] max-[767px]:h-10 max-[767px]:w-10">
               <ActiveIcon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
             </span>
@@ -285,7 +392,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </div>
           {notice}
-          <div className="ap-card min-h-[420px] p-6 max-[1280px]:p-5 max-[767px]:rounded-[16px] max-[767px]:p-4">
+          <div className="ap-card ap-dash-card min-h-[420px] p-6 max-[1280px]:p-5 max-[767px]:min-h-0 max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-0 max-[767px]:shadow-none">
             <ul className="tabs-content-area">{children}</ul>
           </div>
         </main>

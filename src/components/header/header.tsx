@@ -133,7 +133,7 @@ const Header = () => {
                         </div>
                         <div className="notification-dropdown-area ap-icon-btn relative max-[767px]:static">
                           <NotificationButton
-                            notificationBtnClass="max-[767px]:hidden!"
+                            notificationBtnClass=""
                             toggleDropdown={toggleDropdown}
                           />
                           {isDropdownOpen && (

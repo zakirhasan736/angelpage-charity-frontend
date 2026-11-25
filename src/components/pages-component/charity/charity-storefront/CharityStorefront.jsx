@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
 import StoreFrontBanner from './banner';
@@ -21,6 +21,7 @@ const CharityStorefront = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const router = useRouter();
+  const tabsRef = useRef(null);
 
   useEffect(() => {
     if (!storefrontid) {
@@ -113,75 +114,77 @@ const CharityStorefront = () => {
     { label: 'About' },
   ];
 
+  const goToShop = () => {
+    setActiveTab(0);
+    tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div className="charity-storefront-main-page-wrapper">
+    <div className="charity-storefront-main-page-wrapper bg-[#FAF8FB]">
       <StoreFrontBanner
         charityStore={charityData}
         productCount={productCount}
+        onShop={goToShop}
         actions={
           charityData?._id ? (
-            <div className="favorite-btn-item-store flex h-11 w-11 items-center justify-center rounded-full bg-white ring-1 ring-[#DCD5E0]">
+            <span className="favorite-btn-item-store inline-flex h-12 shrink-0 items-center gap-1 rounded-full bg-white/12 pr-4 pl-1.5 text-[14px] font-medium text-white ring-1 ring-white/25 backdrop-blur [&_svg]:text-white max-[767px]:w-12 max-[767px]:justify-center max-[767px]:px-0">
               <FavoriteButton itemId={charityData._id} type="Charity" />
-            </div>
+              <span className="max-[767px]:hidden">Save</span>
+            </span>
           ) : null
         }
       />
+
       <div className="charity-storefront-wrapper-area">
-        <div className="storefront-tabs-area">
-          <div className="storefront-tabs-box border-b border-[#ECE8EE] bg-white">
-            <div className="custom-container">
-              <div className="storefront-tabs-btn-box flex items-center gap-8 pt-8 max-[767px]:pt-5" role="tablist">
-                {tabs.map((tab, idx) => {
-                  const active = activeTab === idx;
-                  return (
-                    <button
-                      key={tab.label}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setActiveTab(idx)}
-                      className={`relative inline-flex items-center gap-2 pb-4 text-[15px] font-medium transition ${
-                        active ? 'text-[#611192]' : 'text-[#6B686E] hover:text-[#0B0112]'
-                      }`}
-                    >
-                      {tab.label}
-                      {tab.count != null ? (
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] ${
-                            active ? 'bg-[#611192] text-white' : 'bg-[#F2E8F8] text-[#611192]'
-                          }`}
-                        >
-                          {tab.count}
-                        </span>
-                      ) : null}
-                      <span
-                        className={`absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-[#611192] transition-transform duration-300 ${
-                          active ? 'scale-x-100' : 'scale-x-0'
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+        <div
+          ref={tabsRef}
+          className="storefront-tabs-box sticky top-0 z-30 scroll-mt-0 border-b border-[#ECE8EE] bg-white/90 backdrop-blur-xl"
+        >
+          <div className="custom-container flex items-center justify-between gap-4 py-3">
+            <div className="inline-flex rounded-full bg-[#F4F1F6] p-1" role="tablist" aria-label="Storefront sections">
+              {tabs.map((tab, idx) => {
+                const active = activeTab === idx;
+                return (
+                  <button
+                    key={tab.label}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setActiveTab(idx)}
+                    className={`inline-flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-medium transition ${
+                      active ? 'bg-white text-[#611192] shadow-[0_2px_10px_rgba(59,5,92,0.12)]' : 'text-[#6B686E] hover:text-[#0B0112]'
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.count != null ? (
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? 'bg-[#611192] text-white' : 'bg-white text-[#611192]'}`}>
+                        {tab.count}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-3 max-[767px]:hidden">
+              <img
+                src={charityData?.profileImage || '/images/icons/charity-img.png'}
+                alt=""
+                className="h-8 w-8 rounded-[10px] object-cover ring-1 ring-[#ECE8EE]"
+              />
+              <span className="max-w-[240px] truncate text-[14px] font-medium capitalize text-[#0B0112]">
+                {charityData?.charityName}
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="store-front-tabs-cont-area">
-            <ul className="tabs-content-area">
-              {activeTab === 0 && (
-                <li className="tabs-cont-item">
-                  <div className="storefront-shop-tabs-cont bg-[#FAF8FB] max-[767px]:py-0!">
-                    <CharityStoreListing storefrontid={storefrontid} />
-                  </div>
-                </li>
-              )}
-              {activeTab === 1 && (
-                <li className="tabs-cont-item">
-                  <AboutInfoComponent charityData={charityData} />
-                </li>
-              )}
-            </ul>
-          </div>
+        <div className="store-front-tabs-cont-area">
+          {activeTab === 0 && (
+            <div className="storefront-shop-tabs-cont">
+              <CharityStoreListing storefrontid={storefrontid} />
+            </div>
+          )}
+          {activeTab === 1 && <AboutInfoComponent charityData={charityData} productCount={productCount} onShop={goToShop} />}
         </div>
       </div>
     </div>

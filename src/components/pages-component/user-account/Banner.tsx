@@ -74,11 +74,11 @@ const BannerSection = () => {
   }
 
   return (
-    <section className="users-account-banner-section bg-white pt-6 max-[767px]:pt-4">
+    <section className="users-account-banner-section bg-white pt-6 max-[767px]:pt-3">
       <div className="custom-container">
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#FCF2FF] via-white to-[#F2E8F8] p-8 ring-1 ring-[#ECE8EE] max-[767px]:rounded-[22px] max-[767px]:p-5">
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#FCF2FF] via-white to-[#F2E8F8] p-8 ring-1 ring-[#ECE8EE] max-[767px]:rounded-[22px] max-[767px]:p-4">
           <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[#E4D0F0]/70 blur-3xl" aria-hidden />
-          <div className="relative flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-start max-[991px]:gap-6">
+          <div className="relative flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-stretch max-[991px]:gap-4">
             <div className="flex items-center gap-5 max-[767px]:gap-4">
               {!loading && userData ? (
                 <Image
@@ -102,7 +102,7 @@ const BannerSection = () => {
               </div>
             </div>
 
-            <div className="w-full max-w-[380px] rounded-2xl bg-white/80 p-5 ring-1 ring-[#ECE8EE] backdrop-blur max-[991px]:max-w-full">
+            <div className="w-full max-w-[380px] rounded-2xl bg-white/80 p-5 ring-1 ring-[#ECE8EE] backdrop-blur max-[991px]:max-w-full max-[767px]:p-3.5">
               {profileData.profileCompleted ? (
                 <p className="flex items-center gap-2 text-sm font-medium text-[#138A21]">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E7F8E9]">✓</span>
@@ -115,7 +115,7 @@ const BannerSection = () => {
                     <span className="font-semibold text-[#611192]">{Math.round(progress)}%</span>
                   </div>
                   <ProgressBar progress={progress} className="mt-3 h-2 w-full rounded-full" />
-                  <p className="mt-2 text-xs text-[#6B686E]">
+                  <p className="mt-2 text-xs text-[#6B686E] max-[767px]:hidden">
                     Finish your details in the Account tab to start selling faster.
                   </p>
                 </>

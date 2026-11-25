@@ -54,7 +54,7 @@ const formattedItemBought = data.itemsBoughtChange.toFixed(2);
           <div className="col-span-3 sm:col-span-full md:col-span-6">
             <h4 className="body-bold-small">Revenue</h4>
             <p className="body-bold-large sm:body-bold-medium flex items-center gap-2">
-              £{data.revenue.toFixed()}
+              ${data.revenue.toFixed()}
               <span
                 className={`px-2 py-[2px] forms-bold ${
                   data.revenueChange >= 0
@@ -67,7 +67,7 @@ const formattedItemBought = data.itemsBoughtChange.toFixed(2);
               </span>
             </p>
             <p className="body-bold-small mt-2">
-              £{revenueIncrease}{' '}
+              ${revenueIncrease}{' '}
               <span className="text-[#8A888C]">in the past week</span>
             </p>
           </div>
@@ -162,7 +162,7 @@ const formattedItemBought = data.itemsBoughtChange.toFixed(2);
           <div className="col-span-3 sm:col-span-full md:col-span-6">
             <h4 className="body-bold-small">Money Spent</h4>
             <p className="body-bold-large sm:body-bold-medium flex items-center gap-2">
-              £{data.moneySpent.toFixed(2)}
+              ${data.moneySpent.toFixed(2)}
               <span
                 className={`px-2 py-[2px] forms-bold ${
                   data.moneySpentChange >= 0
@@ -175,7 +175,7 @@ const formattedItemBought = data.itemsBoughtChange.toFixed(2);
               </span>
             </p>
             <p className="body-bold-small mt-2">
-              £{moneySpentIncrease}{' '}
+              ${moneySpentIncrease}{' '}
               <span className="text-[#8A888C]">in the past week</span>
             </p>
           </div>

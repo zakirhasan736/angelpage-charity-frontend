@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import FullScreenLoader from '@/components/common/loading/FullScreenLoader';
 import axios from 'axios';
 import BannerSection from './Banner';
@@ -55,7 +56,13 @@ const CharityAccount = () => {
   const permissions = (session?.user as { permissions?: string[] })?.permissions;
   const staffRole = (session?.user as { staffRole?: string })?.staffRole;
   const visibleTabs = getCharityTabsForSession(role, permissions);
-  const [activeTabId, setActiveTabId] = useState<string>('listings');
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams?.get('tab');
+  const [activeTabId, setActiveTabId] = useState<string>(tabFromUrl || 'listings');
+
+  useEffect(() => {
+    if (tabFromUrl) setActiveTabId(tabFromUrl);
+  }, [tabFromUrl]);
   const [productsCount, setProductsCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -116,7 +123,9 @@ const CharityAccount = () => {
 
   return (
     <div className="charity-account-main-wrapper">
-      <BannerSection />
+      <div className={activeTabId === 'analytics' ? '' : 'max-[991px]:hidden'}>
+        <BannerSection />
+      </div>
       {role === 'CHARITY_STAFF' && (
         <div className="custom-container mt-4">
           <p className="body-caption text-mono-70 rounded-lg bg-[#FCF2FF] px-4 py-2">

@@ -54,7 +54,7 @@ const BusinessOverview = ({ data, loading }) => {
           <div className="col-span-3 sm:col-span-full md:col-span-6">
             <h4 className="body-bold-small">Revenue</h4>
             <p className="body-bold-large sm:body-bold-medium flex items-center gap-2">
-              £{data.revenue.toFixed(2)}
+              ${data.revenue.toFixed(2)}
               <span
                 className={`px-2 py-[2px] forms-bold ${
                   data.revenueChange >= 0
@@ -67,7 +67,7 @@ const BusinessOverview = ({ data, loading }) => {
               </span>
             </p>
             <p className="body-bold-small mt-2">
-              + £{revenueIncrease}{' '}
+              + ${revenueIncrease}{' '}
               <span className="text-[#8A888C]">in the past week</span>
             </p>
           </div>
@@ -126,7 +126,7 @@ const BusinessOverview = ({ data, loading }) => {
           <div className="col-span-3 sm:col-span-full md:col-span-6">
             <h4 className="body-bold-small">Total Profit Received</h4>
             <p className="body-bold-large sm:body-bold-medium flex items-center gap-2">
-              £{userData?.totalEarned.toFixed(2) || ''}
+              ${userData?.totalEarned.toFixed(2) || ''}
               {/* <span
                 className={`px-2 py-[2px] forms-bold  text-[#00C700] bg-[rgba(165,255,187,.60)] rounded-full`}
               >
@@ -134,7 +134,7 @@ const BusinessOverview = ({ data, loading }) => {
               </span>*/}
             </p>
             <p className="body-bold-small mt-2">
-              {/* +£0.00 */}
+              {/* +$0.00 */}
               <span className="text-[#8A888C]">Current year</span>
             </p>
           </div>
@@ -145,7 +145,7 @@ const BusinessOverview = ({ data, loading }) => {
       <div className="col-span-3 sm:col-span-full md:col-span-6">
         <h4 className="body-bold-small">Treading Profit</h4>
         <p className="body-bold-large sm:body-bold-medium flex items-center gap-2">
-          £{userData?.totalHeldFunds.toFixed(2) || ''}
+          ${userData?.totalHeldFunds.toFixed(2) || ''}
           {/* <span
             className={`px-2 py-[2px] forms-bold ${
               data.moneySpentChange >= 0
@@ -158,7 +158,7 @@ const BusinessOverview = ({ data, loading }) => {
           </span> */}
         </p>
         <p className="body-bold-small mt-2">
-          {/* + £{moneySpentIncrease}{' '} */}
+          {/* + ${moneySpentIncrease}{' '} */}
           <span className="text-[#8A888C]">Waiting for Admin Approved</span>
         </p>
       </div>
