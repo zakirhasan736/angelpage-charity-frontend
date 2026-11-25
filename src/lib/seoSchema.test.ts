@@ -6,7 +6,7 @@ describe('shopCrumbs', () => {
     expect(shopCrumbs('women')).toEqual([
       { name: 'Home', path: '/' },
       { name: 'Shop', path: '/product' },
-      { name: 'Women', path: '/product?category=women' },
+      { name: 'Women', path: '/shop/women' },
     ]);
   });
 

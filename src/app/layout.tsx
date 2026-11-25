@@ -14,6 +14,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_TITLE,
   INDEXABLE,
+  OG_IMAGE_SIZE,
   SITE_NAME,
   SITE_URL,
   organizationGraph,
@@ -36,8 +37,16 @@ export const metadata: Metadata = {
   verification: {
     google: 'p4xrO9_m2Ysbz7A1kRew8wp8HkRurv6KxEUfK8hEqv8',
   },
-  icons: { icon: '/images/favicon.png', apple: '/images/favicon.png' },
-  alternates: { canonical: `${SITE_URL}/` },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  // No canonical here: every page sets its own. A root canonical would be
+  // inherited by any page that forgets one and point it at the homepage.
   robots: INDEXABLE
     ? {
         index: true,
@@ -58,7 +67,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     type: 'website',
     locale: 'en_US',
-    images: [{ url: DEFAULT_OG_IMAGE, alt: DEFAULT_TITLE }],
+    images: [{ url: DEFAULT_OG_IMAGE, alt: DEFAULT_TITLE, ...OG_IMAGE_SIZE }],
   },
   twitter: {
     card: 'summary_large_image',

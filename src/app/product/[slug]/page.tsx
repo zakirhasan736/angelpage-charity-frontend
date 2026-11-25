@@ -1,8 +1,8 @@
 import ProductSingleSec from '@/components/product/ProductSingleSec';
 import { isMongoObjectId } from '@/lib/slugs';
-import { fetchProductDetails, type ProductRecord } from '@/lib/server-api';
+import { fetchProductDetailsResult, productIndexState, type ProductRecord } from '@/lib/server-api';
 import HydrateQuery from '@/store/HydrateQuery';
-import { redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 
 export const revalidate = 300;
 
@@ -17,14 +17,20 @@ const ProductView = ProductSingleSec as React.FC<{
 
 export default async function ProductSinglePage({ params }: PageProps) {
   const { slug } = await params;
-  const initialProduct = await fetchProductDetails(slug);
+  const { product: initialProduct, status } = await fetchProductDetailsResult(slug);
+
+  // Real 404 (not a "not found" message on a 200 page) when the API says so,
+  // or when the listing was removed. An API outage (status 0/5xx) is thrown
+  // so the error boundary answers 500 and caches keep the last good page.
+  if (status === 404 || productIndexState(initialProduct) === 'removed') notFound();
+  if (!initialProduct && status !== 200) throw new Error(`Product API unavailable (${status})`);
 
   if (
     initialProduct?.slug &&
     isMongoObjectId(slug) &&
     slug !== initialProduct.slug
   ) {
-    redirect(`/product/${initialProduct.slug}`);
+    permanentRedirect(`/product/${initialProduct.slug}`);
   }
 
   const querySlug = initialProduct?.slug || slug;

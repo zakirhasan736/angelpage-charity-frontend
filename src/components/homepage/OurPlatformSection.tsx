@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { shopHref } from '@/lib/shopUrls';
 import { Button } from '../elements';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -67,7 +68,7 @@ const OurPlatformSection = () => {
             {categories.map(category => (
               <Link
                 key={category.id}
-                href={`/product?category=${encodeURIComponent(category.id)}`}
+                href={shopHref(category.id)}
                 className="group relative block h-[280px] overflow-hidden rounded-3xl"
               >
                 <Image

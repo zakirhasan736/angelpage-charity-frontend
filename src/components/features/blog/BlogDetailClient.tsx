@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Clock, Link as LinkIcon, ListOrdered, Share2 } from 'lucide-react';
 import { FacebookIcon, LinkedinIcon, TwitterIcon } from '@/icons';

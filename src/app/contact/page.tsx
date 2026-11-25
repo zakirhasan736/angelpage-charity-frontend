@@ -53,9 +53,7 @@ const Contact = () => {
     <div className="flex custom-container gap-[139px] md:gap-5 md:flex-col pt-[73px] pb-[49px] md:pb-20">
       {/* Left Section */}
       <div className="w-1/2 md:w-full flex flex-col justify-center pr-8">
-        <h6 className="mb-2 font-primary text-[18px] text-left font-normal leading-[135%] tracking-[.18px] text-mono-100">
-          Contact AngelPage
-        </h6>
+        <h1 className="ap-display mb-3 text-left text-[34px] leading-tight sm:text-[26px]">Contact Angelpage</h1>
         <p className="body-regular max-w-[433px] w-full">
           For platform help, please check{' '}
           <Link href="/how-it-works" className="text-primary-color-100 underline">
@@ -65,10 +63,6 @@ const Contact = () => {
           be resolved through your account.
         </p>
         <div className="flex justify-between mt-[60px]">
-          <div className="mb-2">
-            <p className="text-body-caption font-medium">Contact number</p>
-            <p>0000000000</p>
-          </div>
           <div className="mb-2">
             <p className="text-body-caption font-medium">Email</p>
             <p>info@angelpage.org</p>

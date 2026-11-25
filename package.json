@@ -20,6 +20,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
+    "seo:audit": "node scripts/seo-audit.mjs",
     "check": "lint-staged && npm run test && npm run typecheck && npm run build",
     "verify": "npm run format:check && npm run test && npm run typecheck && npm run build && npm run test:e2e",
     "prepare": "husky"

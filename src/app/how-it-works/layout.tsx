@@ -1,3 +1,4 @@
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import FaqSection from '@/components/seo/FaqSection';
@@ -6,11 +7,11 @@ import { HOME_FAQS } from '@/lib/seoSchema';
 import { pageMetadata } from '@/lib/siteSeo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'How it works',
+  title: 'How Angelpage Works: Sell, Shop and Give',
   description:
-    'See how Angelpage works: list a pre-loved item, shop the marketplace, watch reels, and join charity events. Most of each sale goes to a charity.',
+    'List pre-loved items, choose your charity and your split, and see exactly where the money goes. How buying and selling on Angelpage supports charity.',
   path: '/how-it-works',
-  keywords: ['how Angelpage works', 'sell for charity', 'charity marketplace'],
+  keywords: [...TOPIC_KEYWORDS.howItWorks, 'Angelpage'],
 });
 
 const description =

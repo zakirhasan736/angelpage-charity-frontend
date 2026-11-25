@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import { Checkmark } from '@/icons';
 import { Button } from '@/components/elements';

@@ -1,14 +1,15 @@
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import SeoTrail from '@/components/seo/SeoTrail';
 import { pageMetadata } from '@/lib/siteSeo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Contact',
+  title: 'Contact Angelpage: Help for Buyers, Sellers and Charities',
   description:
-    'Contact Angelpage about the charity marketplace, a listing, an event, or your account.',
+    'Questions about an order, selling for charity or bringing your charity onto Angelpage? Get in touch with the Angelpage team.',
   path: '/contact',
-  keywords: ['contact Angelpage', 'charity marketplace support'],
+  keywords: [...TOPIC_KEYWORDS.about, 'Angelpage'],
 });
 
 const description =

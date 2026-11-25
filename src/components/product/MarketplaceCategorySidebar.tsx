@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useShopFilter } from '@/components/product/ShopFilterContext';
+import { shopHref } from '@/lib/shopUrls';
 import { categoriesData } from '@/libs/categoriesData';
 import { fetchCategories, type Category } from '@/lib/categories';
 
 const MarketplaceCategorySidebar = () => {
-  const searchParams = useSearchParams();
-  const activeCategory = searchParams?.get('category') || '';
-  const activeSubcategory = searchParams?.get('subcategory') || '';
+  const { category: activeCategory, subcategory: activeSubcategory } = useShopFilter();
   const [categories, setCategories] = useState<Category[]>(
     categoriesData.categories as Category[]
   );
@@ -45,7 +44,7 @@ const MarketplaceCategorySidebar = () => {
           return (
             <li key={cat.id}>
               <Link
-                href={`/product?category=${encodeURIComponent(cat.id)}`}
+                href={shopHref(cat.id)}
                 className={`block rounded-lg px-3 py-2 body-small capitalize transition-colors ${
                   isActive && !activeSubcategory
                     ? 'bg-[#FCF2FF] text-primary-color-100 font-medium'
@@ -61,7 +60,7 @@ const MarketplaceCategorySidebar = () => {
                     return (
                       <li key={sub.id}>
                         <Link
-                          href={`/product?category=${encodeURIComponent(cat.id)}&subcategory=${encodeURIComponent(sub.id)}`}
+                          href={shopHref(cat.id, sub.id)}
                           className={`block rounded-md px-2 py-1.5 caption capitalize ${
                             subActive
                               ? 'text-primary-color-100 font-medium'

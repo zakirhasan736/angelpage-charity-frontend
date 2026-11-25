@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import { ArrowDown, BadgeCheck, Check, HeartHandshake, MapPin, Package, Share2 } from 'lucide-react';
 
 interface CharityStore {

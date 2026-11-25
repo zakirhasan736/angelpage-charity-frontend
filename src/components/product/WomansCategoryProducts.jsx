@@ -15,7 +15,7 @@ const WomansCategoryProducts = ({ secClassName }) => {
       products={data}
       loading={isLoading}
       error={isError ? 'We could not load these items right now.' : null}
-      viewAllHref="/product?category=women"
+      viewAllHref="/shop/women"
       className={secClassName || 'bg-[#FAF8FB]'}
     />
   );

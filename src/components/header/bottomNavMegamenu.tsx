@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import LanguageSwitch from './LanguageSwitch';
 import { categoriesData } from '@/libs/categoriesData';
+import { shopHref } from '@/lib/shopUrls';
 import { fetchCategories, peekCategories, type Category } from '@/lib/categories';
 
 const fallback = categoriesData.categories as Category[];
@@ -18,9 +19,7 @@ const PROMO_IMAGES = [
 ];
 
 export function categoryHref(categoryId: string, subcategoryId?: string) {
-  const params = new URLSearchParams({ category: categoryId });
-  if (subcategoryId) params.set('subcategory', subcategoryId);
-  return `/product?${params.toString()}`;
+  return shopHref(categoryId, subcategoryId);
 }
 
 function useCatalog() {
@@ -60,9 +59,11 @@ const BottomNavMegamenu = () => {
     setOpenId(null);
     const sync = () =>
       setCurrentCategory(
-        window.location.pathname.startsWith('/product')
-          ? new URLSearchParams(window.location.search).get('category')
-          : null,
+        window.location.pathname.startsWith('/shop/')
+          ? window.location.pathname.split('/')[2] || null
+          : window.location.pathname.startsWith('/product')
+            ? new URLSearchParams(window.location.search).get('category')
+            : null,
       );
     sync();
     window.addEventListener('popstate', sync);

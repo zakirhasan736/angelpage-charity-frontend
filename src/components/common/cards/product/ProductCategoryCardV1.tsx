@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@/components/elements';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import React from 'react';
 

@@ -1,3 +1,4 @@
+import { TOPIC_KEYWORDS } from '@/lib/seoKeywords';
 import type { Metadata } from 'next';
 import React from 'react';
 import BlogListClient from '@/components/features/blog/BlogListClient';
@@ -7,11 +8,11 @@ import { pageMetadata } from '@/lib/siteSeo';
 import HydrateQuery from '@/store/HydrateQuery';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Blog',
+  title: 'Charity Shopping Tips, Guides and Stories',
   description:
-    'Stories from Angelpage, the charity marketplace for pre-loved goods in the USA, Canada, and the UK.',
+    'Guides to selling and decluttering for charity, stories from charity shops, and news from Angelpage, the charity marketplace for pre-loved goods.',
   path: '/blog',
-  keywords: ['Angelpage blog', 'charity stories', 'pre-loved'],
+  keywords: [...TOPIC_KEYWORDS.blog, 'Angelpage'],
 });
 
 export const revalidate = 300;

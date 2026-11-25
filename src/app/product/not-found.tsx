@@ -1,20 +1,13 @@
-'use client';
-import Link from 'next/link';
+import StatusPage from '@/components/common/StatusPage';
 
-export default function NotFound() {
+/** 404 for /product/… : the item was removed or the link is wrong. */
+export default function ProductNotFound() {
   return (
-    <div className="not-found-wrapper py-12 h-[80vh]">
-      <div className="custom-container h-full">
-        <div className="not-found-cont flex flex-col justify-center items-center h-full">
-          <h4 className="text-center">Not Found</h4>
-          <p className="text-center">
-            Could not find product requested resource
-          </p>
-          <Link href="/" className="primary-btn btn-styles mt-6 mx-auto block">
-            Return Home
-          </Link>
-        </div>
-      </div>
-    </div>
+    <StatusPage
+      code="404"
+      title="This item is no longer listed"
+      body="It may have sold or been removed by the seller. Each pre-loved piece is one of a kind, but there are plenty of new finds waiting."
+      primary={{ href: '/product', label: 'Browse new finds' }}
+    />
   );
 }

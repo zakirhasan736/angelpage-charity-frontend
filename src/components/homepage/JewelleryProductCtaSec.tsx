@@ -24,7 +24,7 @@ const JewelleryProductCtaSec = () => (
             Rings, necklaces and watches donated and listed by verified sellers. Each one supports
             a charity you can see before you buy.
           </p>
-          <Link href="/product?category=jewellery" className="mt-7 inline-block">
+          <Link href="/shop/jewellery" className="mt-7 inline-block">
             <Button variant="primary" className="h-[50px]! px-7!">
               Shop jewellery <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useShopFilter } from '@/components/product/ShopFilterContext';
 import FilterSidebar from '@/components/elements/search/FilterSidebar';
 import Sorting from '@/components/elements/search/Sorting';
 import ProductList from '@/components/product/ProductList';
@@ -31,9 +31,7 @@ interface ProductsListsSecProps {
 const ProductsListsSec: React.FC<ProductsListsSecProps> = () => {
   const { status } = useSession() || {};
   const isLoggedIn = status === 'authenticated';
-  const searchParams = useSearchParams();
-  const category = searchParams?.get('category') || '';
-  const subcategory = searchParams?.get('subcategory') || '';
+  const { category, subcategory } = useShopFilter();
   const hasCategoryFilter = !!(category || subcategory);
 
   const {

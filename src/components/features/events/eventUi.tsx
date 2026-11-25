@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
+import Image from '@/components/common/SafeImage';
 import Link from 'next/link';
 import { ArrowUpRight, BarChart3, CalendarClock, HandHeart, type LucideIcon, Radio, Users } from 'lucide-react';
 import type { CommunityEventRecord } from '@/lib/server-api';

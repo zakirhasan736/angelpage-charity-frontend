@@ -4,9 +4,9 @@ import SeoTrail from '@/components/seo/SeoTrail';
 import { SITE_FAQS } from '@/lib/seoSchema';
 import { pageMetadata } from '@/lib/siteSeo';
 
-const title = 'FAQ';
+const title = 'Angelpage FAQ: Buying, Selling and Giving';
 const description =
-  'Answers about Angelpage, the charity marketplace that started in the United States and also sells in Canada and the United Kingdom.';
+  'Straight answers about Angelpage: how charity shares work, where we sell, what you can list, buyer protection, payouts and cookies.';
 
 export const metadata: Metadata = pageMetadata({
   title,
