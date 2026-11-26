@@ -28,7 +28,14 @@ export default function AnalyticsPageView() {
       page_location: window.location.href,
       page_title: document.title,
     });
-    window.gtag?.('config', GA_MEASUREMENT_ID, { page_path: pathname });
+    // An event, not a second config call: config would re-send page_view
+    // and double-count every client-side route change.
+    window.gtag?.('event', 'page_view', {
+      send_to: GA_MEASUREMENT_ID,
+      page_path: pathname,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
   }, [pathname]);
 
   return null;

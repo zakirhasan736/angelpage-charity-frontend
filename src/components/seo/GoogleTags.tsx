@@ -11,17 +11,22 @@ w[l]=w[l]||[];
 w.gtag=function(){w[l].push(arguments);};
 var saved=null;
 try{saved=JSON.parse(localStorage.getItem('angelpage-cookie-consent')||'null');}catch(e){}
+if(saved&&typeof saved.version==='number'&&saved.version>2){saved=null;}
+var gpc=navigator.globalPrivacyControl===true;
 var analytics=saved&&saved.analytics?'granted':'denied';
-var ads=saved&&saved.marketing?'granted':'denied';
+var ads=saved&&saved.marketing&&!gpc?'granted':'denied';
+var prefs=saved&&saved.preferences===false?'denied':(saved?'granted':'denied');
 w.gtag('consent','default',{
   ad_storage:ads,
   ad_user_data:ads,
   ad_personalization:ads,
   analytics_storage:analytics,
   functionality_storage:'granted',
+  personalization_storage:prefs,
   security_storage:'granted',
   wait_for_update:500
 });
+w.gtag('set','ads_data_redaction',ads==='denied');
 w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
 var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
 j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;

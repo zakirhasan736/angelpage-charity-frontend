@@ -618,7 +618,7 @@ function VideoPicker({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-[#0B0112]/60 p-4 backdrop-blur-sm sm:items-end sm:p-0"
+      className="fixed inset-0 z-[10055] flex items-center justify-center bg-[#0B0112]/60 p-4 backdrop-blur-sm sm:items-end sm:p-0"
       role="dialog"
       aria-modal="true"
       aria-labelledby="picker-title"
