@@ -3,11 +3,31 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
-import { Camera, Circle, Clapperboard, FileText, Film, Image as ImageIcon, Send, Square, UploadCloud, Video, X } from 'lucide-react';
+import {
+  Camera,
+  Circle,
+  Clapperboard,
+  FileText,
+  Film,
+  Image as ImageIcon,
+  Send,
+  Square,
+  UploadCloud,
+  Video,
+  X,
+} from 'lucide-react';
 import Image from '@/components/common/SafeImage';
 import { AuthField, AuthTextarea } from '@/components/auth/AuthKit';
-import { Btn, EmptyState, SectionCard, StatusPill } from '@/components/dashboard/DashKit';
+import {
+  Btn,
+  EmptyState,
+  SectionCard,
+  StatusPill,
+} from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
+import SocialImportPanel from './SocialImportPanel';
+import ProviderIcon from './ProviderIcon';
+import { PROVIDER_META, isExternal } from '@/lib/socialVideo';
 import SocialPostingToggles, {
   defaultSocialPostingPrefs,
   type SocialPostingPrefs,
@@ -24,6 +44,8 @@ type GalleryItem = {
     url: string;
     thumbnailUrl?: string;
     mediaType: string;
+    source?: string;
+    embedUrl?: string;
   };
   authorName?: string;
 };
@@ -45,7 +67,7 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
   const [preview, setPreview] = useState('');
   const [uploading, setUploading] = useState(false);
   const [socialPosting, setSocialPosting] = useState<SocialPostingPrefs>(
-    defaultSocialPostingPrefs(),
+    defaultSocialPostingPrefs()
   );
   const [statusFilter, setStatusFilter] = useState('pending_review');
   const [recording, setRecording] = useState(false);
@@ -66,7 +88,8 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
       const url = allowModeration
         ? `${api}/gallery/admin/all`
         : `${api}/gallery/mine`;
-      const params = allowModeration && statusFilter ? { status: statusFilter } : {};
+      const params =
+        allowModeration && statusFilter ? { status: statusFilter } : {};
       const res = await axios.get(url, { headers, params });
       setItems(res.data.items || []);
     } catch {
@@ -90,10 +113,13 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
     if (videoRef.current) videoRef.current.srcObject = null;
   };
 
-  useEffect(() => () => {
-    stopCamera();
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
+  useEffect(
+    () => () => {
+      stopCamera();
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview]
+  );
 
   const startCamera = async () => {
     try {
@@ -128,12 +154,18 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx?.drawImage(video, 0, 0);
-    canvas.toBlob(blob => {
-      if (!blob) return;
-      const f = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      setSelectedFile(f);
-      ToastService.success('Photo captured — add title and publish.');
-    }, 'image/jpeg', 0.92);
+    canvas.toBlob(
+      blob => {
+        if (!blob) return;
+        const f = new File([blob], `photo-${Date.now()}.jpg`, {
+          type: 'image/jpeg',
+        });
+        setSelectedFile(f);
+        ToastService.success('Photo captured — add title and publish.');
+      },
+      'image/jpeg',
+      0.92
+    );
   };
 
   const startRecording = () => {
@@ -149,7 +181,9 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
     };
     recorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-      const f = new File([blob], `reel-${Date.now()}.webm`, { type: 'video/webm' });
+      const f = new File([blob], `reel-${Date.now()}.webm`, {
+        type: 'video/webm',
+      });
       setSelectedFile(f);
       setRecording(false);
       ToastService.success('Reel recorded — add title and publish.');
@@ -185,13 +219,17 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
             tags
               .split(',')
               .map(tag => tag.trim())
-              .filter(Boolean),
-          ),
+              .filter(Boolean)
+          )
         );
       }
       body.append(
         'kind',
-        mode === 'reel' || mode === 'record' ? 'reel' : mode === 'document' ? 'document' : 'photo',
+        mode === 'reel' || mode === 'record'
+          ? 'reel'
+          : mode === 'document'
+            ? 'document'
+            : 'photo'
       );
       body.append('socialPosting', JSON.stringify(socialPosting));
       if (allowModeration && publishNow) body.append('publishNow', 'true');
@@ -203,7 +241,7 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
       ToastService.success(
         allowModeration && publishNow
           ? 'Published to gallery & social queue.'
-          : 'Submitted for review.',
+          : 'Submitted for review.'
       );
       setTitle('');
       setCaption('');
@@ -225,7 +263,7 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
     await axios.post(
       `${api}/gallery/${id}/share`,
       { platforms: ['facebook', 'instagram', 'tiktok', 'twitter'] },
-      { headers },
+      { headers }
     );
     ToastService.success('Sharing queued.');
   };
@@ -260,13 +298,20 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
 
   return (
     <div className="gallery-panel space-y-5">
+      <SocialImportPanel isAdmin={allowModeration} onImported={loadItems} />
+
       <SectionCard
         icon={Clapperboard}
-        title="Post to your gallery"
+        title="Upload or record a reel"
         description={
           <>
             Share photos, reels and thank-you stories. Published items appear on{' '}
-            <a href="/reels" className="font-medium text-[#611192] underline" target="_blank" rel="noreferrer">
+            <a
+              href="/reels"
+              className="font-medium text-[#611192] underline"
+              target="_blank"
+              rel="noreferrer"
+            >
               Reels
             </a>
             .
@@ -274,7 +319,11 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
         }
       >
         <div className="space-y-4">
-          <div role="tablist" aria-label="What are you posting?" className="grid grid-cols-5 gap-1 rounded-2xl bg-[#F1ECF4] p-1 sm:grid-cols-5">
+          <div
+            role="tablist"
+            aria-label="What are you posting?"
+            className="grid grid-cols-5 gap-1 rounded-2xl bg-[#F1ECF4] p-1 sm:grid-cols-5"
+          >
             {MODES.map(m => (
               <button
                 key={m.id}
@@ -295,7 +344,12 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
 
           {mode === 'camera' || mode === 'record' ? (
             <div className="space-y-3">
-              <video ref={videoRef} className="aspect-video w-full rounded-2xl bg-[#0B0112] object-contain" playsInline muted={mode === 'camera'} />
+              <video
+                ref={videoRef}
+                className="aspect-video w-full rounded-2xl bg-[#0B0112] object-contain"
+                playsInline
+                muted={mode === 'camera'}
+              />
               <div className="flex justify-center">
                 {mode === 'camera' ? (
                   <Btn icon={Camera} onClick={capturePhoto}>
@@ -314,12 +368,30 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
             </div>
           ) : (
             <div>
-              <input ref={fileInputRef} type="file" accept={acceptMap[mode]} className="hidden" onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={acceptMap[mode]}
+                className="hidden"
+                onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+              />
               {!preview ? (
-                <button type="button" onClick={() => fileInputRef.current?.click()} className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#DCD3E1] bg-[#FAF8FB] px-6 py-10 text-center transition hover:border-[#611192] hover:bg-[#F6EEFA]">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#DCD3E1] bg-[#FAF8FB] px-6 py-10 text-center transition hover:border-[#611192] hover:bg-[#F6EEFA]"
+                >
                   <UploadCloud className="h-8 w-8 text-[#611192]" aria-hidden />
-                  <span className="text-[14px] font-medium text-[#0B0112]">Choose a file</span>
-                  <span className="text-[12px] text-[#8A888C]">{mode === 'reel' ? 'MP4 or MOV' : mode === 'document' ? 'PDF' : 'JPG, PNG or WebP'}</span>
+                  <span className="text-[14px] font-medium text-[#0B0112]">
+                    Choose a file
+                  </span>
+                  <span className="text-[12px] text-[#8A888C]">
+                    {mode === 'reel'
+                      ? 'MP4 or MOV'
+                      : mode === 'document'
+                        ? 'PDF'
+                        : 'JPG, PNG or WebP'}
+                  </span>
                 </button>
               ) : null}
             </div>
@@ -331,29 +403,64 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
                 <video src={preview} controls className="max-h-96 w-full" />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="Preview" className="max-h-96 w-full object-contain" />
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="max-h-96 w-full object-contain"
+                />
               )}
-              <button type="button" onClick={() => setSelectedFile(null)} className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0B0112]" aria-label="Remove file">
+              <button
+                type="button"
+                onClick={() => setSelectedFile(null)}
+                className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0B0112]"
+                aria-label="Remove file"
+              >
                 <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
           ) : null}
 
-          <AuthField label="Title" value={title} onChange={e => setTitle(e.target.value)} />
-          <AuthTextarea label="Caption (optional)" rows={2} value={caption} onChange={e => setCaption(e.target.value)} />
-          <AuthField label="Tags" value={tags} onChange={e => setTags(e.target.value)} placeholder="impact, thank-you" hint="Separate with commas. Use “impact” for thank-you stories donors can find on Reels." />
+          <AuthField
+            label="Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+          <AuthTextarea
+            label="Caption (optional)"
+            rows={2}
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+          />
+          <AuthField
+            label="Tags"
+            value={tags}
+            onChange={e => setTags(e.target.value)}
+            placeholder="impact, thank-you"
+            hint="Separate with commas. Use “impact” for thank-you stories donors can find on Reels."
+          />
 
           <div className="rounded-2xl bg-[#FAF8FB] p-4">
-            <SocialPostingToggles value={socialPosting} onChange={setSocialPosting} />
+            <SocialPostingToggles
+              value={socialPosting}
+              onChange={setSocialPosting}
+            />
           </div>
 
           <div className="flex flex-wrap justify-end gap-2 border-t border-[#F3EFF5] pt-4 sm:flex-col-reverse">
             {allowModeration ? (
-              <Btn variant="secondary" loading={uploading} onClick={() => submitItem(false)}>
+              <Btn
+                variant="secondary"
+                loading={uploading}
+                onClick={() => submitItem(false)}
+              >
                 Save as pending
               </Btn>
             ) : null}
-            <Btn icon={Send} loading={uploading} onClick={() => submitItem(allowModeration)}>
+            <Btn
+              icon={Send}
+              loading={uploading}
+              onClick={() => submitItem(allowModeration)}
+            >
               {allowModeration ? 'Publish now' : 'Submit for review'}
             </Btn>
           </div>
@@ -364,7 +471,12 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
         title={`${allowModeration ? 'Moderation queue' : 'Your gallery'} (${items.length})`}
         action={
           allowModeration ? (
-            <select aria-label="Filter by status" className="h-9! w-auto! py-0! text-[13px]!" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+            <select
+              aria-label="Filter by status"
+              className="h-9! w-auto! py-0! text-[13px]!"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+            >
               <option value="pending_review">Pending</option>
               <option value="published">Published</option>
               <option value="">All</option>
@@ -373,38 +485,106 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
         }
       >
         {items.length === 0 ? (
-          <EmptyState icon={ImageIcon} title="Nothing here yet" body="Your photos and reels will appear here." />
+          <EmptyState
+            icon={ImageIcon}
+            title="Nothing here yet"
+            body="Your photos and reels will appear here."
+          />
         ) : (
           <ul className="grid grid-cols-2 gap-3 md:grid-cols-2 sm:grid-cols-1">
             {items.map(item => (
-              <li key={item._id} className="flex gap-3 rounded-2xl p-3 ring-1 ring-[#ECE8EE]">
+              <li
+                key={item._id}
+                className="flex gap-3 rounded-2xl p-3 ring-1 ring-[#ECE8EE]"
+              >
                 <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F4F1F6]">
-                  <Image src={item.media.thumbnailUrl || item.media.url} alt="" fill sizes="80px" className="object-cover" />
-                  {item.kind === 'reel' ? <Film className="absolute right-1.5 bottom-1.5 h-4 w-4 text-white drop-shadow" aria-hidden /> : null}
+                  <Image
+                    src={item.media.thumbnailUrl || item.media.url}
+                    alt=""
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                  {isExternal(item.media) ? (
+                    <span
+                      className="absolute right-1.5 bottom-1.5 flex h-5 w-5 items-center justify-center rounded-md"
+                      style={{
+                        background: PROVIDER_META[item.media.source].bg,
+                        color: '#fff',
+                      }}
+                      title={`From ${PROVIDER_META[item.media.source].label}`}
+                    >
+                      <ProviderIcon
+                        provider={item.media.source}
+                        className="h-3 w-3"
+                      />
+                    </span>
+                  ) : item.kind === 'reel' ? (
+                    <Film
+                      className="absolute right-1.5 bottom-1.5 h-4 w-4 text-white drop-shadow"
+                      aria-hidden
+                    />
+                  ) : null}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-semibold text-[#0B0112]">{item.title || 'Untitled'}</p>
+                  <p className="truncate text-[14px] font-semibold text-[#0B0112]">
+                    {item.title || 'Untitled'}
+                  </p>
                   <div className="mt-1 flex items-center gap-2">
-                    <StatusPill status={item.status === 'pending_review' ? 'In review' : item.status} tone={item.status === 'published' ? 'green' : item.status === 'pending_review' ? 'amber' : 'grey'} />
-                    <span className="text-[11.5px] text-[#8A888C] capitalize">{item.kind}</span>
+                    <StatusPill
+                      status={
+                        item.status === 'pending_review'
+                          ? 'In review'
+                          : item.status
+                      }
+                      tone={
+                        item.status === 'published'
+                          ? 'green'
+                          : item.status === 'pending_review'
+                            ? 'amber'
+                            : 'grey'
+                      }
+                    />
+                    <span className="text-[11.5px] text-[#8A888C] capitalize">
+                      {item.kind}
+                    </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {item.status === 'published' ? (
-                      <a href={`/reels?item=${item.slug}`} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12.5px] font-medium text-[#611192] hover:bg-[#F6EEFA]">
+                      <a
+                        href={`/reels?item=${item.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-8 items-center rounded-lg px-2.5 text-[12.5px] font-medium text-[#611192] hover:bg-[#F6EEFA]"
+                      >
                         View
                       </a>
                     ) : null}
-                    {item.status === 'published' ? (
-                      <Btn size="sm" variant="ghost" onClick={() => shareItem(item._id)} className="h-8!">
+                    {item.status === 'published' && !isExternal(item.media) ? (
+                      <Btn
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => shareItem(item._id)}
+                        className="h-8!"
+                      >
                         Share
                       </Btn>
                     ) : null}
                     {allowModeration && item.status === 'pending_review' ? (
-                      <Btn size="sm" onClick={() => publishItem(item._id)} className="h-8!">
+                      <Btn
+                        size="sm"
+                        onClick={() => publishItem(item._id)}
+                        className="h-8!"
+                      >
                         Approve
                       </Btn>
                     ) : null}
-                    <Btn size="sm" variant="ghost" onClick={() => deleteItem(item._id)} className="h-8! text-[#B0002A]! hover:bg-[#FFF1F4]!">
+                    <Btn
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deleteItem(item._id)}
+                      className="h-8! text-[#B0002A]! hover:bg-[#FFF1F4]!"
+                    >
                       Remove
                     </Btn>
                   </div>

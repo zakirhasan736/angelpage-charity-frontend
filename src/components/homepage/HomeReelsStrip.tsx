@@ -8,10 +8,13 @@ import { ArrowLeft, ArrowRight, Camera, Play, Plus } from 'lucide-react';
 import Image from '@/components/common/SafeImage';
 import type { ReelItem } from '@/components/gallery/ReelsFeedClient';
 import { buildReelsUrl } from '@/lib/slugs';
-import { compactCount, postStoryHref } from '@/lib/community';
+import { canPostStories, compactCount, postStoryHref } from '@/lib/community';
+import { PROVIDER_META, isExternal } from '@/lib/socialVideo';
+import ProviderIcon from '@/components/gallery/ProviderIcon';
 
 const isVideo = (r: ReelItem) =>
-  ['video', 'reel'].includes(r.media?.mediaType) || r.kind === 'reel';
+  !isExternal(r.media) &&
+  (['video', 'reel'].includes(r.media?.mediaType) || r.kind === 'reel');
 
 /**
  * "Stories from the community" — the reels shelf on the home pages.
@@ -119,10 +122,13 @@ export default function HomeReelsStrip({
                 Share your story
               </span>
               <span className="mt-1.5 block text-[13px] leading-snug text-white/80 sm:text-[12px]">
-                Show what you sold, bought or funded.
+                {canPostStories(session)
+                  ? 'Upload, or import from TikTok, Instagram or YouTube.'
+                  : 'Sellers and charities: sign in to post.'}
               </span>
               <span className="mt-4 inline-flex h-9 items-center gap-1 rounded-full bg-white px-3.5 text-[13px] font-semibold text-[#3B055C]">
-                <Plus className="h-4 w-4" aria-hidden /> Post
+                <Plus className="h-4 w-4" aria-hidden />{' '}
+                {canPostStories(session) ? 'Post' : 'Sign in'}
               </span>
             </span>
           </Link>
@@ -171,7 +177,7 @@ function ReelTile({ r }: { r: ReelItem }) {
         />
       ) : (
         <Image
-          src={r.media.url}
+          src={isExternal(r.media) ? r.media.thumbnailUrl || '' : r.media.url}
           alt=""
           fill
           sizes="220px"
@@ -183,7 +189,15 @@ function ReelTile({ r }: { r: ReelItem }) {
         aria-hidden
       />
       <span className="absolute top-3 left-3 flex items-center gap-1.5">
-        {video ? (
+        {isExternal(r.media) ? (
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+            style={{ background: PROVIDER_META[r.media.source].bg }}
+            title={`From ${PROVIDER_META[r.media.source].label}`}
+          >
+            <ProviderIcon provider={r.media.source} className="h-3.5 w-3.5" />
+          </span>
+        ) : video ? (
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 backdrop-blur">
             <Play
               className="ml-0.5 h-3.5 w-3.5 fill-white text-white"
