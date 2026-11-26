@@ -79,17 +79,14 @@ const buildAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
         }
 
         try {
-          const res = await axios.post<LoginResponse>(
-            `${API_URL}/auth/login`,
-            {
-              email: credentials.email,
-              password: credentials.password,
-              role: credentials.role,
-              ...(credentials.captchaToken
-                ? { captchaToken: credentials.captchaToken }
-                : {}),
-            }
-          );
+          const res = await axios.post<LoginResponse>(`${API_URL}/auth/login`, {
+            email: credentials.email,
+            password: credentials.password,
+            role: credentials.role,
+            ...(credentials.captchaToken
+              ? { captchaToken: credentials.captchaToken }
+              : {}),
+          });
 
           if (res.data) {
             const { user, token, refreshToken } = res.data;
@@ -135,22 +132,29 @@ const buildAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (
-        account?.provider === 'google' ||
-        account?.provider === 'facebook'
-      ) {
+      if (account?.provider === 'google' || account?.provider === 'facebook') {
         try {
           const cookieMap = parseCookieHeader(req?.headers?.cookie);
           const intendedRole = cookieMap.oauth_intent || 'USER';
 
-          const res = await axios.post(`${API_URL}/auth/oauth`, {
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            provider: account.provider,
-            providerId: account.providerAccountId,
-            intendedRole,
-          });
+          const res = await axios.post(
+            `${API_URL}/auth/oauth`,
+            {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              provider: account.provider,
+              providerId: account.providerAccountId,
+              intendedRole,
+            },
+            {
+              // Proves to the API that NextAuth verified this Google/Facebook login
+              headers: {
+                'x-angelpage-oauth-secret':
+                  process.env.OAUTH_BRIDGE_SECRET || '',
+              },
+            }
+          );
           const extended = user as ExtendedUser;
           user.id = res.data.user._id;
           extended.id = res.data.user._id;

@@ -14,6 +14,7 @@ import { openMiniCart } from '@/components/cart/openMiniCart';
 import { useLazyGetProductDetailsQuery } from '@/store/api/angelpageApi';
 import { calculateProfitSplit } from '@/lib/profitSplit';
 import { useLocale } from '@/i18n/LocaleProvider';
+import { affiliatePartner, affiliateLinkProps } from '@/lib/affiliate';
 
 const formatMoney = (amount, locale) =>
   new Intl.NumberFormat(locale === 'fr' ? 'fr-CA' : 'en-US', {
@@ -43,10 +44,24 @@ const ProductCard = ({
   sellerSharePercent = 0,
   fulfillmentType = 'uk_shipping',
   sellAreas = [],
+  checkoutMode,
+  affiliateUrl,
+  ebayAffiliateUrl,
+  ebayItemId,
 }) => {
   const dispatch = useDispatch();
   const { t, locale } = useLocale();
   const detailSlug = slug || id;
+  // eBay / Amazon / partner items: every click goes straight to the partner site
+  const partner = affiliatePartner({
+    checkoutMode,
+    affiliateUrl,
+    ebayAffiliateUrl,
+    ebayItemId,
+  });
+  const linkProps = partner
+    ? affiliateLinkProps(partner, id)
+    : { href: `/product/${detailSlug}` };
   const { data: session } = useSession() || {};
   const userId = session?.user?.id;
   const token = session?.token;
@@ -88,7 +103,7 @@ const ProductCard = ({
           userId,
           productId: id,
           token,
-        }),
+        })
       );
       ToastService.success(t('card.addedToast'));
       setIsAddedToCart(true);
@@ -130,7 +145,15 @@ const ProductCard = ({
   return (
     <article className="ap-product-card group relative flex h-full w-full flex-col">
       <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-[#F2E8F8] ring-1 ring-[#ECE8EE]">
-        <Link href={`/product/${detailSlug}`} className="absolute inset-0" aria-label={name || 'View product'}>
+        <Link
+          {...linkProps}
+          className="absolute inset-0"
+          aria-label={
+            partner
+              ? `${name || 'Product'} on ${partner.name} (opens in a new tab)`
+              : name || 'View product'
+          }
+        >
           <Image
             src={validatedImageSrc}
             alt={images[0]?.altText || name || 'Product'}
@@ -145,8 +168,10 @@ const ProductCard = ({
           <FavoriteButton itemId={id} type="Product" />
         </div>
 
-        <span className="ap-chip ap-chip--glass absolute top-3 left-3 h-7! max-w-[calc(100%-64px)] truncate px-2.5! text-[11px]! text-[#3B055C]! max-[767px]:hidden">
-          {areaLabel}
+        <span
+          className={`ap-chip ap-chip--glass absolute top-3 left-3 h-7! max-w-[calc(100%-64px)] truncate px-2.5! text-[11px]! text-[#3B055C]! ${partner ? '' : 'max-[767px]:hidden'}`}
+        >
+          {partner ? `Sold on ${partner.name}` : areaLabel}
         </span>
 
         <div className="pointer-events-none absolute right-3 bottom-3 left-3 flex items-center gap-2">
@@ -172,7 +197,7 @@ const ProductCard = ({
             <p className="shrink-0 text-[11px] text-[#8A888C]">{size}</p>
           ) : null}
         </div>
-        <Link href={`/product/${detailSlug}`} className="mt-1.5">
+        <Link {...linkProps} className="mt-1.5">
           <h3 className="line-clamp-2 min-h-[46px] font-primary text-[17px] leading-[1.35] text-[#0B0112] transition group-hover:text-[#611192]">
             {name}
           </h3>
@@ -180,7 +205,11 @@ const ProductCard = ({
 
         {priceNum > 0 && (
           <p className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#FCF2FF] px-2.5 py-1 text-[11.5px] font-medium text-[#611192]">
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden>
+            <svg
+              viewBox="0 0 24 24"
+              className="h-3.5 w-3.5 fill-current"
+              aria-hidden
+            >
               <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.4 1.1 4.2 2.3h2c.8-1.2 2.2-2.3 4.2-2.3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z" />
             </svg>
             {t('card.toCharity', {
@@ -199,10 +228,29 @@ const ProductCard = ({
                 {t('card.sellerKeeps', { percent: split.sellerSharePercent })}
               </p>
             ) : showLocation ? (
-              <p className="mt-1 line-clamp-1 text-[11px] text-[#8A888C]">{displayLocation}</p>
+              <p className="mt-1 line-clamp-1 text-[11px] text-[#8A888C]">
+                {displayLocation}
+              </p>
             ) : null}
           </div>
-          {isAddedToCart ? (
+          {partner ? (
+            <a
+              {...linkProps}
+              className="relative z-10 inline-flex h-10 items-center gap-1.5 rounded-full bg-[#611192] px-4 text-[13px] font-medium whitespace-nowrap text-white transition hover:bg-[#4C0D73]"
+            >
+              Buy on {partner.name}
+              <svg
+                viewBox="0 0 24 24"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden
+              >
+                <path d="M7 17 17 7M9 7h8v8" />
+              </svg>
+            </a>
+          ) : isAddedToCart ? (
             <Button
               variant="accent"
               className="h-10! px-4! text-[13px]! inline-flex items-center gap-1.5"
