@@ -5,7 +5,8 @@ import { pageMetadata } from '@/lib/siteSeo';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Verify your email',
-  description: 'Confirm your email address to finish setting up your Angelpage account.',
+  description:
+    'Confirm your email address to finish setting up your Angelpage account.',
   path: '/auth/verify-email',
   noindex: true,
 });

@@ -29,7 +29,10 @@ interface CaptchaWidgetProps {
 
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({ onVerify, onExpire }) => {
+const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({
+  onVerify,
+  onExpire,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
@@ -82,7 +85,9 @@ const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({ onVerify, onExpire }) => 
 
   if (!SITE_KEY) return null;
 
-  return <div ref={containerRef} className="my-4 flex justify-center min-h-[65px]" />;
+  return (
+    <div ref={containerRef} className="my-4 flex justify-center min-h-[65px]" />
+  );
 };
 
 export default CaptchaWidget;

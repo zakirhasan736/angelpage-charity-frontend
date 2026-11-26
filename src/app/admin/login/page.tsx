@@ -2,13 +2,24 @@
 import { signIn, useSession, getProviders, getSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Lock, Mail, ScrollText, ShieldCheck, Users } from 'lucide-react';
-import { AuthAlert, AuthDivider, AuthField, AuthShell, AuthSubmit, OAuthButtons } from '@/components/auth/AuthKit';
+import {
+  AuthAlert,
+  AuthDivider,
+  AuthField,
+  AuthShell,
+  AuthSubmit,
+  OAuthButtons,
+} from '@/components/auth/AuthKit';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import { isAdminRole } from '@/constants/adminPanels';
 import CaptchaWidget from '@/components/auth/CaptchaWidget';
 import FullScreenLoader from '@/components/common/loading/FullScreenLoader';
+import MfaChallenge, {
+  parseMfaError,
+  type MfaChallengeInfo,
+} from '@/components/auth/MfaChallenge';
 
 const waitForAdminSession = async (maxAttempts = 8) => {
   for (let i = 0; i < maxAttempts; i += 1) {
@@ -26,6 +37,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [challenge, setChallenge] = useState<MfaChallengeInfo | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const activeRole = 'ADMIN';
   const [oauthProviders, setOauthProviders] = useState<string[]>([]);
@@ -74,6 +86,13 @@ const Login = () => {
         ...(captchaToken ? { captchaToken } : {}),
       });
 
+      const mfa = parseMfaError(result?.error);
+      if (mfa) {
+        setChallenge(mfa);
+        setPassword('');
+        return;
+      }
+
       if (result?.error) {
         let errorMessage = result.error;
 
@@ -102,13 +121,36 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (session?.user?.role && session?.user?.id && isAdminRole(session.user.role)) {
+    if (
+      session?.user?.role &&
+      session?.user?.id &&
+      isAdminRole(session.user.role)
+    ) {
       router.replace('/admin');
     }
   }, [session, router]);
 
   if (status === 'loading') {
     return <FullScreenLoader />;
+  }
+  if (challenge) {
+    return (
+      <AuthShell
+        eyebrow="Admin team"
+        title="Confirm it’s you"
+        subtitle="Admin accounts use two-step verification."
+      >
+        <MfaChallenge
+          challenge={challenge}
+          onCancel={() => setChallenge(null)}
+          onSignedIn={async () => {
+            await waitForAdminSession();
+            ToastService.success('Login successful! Redirecting...');
+            router.push('/admin');
+          }}
+        />
+      </AuthShell>
+    );
   }
   return (
     <AuthShell
@@ -118,14 +160,35 @@ const Login = () => {
       asideTitle="Run the marketplace that funds good causes."
       asidePoints={[
         { icon: ShieldCheck, text: 'Each role sees only the panels it needs' },
-        { icon: Users, text: 'Sub-admins are invited by a Super Admin from the Team tab' },
-        { icon: ScrollText, text: 'Every admin action is recorded in the audit log' },
+        {
+          icon: Users,
+          text: 'Sub-admins are invited by a Super Admin from the Team tab',
+        },
+        {
+          icon: ScrollText,
+          text: 'Every admin action is recorded in the audit log',
+        },
       ]}
-      footer={<span className="text-[13px]">Admin accounts are created by a Super Admin. Public sign-up is turned off.</span>}
+      footer={
+        <span className="text-[13px]">
+          Admin accounts are created by a Super Admin. Public sign-up is turned
+          off.
+        </span>
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {error ? <AuthAlert>{error}</AuthAlert> : null}
-        <AuthField label="Work email" name="email" type="email" icon={Mail} autoComplete="email" inputMode="email" placeholder="you@angelpage.org" value={email} onChange={e => setEmail(e.target.value)} />
+        <AuthField
+          label="Work email"
+          name="email"
+          type="email"
+          icon={Mail}
+          autoComplete="email"
+          inputMode="email"
+          placeholder="you@angelpage.org"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
         <AuthField
           label="Password"
           name="password"
@@ -136,13 +199,23 @@ const Login = () => {
           value={password}
           onChange={e => setPassword(e.target.value)}
           labelAction={
-            <Link href="/auth/request-reset-password?type=admin" className="text-[12.5px] font-medium text-[#611192] hover:underline">
+            <Link
+              href="/auth/request-reset-password?type=admin"
+              className="text-[12.5px] font-medium text-[#611192] hover:underline"
+            >
               Forgot password?
             </Link>
           }
         />
-        <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken('')} />
-        <AuthSubmit loading={isSubmitting} loadingText="Signing in…" className="mt-2">
+        <CaptchaWidget
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken('')}
+        />
+        <AuthSubmit
+          loading={isSubmitting}
+          loadingText="Signing in…"
+          className="mt-2"
+        >
           Sign in
         </AuthSubmit>
       </form>

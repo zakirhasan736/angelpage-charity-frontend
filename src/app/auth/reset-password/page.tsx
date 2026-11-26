@@ -5,14 +5,23 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CircleCheck, Link2Off, Lock } from 'lucide-react';
 import { resetPassword } from '@/utils/api';
-import { AuthAlert, AuthField, AuthShell, AuthStatus, AuthSubmit, PasswordStrength } from '@/components/auth/AuthKit';
+import {
+  AuthAlert,
+  AuthField,
+  AuthShell,
+  AuthStatus,
+  AuthSubmit,
+  PasswordStrength,
+} from '@/components/auth/AuthKit';
 
 export default function ResetPassword() {
   const router = useRouter();
   const token = useSearchParams()?.get('token') || '';
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
+  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>(
+    {}
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -33,7 +42,11 @@ export default function ResetPassword() {
       setTimeout(() => router.push('/auth/login'), 2500);
     } catch (err) {
       const message = (err as { message?: string })?.message;
-      setError(message && !/status code/i.test(message) ? message : 'This link is invalid or has expired. Request a new one.');
+      setError(
+        message && !/status code/i.test(message)
+          ? message
+          : 'This link is invalid or has expired. Request a new one.'
+      );
     } finally {
       setLoading(false);
     }
@@ -43,9 +56,13 @@ export default function ResetPassword() {
     return (
       <AuthShell eyebrow="Reset password" title="This link doesn’t work">
         <AuthStatus icon={Link2Off} title="Missing or broken link">
-          Open the link from your reset email again, or request a new one. Links expire after 10 minutes.
+          Open the link from your reset email again, or request a new one. Links
+          expire after 10 minutes.
         </AuthStatus>
-        <Link href="/auth/request-reset-password" className="mt-8 inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white">
+        <Link
+          href="/auth/request-reset-password"
+          className="mt-8 inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white"
+        >
           Request a new link
         </Link>
       </AuthShell>
@@ -58,7 +75,10 @@ export default function ResetPassword() {
         <AuthStatus icon={CircleCheck} tone="success" title="You’re all set">
           Your password has been changed. Taking you to sign in…
         </AuthStatus>
-        <Link href="/auth/login" className="mt-8 inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white">
+        <Link
+          href="/auth/login"
+          className="mt-8 inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white"
+        >
           Sign in now
         </Link>
       </AuthShell>
@@ -76,7 +96,10 @@ export default function ResetPassword() {
         {error ? (
           <AuthAlert>
             {error}{' '}
-            <Link href="/auth/request-reset-password" className="font-semibold underline">
+            <Link
+              href="/auth/request-reset-password"
+              className="font-semibold underline"
+            >
               Get a new link
             </Link>
           </AuthAlert>

@@ -8,13 +8,12 @@ import { useRouter } from 'next/navigation';
 import { Button, ProgressBar } from '@/components/elements';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 
-
 const BannerSection = () => {
   const router = useRouter();
   const { data: session, status } = useSession() || {};
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(null);
-   const [dashboardData, setDashboardData] = useState(null); 
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -125,7 +124,10 @@ const BannerSection = () => {
       if (status === 'authenticated' && session?.user?.email) {
         try {
           setLoading(true);
-          const response = await fetchCharityProfileData(session.user.email);
+          const response = await fetchCharityProfileData(
+            session.user.email,
+            session.token
+          );
           if (!response?.user) {
             ToastService.error('Failed to load profile data.');
             return;
@@ -172,7 +174,10 @@ const BannerSection = () => {
               </p>
             </div>
             <div className="w-[280px] shrink-0 max-[767px]:w-full">
-              <ProgressBar progress={progress} className="h-2 w-full rounded-full" />
+              <ProgressBar
+                progress={progress}
+                className="h-2 w-full rounded-full"
+              />
             </div>
           </div>
         )}
@@ -188,7 +193,10 @@ const BannerSection = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0B0112]/85 via-[#0B0112]/25 to-transparent" />
           <div className="chang-image-btn-box absolute right-5 top-5 flex items-center gap-2">
             {isEditing && (
-              <Button variant="accent" className="change-storefront-img relative h-10! overflow-hidden">
+              <Button
+                variant="accent"
+                className="change-storefront-img relative h-10! overflow-hidden"
+              >
                 Upload image
                 <input
                   type="file"
@@ -204,7 +212,11 @@ const BannerSection = () => {
               className="change-storefront-img h-10! bg-white/95! border-white! text-[#611192]! [-webkit-text-fill-color:#611192]!"
               disabled={loading}
             >
-              {loading ? 'Saving...' : isEditing ? 'Save cover' : 'Change cover'}
+              {loading
+                ? 'Saving...'
+                : isEditing
+                  ? 'Save cover'
+                  : 'Change cover'}
             </Button>
           </div>
           <div className="charity-account-banner-cont absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-7 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3 max-[767px]:p-5">
@@ -221,7 +233,9 @@ const BannerSection = () => {
                 <span className="skeleton h-[72px] w-[72px] rounded-[20px] bg-white/20" />
               )}
               <div>
-                <p className="ap-eyebrow ap-eyebrow--plain text-[#E4D0F0]!">Charity dashboard</p>
+                <p className="ap-eyebrow ap-eyebrow--plain text-[#E4D0F0]!">
+                  Charity dashboard
+                </p>
                 <h1 className="ap-display charity-account-banner-tittle mt-1.5 text-[32px] text-white! max-[767px]:text-[22px]">
                   {userData?.charityName || 'Add your charity name'}
                 </h1>
@@ -230,16 +244,25 @@ const BannerSection = () => {
             <ul className="list-info flex flex-wrap items-center gap-2">
               {userData?.storefrontId ? (
                 <li>
-                  <a href={`/charity/store/${userData.storefrontId}`} className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-[#3B055C]">
+                  <a
+                    href={`/charity/store/${userData.storefrontId}`}
+                    className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-[#3B055C]"
+                  >
                     View storefront
                   </a>
                 </li>
               ) : null}
               <li className="rounded-full bg-white/15 px-4 py-2 text-[13px] text-white! backdrop-blur">
-                <strong className="font-semibold text-white!">{userData?.listedProducts?.length || 0}</strong> for sale
+                <strong className="font-semibold text-white!">
+                  {userData?.listedProducts?.length || 0}
+                </strong>{' '}
+                for sale
               </li>
               <li className="rounded-full bg-white/15 px-4 py-2 text-[13px] text-white! backdrop-blur">
-                <strong className="font-semibold text-white!">{dashboardData?.totalSold || 0}</strong> sold
+                <strong className="font-semibold text-white!">
+                  {dashboardData?.totalSold || 0}
+                </strong>{' '}
+                sold
               </li>
             </ul>
           </div>

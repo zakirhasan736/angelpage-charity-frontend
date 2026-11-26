@@ -5,6 +5,7 @@ import AuthProvider from '@utils/AuthProvider';
 import AdminBrowseBar from '@/components/admin/AdminBrowseBar';
 import MarketPreferenceDialog from '@/components/market/MarketPreferenceDialog';
 import CookieConsent from '@/components/cookies/CookieConsent';
+import MfaRequiredWatcher from '@/components/auth/MfaRequiredWatcher';
 import { useSyncApiAuth } from '@/hooks/useSyncApiAuth';
 import { usePathname } from 'next/navigation';
 
@@ -36,6 +37,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       </div>
       <MarketPreferenceDialog />
       <CookieConsent />
+      <MfaRequiredWatcher />
     </div>
   );
 }

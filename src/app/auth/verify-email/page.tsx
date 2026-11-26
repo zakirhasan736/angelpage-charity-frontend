@@ -6,11 +6,24 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CircleCheck, Mail, MailOpen, Pencil } from 'lucide-react';
 import * as authApi from '@/utils/api';
 import { ToastService } from '@/components/elements/notifications/ToastService';
-import { AuthAlert, AuthField, AuthShell, AuthStatus, AuthSubmit, OtpInput } from '@/components/auth/AuthKit';
+import {
+  AuthAlert,
+  AuthField,
+  AuthShell,
+  AuthStatus,
+  AuthSubmit,
+  OtpInput,
+} from '@/components/auth/AuthKit';
 
 // utils/api is plain JS with loose JSDoc; pin the shapes used here
-const verifyEmail = authApi.verifyEmail as unknown as (a: { email: string; verificationCode: string }) => Promise<unknown>;
-const resendVerificationEmail = authApi.resendVerificationEmail as unknown as (a: { email: string }) => Promise<unknown>;
+const verifyEmail = authApi.verifyEmail as unknown as (a: {
+  email: string;
+  verificationCode: string;
+}) => Promise<unknown>;
+const resendVerificationEmail =
+  authApi.resendVerificationEmail as unknown as (a: {
+    email: string;
+  }) => Promise<unknown>;
 
 const CODE_LENGTH = 6;
 const RESEND_WAIT = 30;
@@ -51,10 +64,20 @@ export default function VerifyEmail() {
     try {
       await verifyEmail({ email: email.trim(), verificationCode: code });
       setDone(true);
-      setTimeout(() => router.push(`/auth/login?email=${encodeURIComponent(email.trim())}`), 2000);
+      setTimeout(
+        () =>
+          router.push(`/auth/login?email=${encodeURIComponent(email.trim())}`),
+        2000
+      );
     } catch (err) {
       const message = (err as { message?: string })?.message || '';
-      setError(/expired/i.test(message) ? 'That code has expired. Send a new one below.' : /invalid/i.test(message) ? 'That code isn’t right. Check the email and try again.' : 'We couldn’t verify your email. Please try again.');
+      setError(
+        /expired/i.test(message)
+          ? 'That code has expired. Send a new one below.'
+          : /invalid/i.test(message)
+            ? 'That code isn’t right. Check the email and try again.'
+            : 'We couldn’t verify your email. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -62,7 +85,13 @@ export default function VerifyEmail() {
 
   // submit automatically once all digits are in
   useEffect(() => {
-    if (code.length === CODE_LENGTH && !loading && !done && EMAIL_RE.test(email.trim())) verify();
+    if (
+      code.length === CODE_LENGTH &&
+      !loading &&
+      !done &&
+      EMAIL_RE.test(email.trim())
+    )
+      verify();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
@@ -92,7 +121,10 @@ export default function VerifyEmail() {
         <AuthStatus icon={CircleCheck} tone="success" title="You’re verified">
           Thanks for confirming your email. Taking you to sign in…
         </AuthStatus>
-        <Link href="/auth/login" className="mt-8 inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white">
+        <Link
+          href="/auth/login"
+          className="mt-8 inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white"
+        >
           Sign in now
         </Link>
       </AuthShell>
@@ -111,11 +143,19 @@ export default function VerifyEmail() {
           <MailOpen className="h-5 w-5" aria-hidden />
         </span>
         {editingEmail ? (
-          <p className="text-[14px] leading-snug text-[#3B055C]">Enter your email, then the {CODE_LENGTH}-digit code we sent you. Codes last 15 minutes.</p>
+          <p className="text-[14px] leading-snug text-[#3B055C]">
+            Enter your email, then the {CODE_LENGTH}-digit code we sent you.
+            Codes last 15 minutes.
+          </p>
         ) : (
           <p className="min-w-0 text-[14px] leading-snug text-[#3B055C]">
-            We sent a {CODE_LENGTH}-digit code to <strong className="break-all font-semibold">{email}</strong>.{' '}
-            <button type="button" onClick={() => setEditingEmail(true)} className="inline-flex items-center gap-1 font-medium text-[#611192] underline">
+            We sent a {CODE_LENGTH}-digit code to{' '}
+            <strong className="break-all font-semibold">{email}</strong>.{' '}
+            <button
+              type="button"
+              onClick={() => setEditingEmail(true)}
+              className="inline-flex items-center gap-1 font-medium text-[#611192] underline"
+            >
               <Pencil className="h-3 w-3" aria-hidden /> Change
             </button>
           </p>
@@ -124,11 +164,31 @@ export default function VerifyEmail() {
 
       <form onSubmit={verify} className="mt-6 space-y-5" noValidate>
         {editingEmail ? (
-          <AuthField label="Email address" type="email" icon={Mail} autoComplete="email" inputMode="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+          <AuthField
+            label="Email address"
+            type="email"
+            icon={Mail}
+            autoComplete="email"
+            inputMode="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
         ) : null}
         <div>
-          <p className="mb-2 text-[13px] font-medium text-[#2A2730]">Verification code</p>
-          <OtpInput value={code} onChange={v => { setCode(v); setError(''); }} length={CODE_LENGTH} disabled={loading} invalid={Boolean(error) && code.length === CODE_LENGTH} />
+          <p className="mb-2 text-[13px] font-medium text-[#2A2730]">
+            Verification code
+          </p>
+          <OtpInput
+            value={code}
+            onChange={v => {
+              setCode(v);
+              setError('');
+            }}
+            length={CODE_LENGTH}
+            disabled={loading}
+            invalid={Boolean(error) && code.length === CODE_LENGTH}
+          />
         </div>
         {error ? <AuthAlert>{error}</AuthAlert> : null}
         <AuthSubmit loading={loading} loadingText="Checking…">
@@ -141,7 +201,12 @@ export default function VerifyEmail() {
         {cooldown > 0 ? (
           <span className="text-[#8A888C]">Resend in {cooldown}s</span>
         ) : (
-          <button type="button" onClick={resend} disabled={resending} className="font-semibold text-[#611192] hover:underline disabled:opacity-60">
+          <button
+            type="button"
+            onClick={resend}
+            disabled={resending}
+            className="font-semibold text-[#611192] hover:underline disabled:opacity-60"
+          >
             {resending ? 'Sending…' : 'Send a new code'}
           </button>
         )}

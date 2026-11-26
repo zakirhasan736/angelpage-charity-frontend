@@ -3,20 +3,38 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Building2, KeyRound, Mail, MailCheck, ShieldCheck, User } from 'lucide-react';
+import {
+  Building2,
+  KeyRound,
+  Mail,
+  MailCheck,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 import { requestPasswordReset } from '@/utils/api';
 import CaptchaWidget from '@/components/auth/CaptchaWidget';
-import { AuthAlert, AuthField, AuthGhostButton, AuthShell, AuthStatus, AuthSubmit, RoleSwitch } from '@/components/auth/AuthKit';
+import {
+  AuthAlert,
+  AuthField,
+  AuthGhostButton,
+  AuthShell,
+  AuthStatus,
+  AuthSubmit,
+  RoleSwitch,
+} from '@/components/auth/AuthKit';
 
 type Role = 'USER' | 'CHARITY' | 'ADMIN';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const initialRole = (t?: string | null): Role => (t === 'charity' ? 'CHARITY' : t === 'admin' ? 'ADMIN' : 'USER');
+const initialRole = (t?: string | null): Role =>
+  t === 'charity' ? 'CHARITY' : t === 'admin' ? 'ADMIN' : 'USER';
 
 export default function RequestPasswordReset() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState(searchParams?.get('email') || '');
-  const [role, setRole] = useState<Role>(initialRole(searchParams?.get('type')));
+  const [role, setRole] = useState<Role>(
+    initialRole(searchParams?.get('type'))
+  );
   const [sentTo, setSentTo] = useState('');
   const [error, setError] = useState('');
   const [fieldError, setFieldError] = useState('');
@@ -37,20 +55,41 @@ export default function RequestPasswordReset() {
       await requestPasswordReset(target, role, captchaToken);
       setSentTo(target);
     } catch (err) {
-      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(message || 'We couldn’t send the reset email. Please try again.');
+      const message = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message;
+      setError(
+        message || 'We couldn’t send the reset email. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const loginHref = role === 'ADMIN' ? '/admin/login' : role === 'CHARITY' ? '/auth/login?type=charity' : '/auth/login';
+  const loginHref =
+    role === 'ADMIN'
+      ? '/admin/login'
+      : role === 'CHARITY'
+        ? '/auth/login?type=charity'
+        : '/auth/login';
 
   if (sentTo) {
     return (
-      <AuthShell eyebrow="Step 2 of 3" title="Check your inbox" back={{ href: loginHref, label: 'Back to sign in' }}>
+      <AuthShell
+        eyebrow="Step 2 of 3"
+        title="Check your inbox"
+        back={{ href: loginHref, label: 'Back to sign in' }}
+      >
         <AuthStatus icon={MailCheck} title="Reset link sent">
-          We sent a link to <strong className="font-semibold text-[#0B0112]">{sentTo}</strong>. It works for 10 minutes. Check your spam folder if it doesn’t arrive.
+          If <strong className="font-semibold text-[#0B0112]">{sentTo}</strong>{' '}
+          has{' '}
+          {role === 'CHARITY'
+            ? 'a charity'
+            : role === 'ADMIN'
+              ? 'an admin'
+              : 'an Angelpage'}{' '}
+          account, we’ve sent a reset link. It works for 10 minutes. Nothing
+          arrived? Check your spam folder and that you picked the right account
+          type.
         </AuthStatus>
         {error ? (
           <div className="mt-6">
@@ -58,12 +97,20 @@ export default function RequestPasswordReset() {
           </div>
         ) : null}
         <div className="mt-8 space-y-3">
-          <Link href={loginHref} className="inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white shadow-[0_10px_24px_rgba(97,17,146,0.28)] transition hover:bg-[#4C0D73]">
+          <Link
+            href={loginHref}
+            className="inline-flex h-[52px] w-full items-center justify-center rounded-2xl bg-[#611192] text-[15px] font-semibold text-white shadow-[0_10px_24px_rgba(97,17,146,0.28)] transition hover:bg-[#4C0D73]"
+          >
             Back to sign in
-          </Link>          <AuthGhostButton onClick={() => send()} disabled={loading}>
+          </Link>{' '}
+          <AuthGhostButton onClick={() => send()} disabled={loading}>
             {loading ? 'Sending…' : 'Send it again'}
           </AuthGhostButton>
-          <button type="button" onClick={() => setSentTo('')} className="w-full py-2 text-[13.5px] font-medium text-[#611192] hover:underline">
+          <button
+            type="button"
+            onClick={() => setSentTo('')}
+            className="w-full py-2 text-[13.5px] font-medium text-[#611192] hover:underline"
+          >
             Use a different email
           </button>
         </div>
@@ -81,12 +128,18 @@ export default function RequestPasswordReset() {
       asidePoints={[
         { icon: Mail, text: 'We email you a one-time reset link' },
         { icon: KeyRound, text: 'Choose a new password on the next screen' },
-        { icon: ShieldCheck, text: 'Links expire after 10 minutes for your safety' },
+        {
+          icon: ShieldCheck,
+          text: 'Links expire after 10 minutes for your safety',
+        },
       ]}
       footer={
         <>
           Remembered it?{' '}
-          <Link href={loginHref} className="font-semibold text-[#611192] hover:underline">
+          <Link
+            href={loginHref}
+            className="font-semibold text-[#611192] hover:underline"
+          >
             Sign in
           </Link>
         </>
@@ -121,7 +174,10 @@ export default function RequestPasswordReset() {
           }}
           error={fieldError}
         />
-        <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken('')} />
+        <CaptchaWidget
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken('')}
+        />
         <AuthSubmit loading={loading} loadingText="Sending link…">
           Send reset link
         </AuthSubmit>
