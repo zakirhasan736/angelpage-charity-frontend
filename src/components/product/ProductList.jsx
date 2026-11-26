@@ -9,46 +9,55 @@ const ProductList = ({ products, isLoggedIn }) => {
   return (
     <>
       {products && products.length > 0 ? (
+        <div className="product-list grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {products.map((product, index) => {
+            if (!product) {
+              return null;
+            }
 
-    <div className="product-list grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 lg:grid-cols-3">
-       { products.map((product, index) => {
-          if (!product) {
-            return null;
-          }
+            const location = formatProductLocation(
+              product.seller,
+              product.charity
+            );
 
-          const location = formatProductLocation(product.seller, product.charity);
-
-          return (
-            <ProductCard
-              key={product.id || `product-${index}`}
-              id={product._id}
-              slug={product.slug}
-              charityImageSrc={
-                product.charity?.profileImage ||
-                '/images/icons/elisp-profile-default-img.svg'
-              }
-              charityImageAlt={product.charity?.charityName || 'Charity Image'}
-              images={
-                product.images || '/images/products/card-placeholder-image.webp'
-              }
-              brand={product.brand || 'Unknown Brand'}
-              name={product.name || 'Untitled Product'}
-              size={product.size || ''}
-              price={`${product.price || '0.00'}`}
-              charityProfit={product.charityProfit}
-              sellerSharePercent={product.sellerSharePercent ?? 0}
-              fulfillmentType={product.fulfillmentType || 'uk_shipping'}
-              sellAreas={product.sellAreas || []}
-              location={location}
-              dimensionHeight={product.dimensions?.height || ''}
-              dimensionWidth={product.dimensions?.width || ''}
-              status={product.status}
-              isLoggedIn={isLoggedIn}
-            />
-          );
-        })}
-    </div>
-    ) : (
+            return (
+              <ProductCard
+                key={product.id || `product-${index}`}
+                id={product._id}
+                slug={product.slug}
+                charityImageSrc={
+                  product.charity?.profileImage ||
+                  '/images/icons/elisp-profile-default-img.svg'
+                }
+                charityImageAlt={
+                  product.charity?.charityName || 'Charity Image'
+                }
+                images={
+                  product.images ||
+                  '/images/products/card-placeholder-image.webp'
+                }
+                brand={product.brand || 'Unknown Brand'}
+                name={product.name || 'Untitled Product'}
+                size={product.size || ''}
+                price={`${product.price || '0.00'}`}
+                charityProfit={product.charityProfit}
+                sellerSharePercent={product.sellerSharePercent ?? 0}
+                fulfillmentType={product.fulfillmentType || 'uk_shipping'}
+                sellAreas={product.sellAreas || []}
+                checkoutMode={product.checkoutMode}
+                affiliateUrl={product.affiliateUrl}
+                ebayAffiliateUrl={product.ebayAffiliateUrl}
+                ebayItemId={product.ebayItemId}
+                location={location}
+                dimensionHeight={product.dimensions?.height || ''}
+                dimensionWidth={product.dimensions?.width || ''}
+                status={product.status}
+                isLoggedIn={isLoggedIn}
+              />
+            );
+          })}
+        </div>
+      ) : (
         <div className="not-found-screen-design flex flex-col items-center pt-12 pb-12 custom-container">
           <h5 className="body-bold-medium text-mono-100 font-medium font-secondary mb-2 text-center">
             No products listed!
@@ -64,7 +73,7 @@ const ProductList = ({ products, isLoggedIn }) => {
           </Link>
         </div>
       )}
-      </>
+    </>
   );
 };
 
