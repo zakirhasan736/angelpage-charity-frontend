@@ -19,16 +19,14 @@ const RelatedCategoryProducts = ({
     data: relatedProducts = [],
     isLoading: loading,
     isError,
-  } = useGetRelatedProductsQuery(
-    { category },
-    { skip: !category }
-  );
+  } = useGetRelatedProductsQuery({ category }, { skip: !category });
   const productData = relatedProducts.filter(
     product => product.id !== currentProductId
   );
   const error = isError ? 'Failed to load related products.' : null;
 
-  if (error) return <p className="text-red-600">{error}</p>;
+  // Hide the whole band when there is nothing to suggest (or it failed to load).
+  if (error || (!loading && !productData.length)) return null;
 
   return (
     <section
@@ -37,7 +35,9 @@ const RelatedCategoryProducts = ({
       <div className="custom-container">
         <div className="product-sec-title-box mb-10 flex sm:flex-col items-start justify-between gap-4">
           <div className="product-title-box-left-cont">
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#611192]">More from the shop</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#611192]">
+              More from the shop
+            </p>
             <h4 className="title h4 font-primary mt-1">You may like</h4>
             <p className="body-small mt-2 empty:hidden"></p>
           </div>
@@ -65,24 +65,27 @@ const RelatedCategoryProducts = ({
                   </SwiperSlide>
                 ))
               : productData.map(item => {
-                  const location = formatProductLocation(item.seller, item.charity);
+                  const location = formatProductLocation(
+                    item.seller,
+                    item.charity
+                  );
 
                   return (
                     <SwiperSlide key={item.id} className="h-auto!">
                       <div className="h-full">
-                      <ProductCard
-                        {...item}
-                        id={item._id}
-                        slug={item.slug}
-                        charityImageSrc={item.charity?.profileImage}
-                        charityImageAlt={
-                          item.charity?.charityName || 'Charity Image'
-                        }
-                        dimensionHeight={item.dimensions?.height || ''}
-                        dimensionWidth={item.dimensions?.width || ''}
-                        location={location}
-                        status={item.status}
-                      />
+                        <ProductCard
+                          {...item}
+                          id={item._id}
+                          slug={item.slug}
+                          charityImageSrc={item.charity?.profileImage}
+                          charityImageAlt={
+                            item.charity?.charityName || 'Charity Image'
+                          }
+                          dimensionHeight={item.dimensions?.height || ''}
+                          dimensionWidth={item.dimensions?.width || ''}
+                          location={location}
+                          status={item.status}
+                        />
                       </div>
                     </SwiperSlide>
                   );
