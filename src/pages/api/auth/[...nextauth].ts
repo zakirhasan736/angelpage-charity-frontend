@@ -17,6 +17,10 @@ interface Credentials {
 }
 
 interface LoginResponse {
+  mfaRequired?: boolean;
+  mfaToken?: string;
+  method?: 'totp' | 'email';
+  emailHint?: string;
   user: {
     _id: string;
     role: string;
@@ -88,6 +92,12 @@ const buildAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
               : {}),
           });
 
+          if (res.data?.mfaRequired && res.data.mfaToken) {
+            // The login page reads this and shows the code step
+            throw new Error(
+              `MFA_REQUIRED|${res.data.mfaToken}|${res.data.method || 'totp'}|${res.data.emailHint || ''}`
+            );
+          }
           if (res.data) {
             const { user, token, refreshToken } = res.data;
             return {
@@ -104,11 +114,62 @@ const buildAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
           }
           return null;
         } catch (error) {
-          console.error('Login error:', error);
+          if (
+            error instanceof Error &&
+            error.message.startsWith('MFA_REQUIRED|')
+          ) {
+            throw error;
+          }
+          console.error(
+            'Login error:',
+            axios.isAxiosError(error) ? error.response?.status : error
+          );
           if (axios.isAxiosError(error) && error.response?.data?.message) {
             throw new Error(String(error.response.data.message));
           }
           throw new Error('Invalid email or password');
+        }
+      },
+    }),
+    // Second step of sign-in: exchanges the two-step token + code for a session
+    CredentialsProvider({
+      id: 'mfa',
+      name: 'Two-step verification',
+      credentials: {
+        mfaToken: { label: 'Token', type: 'text' },
+        code: { label: 'Code', type: 'text' },
+        method: { label: 'Method', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.mfaToken || !credentials.code) {
+          throw new Error('Enter the code.');
+        }
+        try {
+          const res = await axios.post<LoginResponse>(
+            `${API_URL}/auth/mfa/verify`,
+            {
+              mfaToken: credentials.mfaToken,
+              code: credentials.code,
+              method: credentials.method,
+            }
+          );
+          const { user, token, refreshToken } = res.data;
+          return {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            charityId: user.charityId,
+            staffRole: user.staffRole,
+            permissions: user.permissions,
+            token,
+            refreshToken,
+          };
+        } catch (error) {
+          if (axios.isAxiosError(error) && error.response?.data?.message) {
+            throw new Error(String(error.response.data.message));
+          }
+          throw new Error('Could not check the code. Try again.');
         }
       },
     }),
@@ -155,6 +216,15 @@ const buildAuthOptions = (req?: NextApiRequest): NextAuthOptions => ({
               },
             }
           );
+          if (res.data?.mfaRequired && res.data.mfaToken) {
+            // Social sign-in with two-step on: finish on the code page
+            const q = new URLSearchParams({
+              t: res.data.mfaToken,
+              m: res.data.method || 'totp',
+              e: res.data.emailHint || '',
+            });
+            return `/auth/two-step?${q}`;
+          }
           const extended = user as ExtendedUser;
           user.id = res.data.user._id;
           extended.id = res.data.user._id;

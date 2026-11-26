@@ -6,7 +6,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Building2, Lock, Mail, User } from 'lucide-react';
 import { ToastService } from '@/components/elements/notifications/ToastService';
 import CaptchaWidget from '@/components/auth/CaptchaWidget';
-import { AuthAlert, AuthDivider, AuthField, AuthShell, AuthSubmit, OAuthButtons, RoleSwitch } from '@/components/auth/AuthKit';
+import {
+  AuthAlert,
+  AuthDivider,
+  AuthField,
+  AuthShell,
+  AuthSubmit,
+  OAuthButtons,
+  RoleSwitch,
+} from '@/components/auth/AuthKit';
+import MfaChallenge, {
+  parseMfaError,
+  type MfaChallengeInfo,
+} from '@/components/auth/MfaChallenge';
 
 type LoginRole = 'USER' | 'CHARITY';
 
@@ -19,6 +31,7 @@ const Login = () => {
   const [activeRole, setActiveRole] = useState<LoginRole>('USER');
   const [oauthProviders, setOauthProviders] = useState<string[]>([]);
   const [captchaToken, setCaptchaToken] = useState('');
+  const [challenge, setChallenge] = useState<MfaChallengeInfo | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get('callbackUrl') || '/';
@@ -26,7 +39,9 @@ const Login = () => {
   useEffect(() => {
     getProviders().then(providers => {
       if (!providers) return;
-      setOauthProviders(Object.keys(providers).filter(p => p !== 'credentials'));
+      setOauthProviders(
+        Object.keys(providers).filter(p => p !== 'credentials')
+      );
     });
   }, []);
 
@@ -38,7 +53,9 @@ const Login = () => {
 
   const handleOAuthSignIn = async (provider: 'google' | 'facebook') => {
     if (!oauthProviders.includes(provider)) {
-      ToastService.error(`${provider === 'google' ? 'Google' : 'Facebook'} login is not set up yet. Please use email and password.`);
+      ToastService.error(
+        `${provider === 'google' ? 'Google' : 'Facebook'} login is not set up yet. Please use email and password.`
+      );
       return;
     }
     try {
@@ -71,6 +88,14 @@ const Login = () => {
       callbackUrl: callbackUrl || '/',
     });
 
+    const mfa = parseMfaError(result?.error);
+    if (mfa) {
+      setChallenge(mfa);
+      setPassword('');
+      setIsSubmitting(false);
+      return;
+    }
+
     if (result?.error) {
       let errorMessage = result.error;
       if (result.error === 'CredentialsSignin') {
@@ -96,13 +121,33 @@ const Login = () => {
         if (userRole === 'USER' || userRole === 'CHARITY') {
           router.push(`/`);
         } else if (userRole === 'CHARITY_STAFF') {
-          const charityId = (session?.user as { charityId?: string })?.charityId;
+          const charityId = (session?.user as { charityId?: string })
+            ?.charityId;
           router.push(charityId ? `/charity/account/${charityId}` : `/`);
         }
       }, 2000);
       return () => clearTimeout(t);
     }
   }, [session, router]);
+
+  if (challenge) {
+    return (
+      <AuthShell
+        eyebrow="Welcome back"
+        title="Confirm it’s you"
+        subtitle="Your account has two-step verification on."
+      >
+        <MfaChallenge
+          challenge={challenge}
+          onCancel={() => setChallenge(null)}
+          onSignedIn={() => {
+            ToastService.success('Signed in. Redirecting…');
+            router.push(callbackUrl || '/');
+          }}
+        />
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell
@@ -112,7 +157,14 @@ const Login = () => {
       footer={
         <>
           New to Angelpage?{' '}
-          <Link href={activeRole === 'CHARITY' ? '/auth/register?type=charity' : '/auth/register'} className="font-semibold text-[#611192] hover:underline">
+          <Link
+            href={
+              activeRole === 'CHARITY'
+                ? '/auth/register?type=charity'
+                : '/auth/register'
+            }
+            className="font-semibold text-[#611192] hover:underline"
+          >
             Create an account
           </Link>
         </>
@@ -130,7 +182,10 @@ const Login = () => {
         ]}
       />
       {activeRole === 'CHARITY' ? (
-        <p className="mt-3 text-[12.5px] text-[#8A888C]">Owners and staff use the same login. Your charity admin sets staff access.</p>
+        <p className="mt-3 text-[12.5px] text-[#8A888C]">
+          Owners and staff use the same login. Your charity admin sets staff
+          access.
+        </p>
       ) : null}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
@@ -158,13 +213,23 @@ const Login = () => {
           onChange={e => setPassword(e.target.value)}
           required
           labelAction={
-            <Link href={`/auth/request-reset-password${activeRole === 'CHARITY' ? '?type=charity' : ''}`} className="text-[12.5px] font-medium text-[#611192] hover:underline">
+            <Link
+              href={`/auth/request-reset-password${activeRole === 'CHARITY' ? '?type=charity' : ''}`}
+              className="text-[12.5px] font-medium text-[#611192] hover:underline"
+            >
               Forgot password?
             </Link>
           }
         />
-        <CaptchaWidget onVerify={setCaptchaToken} onExpire={() => setCaptchaToken('')} />
-        <AuthSubmit loading={isSubmitting} loadingText="Signing in…" className="mt-2">
+        <CaptchaWidget
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken('')}
+        />
+        <AuthSubmit
+          loading={isSubmitting}
+          loadingText="Signing in…"
+          className="mt-2"
+        >
           Sign in
         </AuthSubmit>
       </form>
