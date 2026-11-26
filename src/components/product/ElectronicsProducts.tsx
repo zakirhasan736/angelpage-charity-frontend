@@ -44,7 +44,11 @@ const electronicsCategories = [
   },
 ];
 
-const tiles = electronicsCategories.map(c => ({ title: c.categoryTitle, image: c.imageSrc, href: c.productCategory }));
+const tiles = electronicsCategories.map(c => ({
+  title: c.categoryTitle,
+  image: c.imageSrc,
+  href: c.productCategory,
+}));
 
 const ElectronicsTopCategoryProducts: React.FC<Props> = ({ secClassName }) => (
   <CategoryTileRail

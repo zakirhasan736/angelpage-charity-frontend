@@ -11,7 +11,9 @@ const ProductsPage = ({ hideBanner = false }: { hideBanner?: boolean }) => {
 
   return (
     <div className="products-page-main-wrapper">
-      {hideBanner ? null : <ProductBannerSec category={category} subcategory={subcategory} />}
+      {hideBanner ? null : (
+        <ProductBannerSec category={category} subcategory={subcategory} />
+      )}
       <ProductsListsSec category={category} subcategory={subcategory} />
     </div>
   );

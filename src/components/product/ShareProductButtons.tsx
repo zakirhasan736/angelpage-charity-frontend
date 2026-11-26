@@ -11,10 +11,7 @@ import {
   TwitterIcon,
   WhatsAppIcon,
 } from '@/icons';
-import {
-  CHARITY_SHARE_PERCENT,
-  formatCharityProfit,
-} from '@/constants/brand';
+import { CHARITY_SHARE_PERCENT, formatCharityProfit } from '@/constants/brand';
 import {
   buildSharePayload,
   type ProductShareDetails,
@@ -114,10 +111,7 @@ const ShareProductButtons = ({ product }: ShareProductButtonsProps) => {
   const [copied, setCopied] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const previewPayload = useMemo(
-    () => buildSharePayload(product),
-    [product]
-  );
+  const previewPayload = useMemo(() => buildSharePayload(product), [product]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
