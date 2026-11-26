@@ -27,15 +27,26 @@ const ConfirmationModal: React.FC<ModalProps> = ({
         <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#611192]">
           Angelpage
         </p>
-        <h3 className="font-primary mt-2 text-3xl text-[#0B0112]">Your item is listed</h3>
+        <h3 className="font-primary mt-2 text-3xl text-[#0B0112]">
+          Your item is listed
+        </h3>
         <p className="mt-2 text-sm leading-6 text-[#5C5560]">
-          Buyers can find it in the shop. You can list another item, or open this one.
+          Buyers can find it in the shop. You can list another item, or open
+          this one.
         </p>
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" className="rounded-full!" onClick={onClose}>
+          <Button
+            variant="secondary"
+            className="rounded-full!"
+            onClick={onClose}
+          >
             View listing
           </Button>
-          <Button variant="primary" className="rounded-full!" onClick={onConfirm}>
+          <Button
+            variant="primary"
+            className="rounded-full!"
+            onClick={onConfirm}
+          >
             List another
           </Button>
         </div>

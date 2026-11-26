@@ -7,10 +7,7 @@ import { ToastService } from '@/components/elements/notifications/ToastService';
 import SocialPostingToggles, {
   type SocialPostingPrefs,
 } from '@/components/product/SocialPostingToggles';
-import {
-  calculateProfitSplit,
-  PLATFORM_FEE_PERCENT,
-} from '@/lib/profitSplit';
+import { calculateProfitSplit, PLATFORM_FEE_PERCENT } from '@/lib/profitSplit';
 import { formatMarketMoney } from '@/lib/marketPreference';
 import { useLocale } from '@/i18n/LocaleProvider';
 
@@ -62,7 +59,7 @@ const PriceForm: React.FC<FormProps> = ({
   const money = (amount: number) => formatMarketMoney(amount, locale);
   const [price, setPrice] = useState<string>(formData.price || '');
   const [sellerSharePercent, setSellerSharePercent] = useState<number>(
-    formData.sellerSharePercent ?? 0,
+    formData.sellerSharePercent ?? 0
   );
   const [error, setError] = useState<string>('');
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -77,7 +74,7 @@ const PriceForm: React.FC<FormProps> = ({
 
   const split = useMemo(
     () => calculateProfitSplit(numericPrice, sellerSharePercent),
-    [numericPrice, sellerSharePercent],
+    [numericPrice, sellerSharePercent]
   );
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +101,7 @@ const PriceForm: React.FC<FormProps> = ({
   const handleSubmit = () => {
     if (!termsAccepted) {
       ToastService.error(
-        'You must agree to the seller terms and no-clearance goods policy.',
+        'You must agree to the seller terms and no-clearance goods policy.'
       );
       return;
     }
@@ -129,7 +126,7 @@ const PriceForm: React.FC<FormProps> = ({
       sellerProfit: `$${finalSplit.sellerProfit.toFixed(2)}`,
     });
     ToastService.success(
-      isEditMode ? 'Price & split saved.' : 'Your product listed successfully!',
+      isEditMode ? 'Price & split saved.' : 'Your product listed successfully!'
     );
     onFinish();
   };
@@ -255,6 +252,7 @@ const PriceForm: React.FC<FormProps> = ({
             value={socialPosting}
             onChange={onSocialPostingChange}
             listingVideoUrl={listingVideoUrl}
+            showCrossPost
           />
         </div>
 
@@ -287,7 +285,11 @@ const PriceForm: React.FC<FormProps> = ({
               onClick={handleSubmit}
               disabled={!!error}
             >
-              {isSubmitting ? 'Loading...' : isEditMode ? 'Save changes' : 'Finish'}
+              {isSubmitting
+                ? 'Loading...'
+                : isEditMode
+                  ? 'Save changes'
+                  : 'Finish'}
             </Button>
           </div>
         </div>

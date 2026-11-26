@@ -21,7 +21,9 @@ type PurchaseImpactPanelProps = {
   }>;
 };
 
-export default function PurchaseImpactPanel({ products = [] }: PurchaseImpactPanelProps) {
+export default function PurchaseImpactPanel({
+  products = [],
+}: PurchaseImpactPanelProps) {
   const charities = useMemo(() => {
     const map = new Map<string, CharitySummary>();
     products.forEach(item => {
@@ -37,9 +39,9 @@ export default function PurchaseImpactPanel({ products = [] }: PurchaseImpactPan
     () =>
       products.reduce(
         (sum, item) => sum + (Number(item.charityProfit) || 0),
-        0,
+        0
       ),
-    [products],
+    [products]
   );
 
   if (!charities.length) return null;

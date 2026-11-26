@@ -5,9 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useSession } from 'next-auth/react';
-import {
-  ToastService,
-} from '@/components/elements/notifications/ToastService';
+import { ToastService } from '@/components/elements/notifications/ToastService';
 import AiAssistButton from '@/components/ai/AiAssistButton';
 import { analyzeProductImage } from '@/lib/aiApi';
 interface UploadedImage {
@@ -74,7 +72,8 @@ const PhotosForm: React.FC<FormProps> = ({
   };
 
   const handleAiFromPhoto = async () => {
-    const featured = uploadedImages.find(img => img.isFeatured) || uploadedImages[0];
+    const featured =
+      uploadedImages.find(img => img.isFeatured) || uploadedImages[0];
     if (!featured?.file) {
       ToastService.error('Upload a photo first.');
       return;
@@ -95,7 +94,8 @@ const PhotosForm: React.FC<FormProps> = ({
         size: result.size || '',
         category: result.category || '',
         subcategory: result.subcategory || '',
-        additionalInfo: result.additionalInfo || result.suggestedDescription || '',
+        additionalInfo:
+          result.additionalInfo || result.suggestedDescription || '',
       });
       ToastService.success('AI identified your product — review details.');
       onGoToDetails?.();
@@ -109,59 +109,63 @@ const PhotosForm: React.FC<FormProps> = ({
     }
   };
 
-const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const files = event.target.files;
-  const MAX_SIZE = 5 * 1024 * 1024;
-  const MIN_WIDTH = 400;
-  const MIN_HEIGHT = 400;
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const MIN_WIDTH = 400;
+    const MIN_HEIGHT = 400;
 
-  if (files) {
-    const fileList = Array.from(files);
-    for (const file of fileList) {
-      if (!['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
-        setError('Only JPG, PNG, or WebP images are allowed.');
-        ToastService.error('Only JPG, PNG, or WebP images are allowed.');
-        return;
+    if (files) {
+      const fileList = Array.from(files);
+      for (const file of fileList) {
+        if (
+          !['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(
+            file.type
+          )
+        ) {
+          setError('Only JPG, PNG, or WebP images are allowed.');
+          ToastService.error('Only JPG, PNG, or WebP images are allowed.');
+          return;
+        }
+        if (file.size > MAX_SIZE) {
+          setError('Each image must be under 5MB.');
+          ToastService.error('Each image must be under 5MB.');
+          return;
+        }
       }
-      if (file.size > MAX_SIZE) {
-        setError('Each image must be under 5MB.');
-        ToastService.error('Each image must be under 5MB.');
-        return;
-      }
-    }
 
-    const validateDimensions = (file: File) =>
-      new Promise<boolean>(resolve => {
-        const img = new window.Image();
-        img.onload = () => {
-          resolve(img.width >= MIN_WIDTH && img.height >= MIN_HEIGHT);
-          URL.revokeObjectURL(img.src);
-        };
-        img.onerror = () => resolve(false);
-        img.src = URL.createObjectURL(file);
+      const validateDimensions = (file: File) =>
+        new Promise<boolean>(resolve => {
+          const img = new window.Image();
+          img.onload = () => {
+            resolve(img.width >= MIN_WIDTH && img.height >= MIN_HEIGHT);
+            URL.revokeObjectURL(img.src);
+          };
+          img.onerror = () => resolve(false);
+          img.src = URL.createObjectURL(file);
+        });
+
+      Promise.all(fileList.map(validateDimensions)).then(results => {
+        if (results.some(valid => !valid)) {
+          setError('Images must be at least 400×400 pixels.');
+          ToastService.error('Images must be at least 400×400 pixels.');
+          return;
+        }
+
+        const newImages = fileList.map(file => ({
+          id: Date.now() + Math.random(),
+          src: URL.createObjectURL(file),
+          file,
+          isFeatured: uploadedImages.length === 0,
+        }));
+
+        const updatedImages = [...uploadedImages, ...newImages].slice(0, 10);
+        setUploadedImages(updatedImages);
+        onSubmit(updatedImages);
+        setError('');
       });
-
-    Promise.all(fileList.map(validateDimensions)).then(results => {
-      if (results.some(valid => !valid)) {
-        setError('Images must be at least 400×400 pixels.');
-        ToastService.error('Images must be at least 400×400 pixels.');
-        return;
-      }
-
-      const newImages = fileList.map(file => ({
-        id: Date.now() + Math.random(),
-        src: URL.createObjectURL(file),
-        file,
-        isFeatured: uploadedImages.length === 0,
-      }));
-
-      const updatedImages = [...uploadedImages, ...newImages].slice(0, 10);
-      setUploadedImages(updatedImages);
-      onSubmit(updatedImages);
-      setError('');
-    });
-  }
-};
+    }
+  };
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -196,26 +200,26 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onVideosChange?.(updated);
   };
 
- const handleDeleteImage = (imageId: number) => {
-   const updatedImages = uploadedImages.filter(image => image.id !== imageId);
-   setUploadedImages(updatedImages);
+  const handleDeleteImage = (imageId: number) => {
+    const updatedImages = uploadedImages.filter(image => image.id !== imageId);
+    setUploadedImages(updatedImages);
 
-   if (
-     !updatedImages.some(image => image.isFeatured) &&
-     updatedImages.length > 0
-   ) {
-     updatedImages[0].isFeatured = true;
-     setUploadedImages([...updatedImages]);
-   }
- };
+    if (
+      !updatedImages.some(image => image.isFeatured) &&
+      updatedImages.length > 0
+    ) {
+      updatedImages[0].isFeatured = true;
+      setUploadedImages([...updatedImages]);
+    }
+  };
 
- const moveImage = (dragIndex: number, hoverIndex: number) => {
-   const draggedImage = uploadedImages[dragIndex];
-   const updatedImages = [...uploadedImages];
-   updatedImages.splice(dragIndex, 1);
-   updatedImages.splice(hoverIndex, 0, draggedImage);
-   setUploadedImages(updatedImages);
- };
+  const moveImage = (dragIndex: number, hoverIndex: number) => {
+    const draggedImage = uploadedImages[dragIndex];
+    const updatedImages = [...uploadedImages];
+    updatedImages.splice(dragIndex, 1);
+    updatedImages.splice(hoverIndex, 0, draggedImage);
+    setUploadedImages(updatedImages);
+  };
 
   const handleDropToFeatured = (imageId: number) => {
     const updatedImages = uploadedImages.map(image =>
@@ -226,22 +230,22 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUploadedImages(updatedImages);
     ToastService.success('Updated featured image.');
   };
- const handleSubmit = () => {
-   if (uploadedImages.length === 0) {
-     setError('Please upload at least one image.');
-     ToastService.error('Please upload at least one image.');
-     return;
-   }
+  const handleSubmit = () => {
+    if (uploadedImages.length === 0) {
+      setError('Please upload at least one image.');
+      ToastService.error('Please upload at least one image.');
+      return;
+    }
 
-   // Ensure each uploaded image has the file object for backend processing
-   if (!isEditMode && !uploadedImages.every(image => image.file)) {
-     ToastService.error('Some images are missing their file data.');
-     return;
-   }
+    // Ensure each uploaded image has the file object for backend processing
+    if (!isEditMode && !uploadedImages.every(image => image.file)) {
+      ToastService.error('Some images are missing their file data.');
+      return;
+    }
 
-   onSubmit(uploadedImages);
-   setActiveTab('price');
- };
+    onSubmit(uploadedImages);
+    setActiveTab('price');
+  };
 
   return (
     <>
@@ -287,7 +291,8 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
                 onClick={handleAiFromPhoto}
               />
               <p className="caption text-mono-70 mt-1">
-                Uses your featured photo to suggest title, category, and description.
+                Uses your featured photo to suggest title, category, and
+                description.
               </p>
             </div>
           )}
@@ -312,7 +317,9 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </div>
 
           <div className="mt-6 mb-4">
-            <p className="font-primary text-2xl text-[#0B0112]">Product video</p>
+            <p className="font-primary text-2xl text-[#0B0112]">
+              Product video
+            </p>
             <span className="body-small text-[#474648]">
               Add up to 2 short clips (MP4/WebM, max 50MB each).
             </span>
@@ -400,7 +407,6 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </div>
         </div>
       </DndProvider>
-     
     </>
   );
 };

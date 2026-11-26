@@ -5,10 +5,14 @@ type SessionLike =
   | null
   | undefined;
 
-/** Where "Share your story" goes: the gallery tab when signed in, otherwise sign-up first. */
+/** Posting reels needs an account: sellers (USER), charity owners/staff, or admins. */
+export const canPostStories = (session: SessionLike) =>
+  Boolean(session?.user?.id);
+
+/** Where "Share your story" goes: the gallery tab when signed in, otherwise sign in first. */
 export function postStoryHref(session: SessionLike) {
   const u = session?.user;
-  if (!u?.id) return '/auth/register?intent=story';
+  if (!u?.id) return `/auth/login?callbackUrl=${encodeURIComponent('/reels')}`;
   const base = getAccountPathForRole(u.role, u.id, u.charityId);
   return base.startsWith('/admin')
     ? '/admin?tab=gallery'

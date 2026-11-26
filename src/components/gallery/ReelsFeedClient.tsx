@@ -30,7 +30,9 @@ import {
 import Image from '@/components/common/SafeImage';
 import type { ReelsFilterParams } from '@/lib/slugs';
 import { buildReelsUrl } from '@/lib/slugs';
-import { compactCount, postStoryHref } from '@/lib/community';
+import { canPostStories, compactCount, postStoryHref } from '@/lib/community';
+import { PROVIDER_META, isExternal, playerUrl } from '@/lib/socialVideo';
+import ProviderIcon from './ProviderIcon';
 
 export type ReelItem = {
   _id: string;
@@ -49,6 +51,10 @@ export type ReelItem = {
     url: string;
     thumbnailUrl?: string;
     mediaType: string;
+    source?: string;
+    embedUrl?: string;
+    externalId?: string;
+    permalink?: string;
   };
   productId?: string;
   productSlug?: string | null;
@@ -73,7 +79,8 @@ const KINDS = [
 
 const LIKES_KEY = 'ap-reel-likes';
 const isVideo = (r: ReelItem) =>
-  ['video', 'reel'].includes(r.media?.mediaType) || r.kind === 'reel';
+  !isExternal(r.media) &&
+  (['video', 'reel'].includes(r.media?.mediaType) || r.kind === 'reel');
 
 const readLikes = (): Record<string, boolean> => {
   try {
@@ -332,14 +339,16 @@ export default function ReelsFeedClient({
             Share your story
           </p>
           <p className="mt-1.5 text-[13px] leading-snug text-white/80">
-            Post a reel of what you sold, bought or funded. Charities: show the
-            impact.
+            {canPostStories(session)
+              ? 'Upload a reel, or bring in videos from TikTok, Instagram or YouTube.'
+              : 'Sellers, charities and the Angelpage team can post. Sign in to share yours.'}
           </p>
           <Link
             href={postHref}
             className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13.5px] font-semibold text-[#3B055C]"
           >
-            <Plus className="h-4 w-4" aria-hidden /> Post a reel
+            <Plus className="h-4 w-4" aria-hidden />{' '}
+            {canPostStories(session) ? 'Post a reel' : 'Sign in to post'}
           </Link>
         </div>
         <p className="mt-4 text-[11.5px] text-white/40">
@@ -451,7 +460,8 @@ export default function ReelsFeedClient({
               const liked = Boolean(likes[r._id]);
               const near = Math.abs(i - active) <= 1;
               const poster =
-                r.media.thumbnailUrl || (video ? undefined : r.media.url);
+                r.media.thumbnailUrl ||
+                (video || isExternal(r.media) ? undefined : r.media.url);
               const charityHref = r.charityId
                 ? `/charity/find-a-charity/${r.charityId}`
                 : null;
@@ -474,7 +484,42 @@ export default function ReelsFeedClient({
                         setTimeout(() => setBurst(null), 700);
                       }}
                     >
-                      {video ? (
+                      {isExternal(r.media) ? (
+                        i === active ? (
+                          <>
+                            {poster ? (
+                              <Image
+                                src={poster}
+                                alt=""
+                                fill
+                                sizes="460px"
+                                className="object-cover"
+                              />
+                            ) : null}
+                            <iframe
+                              key={`${r._id}-${muted}`}
+                              src={playerUrl(r.media, {
+                                autoplay: true,
+                                muted,
+                              })}
+                              title={r.title}
+                              className="absolute inset-0 h-full w-full border-0"
+                              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                              allowFullScreen
+                              referrerPolicy="strict-origin-when-cross-origin"
+                              sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                            />
+                          </>
+                        ) : poster ? (
+                          <Image
+                            src={poster}
+                            alt=""
+                            fill
+                            sizes="460px"
+                            className="object-cover"
+                          />
+                        ) : null
+                      ) : video ? (
                         near ? (
                           <video
                             ref={el => {
@@ -525,6 +570,21 @@ export default function ReelsFeedClient({
                         </button>
                       ) : null}
 
+                      {isExternal(r.media) ? (
+                        <a
+                          href={r.media.permalink || r.media.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="absolute top-4 left-4 z-10 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/45 px-3 text-[12px] font-medium text-white backdrop-blur md:top-[calc(64px+env(safe-area-inset-top))]"
+                        >
+                          <ProviderIcon
+                            provider={r.media.source}
+                            className="h-3.5 w-3.5"
+                          />{' '}
+                          Watch on {PROVIDER_META[r.media.source].short}
+                        </a>
+                      ) : null}
+
                       {burst === r._id ? (
                         <Heart
                           className="pointer-events-none absolute inset-0 m-auto h-24 w-24 animate-ping fill-white text-white"
@@ -533,7 +593,9 @@ export default function ReelsFeedClient({
                       ) : null}
 
                       {/* info */}
-                      <div className="absolute inset-x-0 bottom-0 p-5 pr-20 md:pb-[calc(28px+env(safe-area-inset-bottom))]">
+                      <div
+                        className={`absolute inset-x-0 bottom-0 p-5 pr-20 ${isExternal(r.media) ? 'pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto' : ''} md:pb-[calc(28px+env(safe-area-inset-bottom))]`}
+                      >
                         <div className="flex items-center gap-2.5">
                           <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-white/20 ring-2 ring-white/70">
                             {r.charityProfileImage || r.authorAvatar ? (
