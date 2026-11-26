@@ -48,7 +48,7 @@ export default function HomeReelsStrip({
     };
   }, []);
 
-  if (items && items.length === 0) return null;
+  const empty = Boolean(items && items.length === 0);
 
   const nudge = (dir: 1 | -1) =>
     track.current?.scrollBy({
@@ -75,8 +75,9 @@ export default function HomeReelsStrip({
                 : 'See where your money goes'}
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-[#6B686E] sm:text-[14px]">
-              Short videos and photos from charities and members: the kitchens,
-              clinics and classrooms your purchases keep running.
+              {empty
+                ? 'Reels are new on Angelpage. Charities, sellers and buyers: be among the first to show what a sale or a donation made possible.'
+                : 'Short videos and photos from charities and members: the kitchens, clinics and classrooms your purchases keep running.'}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -96,12 +97,22 @@ export default function HomeReelsStrip({
             >
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
-            <Link
-              href="/reels"
-              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-[#0B0112] px-5 text-[14px] font-semibold text-white transition hover:bg-[#2A1A35]"
-            >
-              <Play className="h-4 w-4 fill-current" aria-hidden /> Watch reels
-            </Link>
+            {empty ? (
+              <Link
+                href={postHref}
+                className="inline-flex h-11 items-center gap-1.5 rounded-full bg-[#611192] px-5 text-[14px] font-semibold text-white shadow-[0_8px_18px_rgba(97,17,146,0.25)] transition hover:bg-[#4C0D73]"
+              >
+                <Plus className="h-4 w-4" aria-hidden /> Share the first story
+              </Link>
+            ) : (
+              <Link
+                href="/reels"
+                className="inline-flex h-11 items-center gap-1.5 rounded-full bg-[#0B0112] px-5 text-[14px] font-semibold text-white transition hover:bg-[#2A1A35]"
+              >
+                <Play className="h-4 w-4 fill-current" aria-hidden /> Watch
+                reels
+              </Link>
+            )}
           </div>
         </div>
 
@@ -141,10 +152,83 @@ export default function HomeReelsStrip({
                   aria-hidden
                 />
               ))
-            : items.map(r => <ReelTile key={r._id} r={r} />)}
+            : empty
+              ? STORY_IDEAS.map(idea => (
+                  <IdeaTile key={idea.title} idea={idea} href={postHref} />
+                ))
+              : items.map(r => <ReelTile key={r._id} r={r} />)}
         </div>
       </div>
     </section>
+  );
+}
+
+/** Shown until the first reels are published: prompts, clearly labelled, never fake posts. */
+const STORY_IDEAS = [
+  {
+    title: 'The meal your sale paid for',
+    body: 'Charities: film a kitchen shift or a food parcel going out.',
+    img: '/images/design-events-giving/impact_reel_child_1783397355399.jpg',
+  },
+  {
+    title: 'Say thank you on camera',
+    body: 'A 15-second thank-you to the people who shopped for you.',
+    img: '/images/design-events-giving/donation_hands_1783396766300.jpg',
+  },
+  {
+    title: 'Unbox a pre-loved find',
+    body: 'Sellers and buyers: show the item and the cause it helped.',
+    img: '/images/home/home-banner-modal-2.jpg',
+  },
+  {
+    title: 'Behind the scenes',
+    body: 'Sorting donations, packing orders, a day in the shop.',
+    img: '/images/design-events-giving/charity_event_hero_1783396752424.jpg',
+  },
+];
+
+function IdeaTile({
+  idea,
+  href,
+}: {
+  idea: (typeof STORY_IDEAS)[number];
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative isolate block aspect-[9/16] w-[220px] shrink-0 snap-start overflow-hidden rounded-[24px] bg-[#1A0B26] laptop-m:w-[200px] sm:w-[160px] sm:rounded-[20px]"
+    >
+      <Image
+        src={idea.img}
+        alt=""
+        fill
+        sizes="220px"
+        className="-z-10 object-cover opacity-70 transition duration-700 group-hover:scale-[1.04] group-hover:opacity-80"
+      />
+      <span
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0B0112] via-[#0B0112]/40 to-[#0B0112]/10"
+        aria-hidden
+      />
+      <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#611192]">
+        Story idea
+      </span>
+      <span className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-3">
+        <span className="block text-[15px] leading-snug font-semibold sm:text-[13.5px]">
+          {idea.title}
+        </span>
+        <span className="mt-1.5 block text-[12.5px] leading-snug text-white/75 sm:hidden">
+          {idea.body}
+        </span>
+        <span className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#E9D5F5]">
+          Post yours{' '}
+          <ArrowRight
+            className="h-3.5 w-3.5 transition group-hover:translate-x-0.5"
+            aria-hidden
+          />
+        </span>
+      </span>
+    </Link>
   );
 }
 
