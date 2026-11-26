@@ -1,31 +1,36 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import axios from 'axios';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import {
   ArrowLeft,
-  AtSign,
   Check,
-  Copy,
+  ChevronDown,
+  ChevronUp,
+  Eye,
   Heart,
-  HelpCircle,
-  MessageCircle,
-  Music,
+  Pause,
   Play,
-  Send,
+  Plus,
   Share2,
-  Users,
-  Video,
+  ShoppingBag,
+  Store,
   Volume2,
   VolumeX,
-  X,
 } from 'lucide-react';
+import Image from '@/components/common/SafeImage';
 import type { ReelsFilterParams } from '@/lib/slugs';
 import { buildReelsUrl } from '@/lib/slugs';
+import { compactCount, postStoryHref } from '@/lib/community';
 
 export type ReelItem = {
   _id: string;
@@ -37,1033 +42,722 @@ export type ReelItem = {
   authorName?: string;
   authorAvatar?: string;
   viewCount?: number;
-  charityName?: string;
-  charityProfileImage?: string;
+  charityId?: string;
+  charityName?: string | null;
+  charityProfileImage?: string | null;
   media: {
     url: string;
     thumbnailUrl?: string;
     mediaType: string;
   };
   productId?: string;
-  productSlug?: string;
+  productSlug?: string | null;
 };
 
-type Comment = {
-  id: number;
-  user: string;
-  avatarColor: string;
-  text: string;
-  time: string;
-};
+type Topic = { id: string; label: string; tag?: string };
 
-type CategoryTab = {
-  id: string;
-  label: string;
-  tag?: string;
-  kind?: string;
-};
-
-type ReelDisplay = {
-  id: string;
-  slug: string;
-  author: string;
-  description: string;
-  song: string;
-  category: string;
-  likes: number;
-  image: string;
-  videoUrl?: string;
-  isVideo: boolean;
-  productSlug?: string;
-  productId?: string;
-};
-
-const CATEGORIES: CategoryTab[] = [
-  { id: 'all', label: 'All Impact' },
-  { id: 'food', label: 'Food Relief', tag: 'food' },
+const TOPICS: Topic[] = [
+  { id: 'all', label: 'For you' },
+  { id: 'impact', label: 'Impact stories', tag: 'impact' },
+  { id: 'thank-you', label: 'Thank-yous', tag: 'thank-you' },
+  { id: 'food', label: 'Food relief', tag: 'food' },
   { id: 'healthcare', label: 'Healthcare', tag: 'healthcare' },
   { id: 'education', label: 'Education', tag: 'education' },
-  { id: 'impact', label: 'Impact', tag: 'impact' },
 ];
 
-const FALLBACK_IMAGES = {
-  food: '/images/events/charity_event_hero.jpg',
-  healthcare: '/images/events/donation_hands.jpg',
-  education: '/images/events/community_poll_bg.jpg',
-  default: '/images/events/charity_event_hero.jpg',
+const KINDS = [
+  { id: '', label: 'All' },
+  { id: 'reel', label: 'Videos' },
+  { id: 'photo', label: 'Photos' },
+];
+
+const LIKES_KEY = 'ap-reel-likes';
+const isVideo = (r: ReelItem) =>
+  ['video', 'reel'].includes(r.media?.mediaType) || r.kind === 'reel';
+
+const readLikes = (): Record<string, boolean> => {
+  try {
+    return JSON.parse(localStorage.getItem(LIKES_KEY) || '{}');
+  } catch {
+    return {};
+  }
 };
-
-const DEMO_COMMENTS: Record<string, Comment[]> = {
-  demo1: [
-    {
-      id: 1,
-      user: 'Claire M.',
-      avatarColor: 'bg-blue-100 text-blue-900',
-      text: 'Thank you for distributing this directly! Verified grain bags look so wholesome! 🍲',
-      time: '2m ago',
-    },
-    {
-      id: 2,
-      user: 'Marcus Vance',
-      avatarColor: 'bg-slate-100 text-slate-800',
-      text: 'Zero administrative leakage is why I trust Angelpage above traditional NGOs.',
-      time: '1h ago',
-    },
-  ],
-  demo2: [
-    {
-      id: 1,
-      user: 'Dr. Jenkins',
-      avatarColor: 'bg-blue-100 text-blue-900',
-      text: 'The pediatric diagnostics machine is fully operational. Already treated 42 kids!',
-      time: '12m ago',
-    },
-  ],
-};
-
-function filtersFromParams(params: ReelsFilterParams) {
-  return {
-    kind: params.kind || '',
-    tag: params.tag || '',
-    charityId: params.charityId || '',
-    item: params.item || '',
-  };
-}
-
-function inferCategory(item: ReelItem): string {
-  const tags = (item.tags || []).map(t => t.toLowerCase());
-  if (tags.some(t => t.includes('food'))) return 'Food Relief';
-  if (tags.some(t => t.includes('health') || t.includes('medical'))) return 'Healthcare';
-  if (tags.some(t => t.includes('education') || t.includes('school'))) return 'Education';
-  if (tags.some(t => t.includes('impact'))) return 'Impact';
-  if (item.kind === 'photo') return 'Impact';
-  return 'All Impact';
-}
-
-function mapItemToReel(item: ReelItem): ReelDisplay {
-  const category = inferCategory(item);
-  const isVideo = ['video', 'reel'].includes(item.media.mediaType);
-  const image =
-    item.media.thumbnailUrl ||
-    (isVideo ? item.media.url : item.media.url) ||
-    FALLBACK_IMAGES.default;
-
-  return {
-    id: item._id,
-    slug: item.slug,
-    author: item.authorName ? `@${item.authorName.replace(/\s+/g, '').toLowerCase()}` : '@angelpage',
-    description: item.caption || item.title,
-    song: `Original Audio - ${item.charityName || 'Angelpage Field Team'}`,
-    category,
-    likes: Math.max(0, Math.round(Number(item.viewCount || 0) / 10)) || 1200,
-    image,
-    videoUrl: isVideo ? item.media.url : undefined,
-    isVideo,
-    productSlug: item.productSlug,
-    productId: item.productId,
-  };
-}
-
-function buildDemoReels(): ReelDisplay[] {
-  return [
-    {
-      id: 'demo1',
-      slug: 'demo-food-relief',
-      author: '@globalrelief',
-      description:
-        'Your donations at work! Distributing warm meals today directly in flood regions. Thank you Angelpage community! 🍲✨ #Impact #FoodRelief',
-      song: 'Original Audio - Global Relief Field Depot',
-      category: 'Food Relief',
-      likes: 12400,
-      image: FALLBACK_IMAGES.food,
-      isVideo: false,
-    },
-    {
-      id: 'demo2',
-      slug: 'demo-healthcare',
-      author: '@angelpage_healthcare',
-      description:
-        'Behind the scenes at our frontline Maternal Health Clinic. State-of-the-art equipment treating mothers! 🏥💙 #Transparency #Healthcare',
-      song: 'Inspiring Hope - Cinematic Clinicians',
-      category: 'Healthcare',
-      likes: 8900,
-      image: FALLBACK_IMAGES.healthcare,
-      isVideo: false,
-    },
-    {
-      id: 'demo3',
-      slug: 'demo-education',
-      author: '@education_forward',
-      description:
-        'Handing out certified school curriculum kits and pencils to students rebuilding their future. 🎒📝 #Education #DirectImpact',
-      song: 'Acoustic Horizons - School Builders',
-      category: 'Education',
-      likes: 5400,
-      image: FALLBACK_IMAGES.education,
-      isVideo: false,
-    },
-  ];
-}
 
 interface ReelsFeedClientProps {
   initialItems: ReelItem[];
   initialFilters?: ReelsFilterParams;
 }
 
-const reelVariants = {
-  enter: (dir: 'up' | 'down') => ({
-    y: dir === 'up' ? '100%' : '-100%',
-    opacity: 0,
-    scale: 0.98,
-  }),
-  center: {
-    y: 0,
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: 'spring' as const,
-      stiffness: 260,
-      damping: 26,
-      opacity: { duration: 0.22 },
-    },
-  },
-  exit: (dir: 'up' | 'down') => ({
-    y: dir === 'up' ? '-100%' : '100%',
-    opacity: 0,
-    scale: 0.98,
-    transition: { duration: 0.22, ease: 'easeInOut' as const },
-  }),
-};
-
+/**
+ * Full-screen reels. Native scroll-snap (no wheel hijacking): the reel that
+ * fills most of the screen plays, the rest pause. Desktop adds a topic rail
+ * and an action column; phones get an app-style overlay.
+ */
 export default function ReelsFeedClient({
   initialItems,
   initialFilters = {},
 }: ReelsFeedClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const lastScrollTimeRef = useRef(0);
+  const { data: session } = useSession() || {};
+  const scroller = useRef<HTMLDivElement>(null);
+  const videos = useRef<Record<string, HTMLVideoElement | null>>({});
+
+  const filters = useMemo(
+    () => ({
+      kind: searchParams?.get('kind') ?? initialFilters.kind ?? '',
+      tag: searchParams?.get('tag') ?? initialFilters.tag ?? '',
+      charityId:
+        searchParams?.get('charityId') ?? initialFilters.charityId ?? '',
+      item: searchParams?.get('item') ?? initialFilters.item ?? '',
+    }),
+    [searchParams, initialFilters]
+  );
 
   const [items, setItems] = useState<ReelItem[]>(initialItems);
   const [loading, setLoading] = useState(false);
-  const [activeReelIndex, setActiveReelIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState<'up' | 'down'>('up');
-  const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [likedReels, setLikedReels] = useState<Record<string, boolean>>({});
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
-  const [commentsMap, setCommentsMap] = useState<Record<string, Comment[]>>(DEMO_COMMENTS);
-  const [newCommentText, setNewCommentText] = useState('');
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [copyFeedback, setCopyFeedback] = useState(false);
-  const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [active, setActive] = useState(0);
+  const [muted, setMuted] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const [likes, setLikes] = useState<Record<string, boolean>>({});
+  const [burst, setBurst] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const firstLoad = useRef(true);
 
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [touchEndX, setTouchEndX] = useState<number | null>(null);
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
-  const [touchEndY, setTouchEndY] = useState<number | null>(null);
+  useEffect(() => setLikes(readLikes()), []);
 
-  const filters = useMemo(
-    () =>
-      filtersFromParams({
-        kind: searchParams?.get('kind') || initialFilters.kind || '',
-        tag: searchParams?.get('tag') || initialFilters.tag || '',
-        charityId: searchParams?.get('charityId') || initialFilters.charityId || '',
-        item: searchParams?.get('item') || initialFilters.item || '',
-      }),
-    [searchParams, initialFilters],
-  );
-
-  const activeCategoryId = useMemo(() => {
-    if (filters.tag === 'food') return 'food';
-    if (filters.tag === 'healthcare') return 'healthcare';
-    if (filters.tag === 'education') return 'education';
-    if (filters.tag === 'impact') return 'impact';
-    return 'all';
-  }, [filters.tag]);
-
-  const fetchItems = useCallback(async () => {
+  // refetch when the filters change (the server already rendered the first set)
+  useEffect(() => {
+    if (firstLoad.current) {
+      firstLoad.current = false;
+      return;
+    }
+    let cancelled = false;
     setLoading(true);
-    try {
-      const api = process.env.NEXT_PUBLIC_API_URL;
-      const res = await axios.get(`${api}/gallery`, {
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/gallery`, {
         params: {
           limit: 24,
           ...(filters.kind ? { kind: filters.kind } : {}),
           ...(filters.tag ? { tag: filters.tag } : {}),
           ...(filters.charityId ? { charityId: filters.charityId } : {}),
         },
+      })
+      .then(r => !cancelled && setItems(r.data?.items || []))
+      .catch(() => !cancelled && setItems([]))
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+        setActive(0);
+        scroller.current?.scrollTo({ top: 0 });
       });
-      setItems(res.data.items || []);
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [filters.kind, filters.tag, filters.charityId]);
 
+  // the reel filling most of the viewport becomes active
   useEffect(() => {
-    fetchItems();
-    setActiveReelIndex(0);
-  }, [fetchItems]);
-
-  const mappedReels = useMemo(() => {
-    const fromApi = items.map(mapItemToReel);
-    return fromApi.length > 0 ? fromApi : buildDemoReels();
+    const root = scroller.current;
+    if (!root) return;
+    const io = new IntersectionObserver(
+      entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting && e.intersectionRatio > 0.6)
+            setActive(Number((e.target as HTMLElement).dataset.index));
+        });
+      },
+      { root, threshold: [0.6] }
+    );
+    root.querySelectorAll('[data-reel]').forEach(el => io.observe(el));
+    return () => io.disconnect();
   }, [items]);
 
-  const filteredReels = useMemo(() => {
-    const cat = CATEGORIES.find(c => c.id === activeCategoryId);
-    if (!cat || cat.id === 'all') return mappedReels;
-    return mappedReels.filter(
-      reel =>
-        reel.category.toLowerCase().includes(cat.label.split(' ')[0].toLowerCase()) ||
-        (cat.tag && reel.description.toLowerCase().includes(cat.tag)),
+  // play only the active video
+  useEffect(() => {
+    items.forEach((r, i) => {
+      const v = videos.current[r._id];
+      if (!v) return;
+      v.muted = muted;
+      if (i === active && !paused) v.play().catch(() => {});
+      else v.pause();
+    });
+  }, [active, paused, muted, items]);
+
+  const scrollTo = useCallback((i: number) => {
+    const el = scroller.current?.querySelector<HTMLElement>(
+      `[data-index="${i}"]`
     );
-  }, [mappedReels, activeCategoryId]);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
-  const currentReel = filteredReels[activeReelIndex] || filteredReels[0];
+  // deep link: /reels?item=<slug>
+  useEffect(() => {
+    if (!filters.item) return;
+    const i = items.findIndex(r => r.slug === filters.item);
+    if (i > 0)
+      requestAnimationFrame(() =>
+        scroller.current
+          ?.querySelector<HTMLElement>(`[data-index="${i}"]`)
+          ?.scrollIntoView()
+      );
+  }, [filters.item, items]);
 
   useEffect(() => {
-    if (!filters.item || !filteredReels.length) return;
-    const index = filteredReels.findIndex(r => r.slug === filters.item);
-    if (index >= 0) setActiveReelIndex(index);
-  }, [filters.item, filteredReels]);
-
-  useEffect(() => {
-    if (!currentReel) return;
-    setLikeCounts(prev => ({
-      ...prev,
-      [currentReel.id]: prev[currentReel.id] ?? currentReel.likes,
-    }));
-  }, [currentReel]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !currentReel?.isVideo) return;
-    if (isPlaying) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-  }, [isPlaying, currentReel?.id, currentReel?.isVideo]);
-
-  const handleNext = useCallback(() => {
-    if (activeReelIndex < filteredReels.length - 1) {
-      setSlideDirection('up');
-      setActiveReelIndex(prev => prev + 1);
-      setIsPlaying(true);
-    }
-  }, [activeReelIndex, filteredReels.length]);
-
-  const handlePrev = useCallback(() => {
-    if (activeReelIndex > 0) {
-      setSlideDirection('down');
-      setActiveReelIndex(prev => prev - 1);
-      setIsPlaying(true);
-    }
-  }, [activeReelIndex]);
-
-  useEffect(() => {
-    const handleWindowWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastScrollTimeRef.current < 650) return;
-      if (e.deltaY > 15 && activeReelIndex < filteredReels.length - 1) {
-        lastScrollTimeRef.current = now;
-        handleNext();
-      } else if (e.deltaY < -15 && activeReelIndex > 0) {
-        lastScrollTimeRef.current = now;
-        handlePrev();
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest('input, textarea, select')) return;
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        scrollTo(Math.min(active + 1, items.length - 1));
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        scrollTo(Math.max(active - 1, 0));
+      } else if (e.key === 'm') setMuted(m => !m);
+      else if (e.key === ' ') {
+        e.preventDefault();
+        setPaused(p => !p);
       }
     };
-    window.addEventListener('wheel', handleWindowWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWindowWheel);
-  }, [activeReelIndex, filteredReels.length, handleNext, handlePrev]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [active, items.length, scrollTo]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        handleNext();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        handlePrev();
+  const toggleLike = (id: string, force?: boolean) => {
+    setLikes(prev => {
+      const next = { ...prev, [id]: force ?? !prev[id] };
+      try {
+        localStorage.setItem(LIKES_KEY, JSON.stringify(next));
+      } catch {
+        /* private mode */
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleNext, handlePrev]);
-
-  const applyCategory = (tab: CategoryTab) => {
-    setActiveReelIndex(0);
-    const next: ReelsFilterParams = {
-      ...(filters.charityId ? { charityId: filters.charityId } : {}),
-      ...(filters.kind ? { kind: filters.kind } : {}),
-      ...(tab.tag ? { tag: tab.tag } : {}),
-    };
-    router.push(buildReelsUrl(next));
+      return next;
+    });
   };
 
-  const handleLikeToggle = (reelId: string) => {
-    const isLiked = likedReels[reelId];
-    setLikedReels(prev => ({ ...prev, [reelId]: !isLiked }));
-    setLikeCounts(prev => ({
-      ...prev,
-      [reelId]: (prev[reelId] ?? 0) + (isLiked ? -1 : 1),
-    }));
-  };
-
-  const handleDoubleClickVideo = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (!currentReel) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const heartId = Date.now();
-    setFloatingHearts(prev => [...prev, { id: heartId, x, y }]);
-    if (!likedReels[currentReel.id]) handleLikeToggle(currentReel.id);
-    setTimeout(() => {
-      setFloatingHearts(prev => prev.filter(h => h.id !== heartId));
-    }, 1000);
-  };
-
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCommentText.trim() || !currentReel) return;
-    const newComment: Comment = {
-      id: Date.now(),
-      user: 'You (Verified Backer)',
-      avatarColor: 'bg-blue-900 text-white font-bold',
-      text: newCommentText,
-      time: 'Just now',
-    };
-    setCommentsMap(prev => ({
-      ...prev,
-      [currentReel.id]: [newComment, ...(prev[currentReel.id] || [])],
-    }));
-    setNewCommentText('');
-  };
-
-  const shareUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !currentReel) return '/reels';
-    return `${window.location.origin}${buildReelsUrl({
-      ...(filters.charityId ? { charityId: filters.charityId } : {}),
-      ...(filters.kind ? { kind: filters.kind } : {}),
-      ...(filters.tag ? { tag: filters.tag } : {}),
-      item: currentReel.slug,
-    })}`;
-  }, [currentReel, filters.charityId, filters.kind, filters.tag]);
-
-  const handleCopyLink = async () => {
+  const share = async (r: ReelItem) => {
+    const url = `${window.location.origin}${buildReelsUrl({ item: r.slug })}`;
+    const text = r.charityName
+      ? `${r.title} · ${r.charityName} on Angelpage`
+      : `${r.title} on Angelpage`;
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 2000);
+      if (navigator.share) {
+        await navigator.share({ title: r.title, text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(r._id);
+      setTimeout(() => setCopied(null), 1800);
     } catch {
-      /* ignore */
+      /* dismissed */
     }
   };
 
-  const handleSocialShare = (platform: string) => {
-    if (!currentReel) return;
-    const shareText = `Check out this verified direct-impact story on Angelpage by ${currentReel.author}`;
-    let url = '';
-    if (platform === 'linkedin') {
-      url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-    } else if (platform === 'facebook') {
-      url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    } else if (platform === 'twitter') {
-      url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    } else {
-      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      return;
-    }
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEndX(null);
-    setTouchEndY(null);
-    setTouchStartX(e.targetTouches[0].clientX);
-    setTouchStartY(e.targetTouches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEndX(e.targetTouches[0].clientX);
-    setTouchEndY(e.targetTouches[0].clientY);
-  };
-
-  const handleTouchEnd = () => {
-    if (
-      touchStartY === null ||
-      touchEndY === null ||
-      touchStartX === null ||
-      touchEndX === null
-    ) {
-      return;
-    }
-    const distanceY = touchStartY - touchEndY;
-    const distanceX = touchStartX - touchEndX;
-    if (Math.abs(distanceY) > Math.abs(distanceX)) {
-      if (distanceY > 40) handleNext();
-      else if (distanceY < -40) handlePrev();
-    } else {
-      if (distanceX > 40) handleNext();
-      else if (distanceX < -40) handlePrev();
-    }
-  };
-
-  const commentsList = currentReel ? commentsMap[currentReel.id] || [] : [];
-  const activeCategory = CATEGORIES.find(c => c.id === activeCategoryId)?.label || 'All Impact';
-
-  if (loading && items.length === 0) {
-    return (
-      <div className="fixed inset-0 z-[10070] flex items-center justify-center bg-[#0B0112]">
-        <div className="flex flex-col items-center gap-4">
-          <span className="h-12 w-12 animate-spin rounded-full border-2 border-white/20 border-t-[#611192]" />
-          <p className="font-primary text-2xl text-white">Loading stories</p>
-        </div>
-      </div>
+  const setFilter = (next: Partial<ReelsFilterParams>) => {
+    router.push(
+      buildReelsUrl({
+        kind: filters.kind || undefined,
+        tag: filters.tag || undefined,
+        charityId: filters.charityId || undefined,
+        ...next,
+      }),
+      { scroll: false }
     );
-  }
+  };
+
+  const activeTopic =
+    TOPICS.find(t => (t.tag || '') === filters.tag)?.id || 'all';
+  const postHref = postStoryHref(session);
 
   return (
-    <div className="relative flex min-h-screen select-none flex-col items-center justify-center overflow-hidden bg-slate-950 text-white">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-size-[4rem_4rem] opacity-20 mask-[radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)]"
-        aria-hidden
-      />
-
-      {/* Header overlay */}
-      <div className="pointer-events-none absolute left-0 right-0 top-4 z-30 flex items-center justify-between px-4">
+    <div className="fixed inset-0 z-[60] flex bg-[#0B0112] text-white">
+      {/* desktop rail */}
+      <aside className="flex w-[300px] shrink-0 flex-col border-r border-white/10 px-6 py-7 lg:w-[260px] md:hidden">
         <Link
           href="/"
-          className="pointer-events-auto flex items-center justify-center gap-2 rounded-full border border-white/10 bg-black/45 px-3.5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-white shadow-lg backdrop-blur-md transition-all hover:bg-black/75"
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-white/70 hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          <span className="inline sm:hidden">Home</span>
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to Angelpage
         </Link>
+        <p className="mt-8 font-primary text-[34px] leading-none">Reels</p>
+        <p className="mt-3 text-[13.5px] leading-relaxed text-white/65">
+          Real stories from the people and charities behind every sale.
+        </p>
 
-        <div className="pointer-events-auto flex max-w-[calc(100%-140px)] gap-1.5 overflow-x-auto rounded-full border border-white/10 bg-black/35 p-1 backdrop-blur-md scrollbar-none">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => applyCategory(cat)}
-              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
-                activeCategoryId === cat.id
-                  ? 'bg-white font-black text-slate-950 shadow-xs'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
+        <nav aria-label="Topics" className="mt-8">
+          <p className="mb-2 text-[11px] font-semibold tracking-[0.14em] text-white/45 uppercase">
+            Topics
+          </p>
+          <ul className="space-y-1">
+            {TOPICS.map(t => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => setFilter({ tag: t.tag })}
+                  aria-current={activeTopic === t.id ? 'true' : undefined}
+                  className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-[14px] transition ${activeTopic === t.id ? 'bg-white font-semibold text-[#0B0112]' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
+                >
+                  {t.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-        <div className="pointer-events-none flex items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 font-mono text-xs text-emerald-400 shadow-lg backdrop-blur-md md:hidden">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          <span>LIVE STORIES</span>
-        </div>
-      </div>
-
-      {/* Player frame */}
-      <div className="relative flex h-[86vh] w-full max-w-[420px] flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-950 shadow-2xl sm:h-dvh sm:max-w-full sm:rounded-none sm:border-0">
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="relative h-full w-full touch-none select-none overflow-hidden"
-        >
-          {filteredReels.length > 0 && currentReel ? (
-            <AnimatePresence mode="popLayout" custom={slideDirection}>
-              <motion.div
-                key={`${activeCategoryId}-${activeReelIndex}`}
-                custom={slideDirection}
-                variants={reelVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="absolute inset-0"
-                onDoubleClick={handleDoubleClickVideo}
+        <div className="mt-6">
+          <p className="mb-2 text-[11px] font-semibold tracking-[0.14em] text-white/45 uppercase">
+            Show
+          </p>
+          <div
+            role="radiogroup"
+            className="grid grid-cols-3 gap-1 rounded-xl bg-white/10 p-1"
+          >
+            {KINDS.map(k => (
+              <button
+                key={k.id || 'all'}
+                type="button"
+                role="radio"
+                aria-checked={filters.kind === k.id}
+                onClick={() => setFilter({ kind: k.id || undefined })}
+                className={`h-9 rounded-lg text-[13px] font-medium transition ${filters.kind === k.id ? 'bg-white text-[#0B0112]' : 'text-white/75 hover:text-white'}`}
               >
-                {currentReel.isVideo && currentReel.videoUrl ? (
-                  <video
-                    ref={videoRef}
-                    src={currentReel.videoUrl}
-                    poster={currentReel.image}
-                    className={`h-full w-full object-cover transition-transform duration-[20s] ease-out ${isPlaying ? 'scale-105' : 'scale-100'}`}
-                    loop
-                    playsInline
-                    muted={isMuted}
-                  />
-                ) : (
-                  <Image
-                    src={currentReel.image}
-                    alt={currentReel.description}
-                    fill
-                    className={`object-cover transition-transform duration-[20s] ease-out ${isPlaying ? 'scale-105' : 'scale-100'}`}
-                    sizes="(max-width: 420px) 100vw, 420px"
-                    priority
-                  />
-                )}
+                {k.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-                <div className="absolute inset-0 bg-linear-to-t from-black via-black/15 to-black/55" />
+        <div className="mt-auto rounded-[20px] bg-gradient-to-br from-[#611192] to-[#3B055C] p-5">
+          <p className="font-primary text-[20px] leading-snug">
+            Share your story
+          </p>
+          <p className="mt-1.5 text-[13px] leading-snug text-white/80">
+            Post a reel of what you sold, bought or funded. Charities: show the
+            impact.
+          </p>
+          <Link
+            href={postHref}
+            className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13.5px] font-semibold text-[#3B055C]"
+          >
+            <Plus className="h-4 w-4" aria-hidden /> Post a reel
+          </Link>
+        </div>
+        <p className="mt-4 text-[11.5px] text-white/40">
+          ↑ ↓ to browse · M to mute · Space to pause
+        </p>
+      </aside>
 
-                <div
-                  className="absolute inset-0 z-10 cursor-pointer"
-                  onClick={() => setIsPlaying(p => !p)}
-                  aria-hidden
-                />
+      {/* feed */}
+      <div className="relative min-w-0 flex-1">
+        {/* phone top bar */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 hidden bg-gradient-to-b from-black/60 to-transparent px-3 pt-[calc(10px+env(safe-area-inset-top))] pb-6 md:block">
+          <div className="pointer-events-auto flex items-center gap-2">
+            <Link
+              href="/"
+              aria-label="Back to Angelpage"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/35 backdrop-blur"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden />
+            </Link>
+            <div className="ap-no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
+              {TOPICS.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setFilter({ tag: t.tag })}
+                  className={`h-9 shrink-0 rounded-full px-3.5 text-[13px] font-medium backdrop-blur transition ${activeTopic === t.id ? 'bg-white text-[#0B0112]' : 'bg-black/35 text-white'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <Link
+              href={postHref}
+              aria-label="Post a reel"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#611192]"
+            >
+              <Plus className="h-5 w-5" aria-hidden />
+            </Link>
+          </div>
+        </div>
 
-                {floatingHearts.map(heart => (
-                  <motion.div
-                    key={heart.id}
-                    initial={{ scale: 0, opacity: 1, x: heart.x - 24, y: heart.y - 24 }}
-                    animate={{
-                      scale: [1, 1.8, 1.2],
-                      opacity: [1, 1, 0],
-                      y: heart.y - 140,
-                      rotate: [-15, 15, -5],
-                    }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className="pointer-events-none absolute z-30"
-                  >
-                    <Heart className="h-12 w-12 fill-red-500 text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]" />
-                  </motion.div>
-                ))}
+        {/* desktop up/down */}
+        {items.length > 1 ? (
+          <div className="absolute top-1/2 right-6 z-20 flex -translate-y-1/2 flex-col gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => scrollTo(Math.max(active - 1, 0))}
+              disabled={active === 0}
+              aria-label="Previous reel"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20 disabled:opacity-30"
+            >
+              <ChevronUp className="h-5 w-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo(Math.min(active + 1, items.length - 1))}
+              disabled={active >= items.length - 1}
+              aria-label="Next reel"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20 disabled:opacity-30"
+            >
+              <ChevronDown className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
+        ) : null}
 
-                {!isPlaying && (
-                  <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-xl backdrop-blur-md"
-                    >
-                      <Play className="ml-1 h-6 w-6 text-white" fill="currentColor" aria-hidden />
-                    </motion.div>
-                  </div>
-                )}
-
-                <div className="pointer-events-none absolute bottom-0 left-0 right-16 z-20 p-6">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="rounded-sm border border-blue-500/25 bg-blue-900 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-white">
-                      {currentReel.category}
-                    </span>
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                    <span className="font-mono text-[10px] font-semibold uppercase text-emerald-400">
-                      VERIFIED
-                    </span>
-                  </div>
-                  <h3 className="mb-1.5 font-sans text-sm font-bold text-white drop-shadow-md">
-                    {currentReel.author}
-                  </h3>
-                  <p className="mb-4 line-clamp-3 text-xs font-light leading-relaxed text-slate-200 drop-shadow-md">
-                    {currentReel.description}
+        <div
+          ref={scroller}
+          className={`ap-no-scrollbar h-dvh snap-y snap-mandatory overflow-y-auto overscroll-contain transition-opacity ${loading ? 'opacity-50' : ''}`}
+        >
+          {items.length === 0 ? (
+            <div className="flex h-dvh flex-col items-center justify-center px-6 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-white/10">
+                <Play className="h-7 w-7" aria-hidden />
+              </span>
+              <p className="mt-5 font-primary text-[28px]">
+                {loading ? 'Loading stories…' : 'No stories here yet'}
+              </p>
+              {!loading ? (
+                <>
+                  <p className="mt-2 max-w-[360px] text-[14.5px] text-white/65">
+                    Be the first to share what your sale, purchase or donation
+                    made possible.
                   </p>
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-300">
-                    <Music
-                      className="h-3 w-3 animate-spin text-slate-400"
-                      style={{ animationDuration: '6s' }}
-                      aria-hidden
-                    />
-                    <span className="max-w-[140px] truncate">{currentReel.song}</span>
-                  </div>
-                  {currentReel.productId && (
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
                     <Link
-                      href={`/product/${currentReel.productSlug || currentReel.productId}`}
-                      className="pointer-events-auto mt-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-xs"
+                      href={postHref}
+                      className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-[14px] font-semibold text-[#3B055C]"
                     >
-                      View linked product
+                      <Plus className="h-4 w-4" aria-hidden /> Post a reel
                     </Link>
-                  )}
-                </div>
-
-                <div className="absolute bottom-6 right-3.5 z-20 flex flex-col items-center gap-4.5">
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleLikeToggle(currentReel.id);
-                    }}
-                    className="group flex flex-col items-center gap-0.5 transition-transform active:scale-95"
-                    title="Like Story"
-                  >
+                    {filters.tag || filters.kind ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFilter({ tag: undefined, kind: undefined })
+                        }
+                        className="h-11 rounded-full px-5 text-[14px] text-white ring-1 ring-white/30"
+                      >
+                        See all stories
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          ) : (
+            items.map((r, i) => {
+              const video = isVideo(r);
+              const liked = Boolean(likes[r._id]);
+              const near = Math.abs(i - active) <= 1;
+              const poster =
+                r.media.thumbnailUrl || (video ? undefined : r.media.url);
+              const charityHref = r.charityId
+                ? `/charity/find-a-charity/${r.charityId}`
+                : null;
+              const caption = r.caption || '';
+              return (
+                <section
+                  key={r._id}
+                  data-reel
+                  data-index={i}
+                  aria-label={r.title}
+                  className="flex h-dvh snap-start snap-always items-center justify-center py-6 md:py-0"
+                >
+                  <div className="flex h-full items-end gap-4 md:w-full">
+                    {/* card */}
                     <div
-                      className={`rounded-full border p-2.5 backdrop-blur-md transition-all duration-300 ${
-                        likedReels[currentReel.id]
-                          ? 'scale-110 border-red-500 bg-red-500/25 text-red-500 shadow-lg shadow-red-500/20'
-                          : 'border-white/10 bg-black/45 text-white hover:border-red-400 hover:bg-red-500/25'
-                      }`}
+                      className="relative aspect-[9/16] h-full max-h-[calc(100dvh-48px)] overflow-hidden rounded-[28px] bg-[#1A0B26] shadow-[0_30px_80px_rgba(0,0,0,0.5)] md:aspect-auto md:max-h-none md:w-full md:rounded-none"
+                      onDoubleClick={() => {
+                        toggleLike(r._id, true);
+                        setBurst(r._id);
+                        setTimeout(() => setBurst(null), 700);
+                      }}
                     >
-                      <Heart
-                        className={`h-5 w-5 ${likedReels[currentReel.id] ? 'fill-red-500 text-red-500' : ''}`}
+                      {video ? (
+                        near ? (
+                          <video
+                            ref={el => {
+                              videos.current[r._id] = el;
+                            }}
+                            src={r.media.url}
+                            poster={poster}
+                            className="h-full w-full object-cover"
+                            loop
+                            playsInline
+                            muted={muted}
+                            preload="metadata"
+                            onClick={() => setPaused(p => !p)}
+                          />
+                        ) : poster ? (
+                          <Image
+                            src={poster}
+                            alt=""
+                            fill
+                            sizes="460px"
+                            className="object-cover"
+                          />
+                        ) : null
+                      ) : (
+                        <Image
+                          src={r.media.url}
+                          alt={r.title}
+                          fill
+                          sizes="(max-width: 991px) 100vw, 460px"
+                          className="object-cover"
+                          priority={i === 0}
+                        />
+                      )}
+
+                      <span
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20"
                         aria-hidden
                       />
-                    </div>
-                    <span className="font-mono text-[9px] font-bold text-slate-200 drop-shadow-md">
-                      {(likeCounts[currentReel.id] ?? currentReel.likes).toLocaleString()}
-                    </span>
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setIsCommentsOpen(true);
-                    }}
-                    className="group flex flex-col items-center gap-0.5 transition-transform active:scale-95"
-                    title="Read Comments"
-                  >
-                    <div className="rounded-full border border-white/10 bg-black/45 p-2.5 text-white backdrop-blur-md transition-colors hover:border-blue-500/50 hover:bg-blue-900/40">
-                      <MessageCircle className="h-5 w-5" aria-hidden />
-                    </div>
-                    <span className="font-mono text-[9px] font-bold text-slate-200 drop-shadow-md">
-                      {commentsList.length}
-                    </span>
-                  </button>
+                      {video && i === active && paused ? (
+                        <button
+                          type="button"
+                          onClick={() => setPaused(false)}
+                          aria-label="Play"
+                          className="absolute inset-0 m-auto flex h-16 w-16 items-center justify-center rounded-full bg-black/45 backdrop-blur"
+                        >
+                          <Play className="ml-1 h-7 w-7" aria-hidden />
+                        </button>
+                      ) : null}
 
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setIsShareOpen(true);
-                    }}
-                    className="group flex flex-col items-center gap-0.5 transition-transform active:scale-95"
-                    title="Share Verified Link"
-                  >
-                    <div className="rounded-full border border-white/10 bg-black/45 p-2.5 text-white backdrop-blur-md transition-colors hover:border-indigo-500/50 hover:bg-indigo-900/40">
-                      <Share2 className="h-5 w-5" aria-hidden />
-                    </div>
-                    <span className="font-mono text-[9px] font-bold text-slate-200 drop-shadow-md">
-                      Share
-                    </span>
-                  </button>
-                </div>
+                      {burst === r._id ? (
+                        <Heart
+                          className="pointer-events-none absolute inset-0 m-auto h-24 w-24 animate-ping fill-white text-white"
+                          aria-hidden
+                        />
+                      ) : null}
 
-                {(currentReel.isVideo) && (
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setIsMuted(m => !m);
-                    }}
-                    className="absolute right-4 top-18 z-20 rounded-full border border-white/10 bg-black/45 p-2.5 backdrop-blur-md transition-colors hover:bg-slate-800"
-                    title={isMuted ? 'Unmute' : 'Mute'}
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-4 w-4 text-slate-400" aria-hidden />
-                    ) : (
-                      <Volume2 className="h-4 w-4 text-white" aria-hidden />
-                    )}
-                  </button>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <Video className="mb-3 h-12 w-12 text-slate-600" aria-hidden />
-              <h4 className="mb-1 font-serif text-sm font-bold">No Videos in {activeCategory}</h4>
-              <p className="mb-4 text-xs font-light text-slate-500">
-                Our ground teams are uploading more telemetry logs. Check back soon!
-              </p>
-              <button
-                type="button"
-                onClick={() => applyCategory(CATEGORIES[0])}
-                className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 font-mono text-xs uppercase hover:bg-slate-800"
-              >
-                Reset Filter
-              </button>
-            </div>
+                      {/* info */}
+                      <div className="absolute inset-x-0 bottom-0 p-5 pr-20 md:pb-[calc(28px+env(safe-area-inset-bottom))]">
+                        <div className="flex items-center gap-2.5">
+                          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-white/20 ring-2 ring-white/70">
+                            {r.charityProfileImage || r.authorAvatar ? (
+                              <Image
+                                src={
+                                  (r.charityProfileImage ||
+                                    r.authorAvatar) as string
+                                }
+                                alt=""
+                                fill
+                                sizes="36px"
+                                className="object-cover"
+                              />
+                            ) : null}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-[14px] font-semibold">
+                              {r.charityName ||
+                                r.authorName ||
+                                'Angelpage community'}
+                            </p>
+                            {r.charityName && r.authorName ? (
+                              <p className="truncate text-[12px] text-white/70">
+                                by {r.authorName}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <p className="mt-3 text-[15px] font-semibold leading-snug">
+                          {r.title}
+                        </p>
+                        {caption ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpanded(x => ({ ...x, [r._id]: !x[r._id] }))
+                            }
+                            className={`mt-1 block text-left text-[13.5px] leading-snug text-white/85 ${expanded[r._id] ? '' : 'line-clamp-2'}`}
+                          >
+                            {caption}
+                          </button>
+                        ) : null}
+                        {r.tags?.length ? (
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            {r.tags.slice(0, 3).map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => setFilter({ tag: t })}
+                                className="rounded-full bg-white/15 px-2.5 py-1 text-[11.5px] font-medium backdrop-blur hover:bg-white/25"
+                              >
+                                #{t}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                        {r.productSlug ? (
+                          <Link
+                            href={`/product/${r.productSlug}`}
+                            className="mt-3.5 inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-[13.5px] font-semibold text-[#0B0112]"
+                          >
+                            <ShoppingBag
+                              className="h-4 w-4 text-[#611192]"
+                              aria-hidden
+                            />{' '}
+                            Shop this item
+                          </Link>
+                        ) : null}
+                      </div>
+
+                      {/* phone actions (overlay) */}
+                      <div className="absolute right-3 bottom-[calc(28px+env(safe-area-inset-bottom))] hidden flex-col items-center gap-4 md:flex">
+                        <ActionButtons
+                          r={r}
+                          liked={liked}
+                          video={video}
+                          muted={muted}
+                          copied={copied === r._id}
+                          charityHref={charityHref}
+                          onLike={() => toggleLike(r._id)}
+                          onShare={() => share(r)}
+                          onMute={() => setMuted(m => !m)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* desktop actions (beside the card) */}
+                    <div className="flex flex-col items-center gap-4 pb-4 md:hidden">
+                      <ActionButtons
+                        r={r}
+                        liked={liked}
+                        video={video}
+                        muted={muted}
+                        copied={copied === r._id}
+                        charityHref={charityHref}
+                        onLike={() => toggleLike(r._id)}
+                        onShare={() => share(r)}
+                        onMute={() => setMuted(m => !m)}
+                      />
+                      {video ? (
+                        <button
+                          type="button"
+                          onClick={() => setPaused(p => !p)}
+                          aria-label={paused ? 'Play' : 'Pause'}
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20"
+                        >
+                          {paused ? (
+                            <Play className="h-5 w-5" aria-hidden />
+                          ) : (
+                            <Pause className="h-5 w-5" aria-hidden />
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </section>
+              );
+            })
           )}
         </div>
-
-        {/* Desktop nav arrows */}
-        <div className="absolute -left-16 top-1/2 flex -translate-y-1/2 flex-col gap-3 md:hidden">
-          <button
-            type="button"
-            onClick={handlePrev}
-            disabled={activeReelIndex === 0}
-            className="rounded-full border border-white/10 bg-black/50 p-3 shadow-lg backdrop-blur-md transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-20"
-            title="Previous Story"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="rotate-90 text-white">
-              <path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <span className="text-center font-mono text-[8px] font-bold uppercase tracking-widest text-slate-400">
-            PREV
-          </span>
-        </div>
-
-        <div className="absolute -right-16 top-1/2 flex -translate-y-1/2 flex-col gap-3 md:hidden">
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={activeReelIndex >= filteredReels.length - 1}
-            className="rounded-full border border-white/10 bg-black/50 p-3 shadow-lg backdrop-blur-md transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-20"
-            title="Next Story"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="rotate-90 text-white">
-              <path d="M9 5L16 12L9 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <span className="text-center font-mono text-[8px] font-bold uppercase tracking-widest text-slate-400">
-            NEXT
-          </span>
-        </div>
-
-        {/* Pagination dots */}
-        <div className="pointer-events-none absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-full border border-white/5 bg-black/35 px-2.5 py-1 backdrop-blur-xs">
-          {filteredReels.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === activeReelIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/40'
-              }`}
-            />
-          ))}
-        </div>
       </div>
-
-      {/* Comments drawer */}
-      <AnimatePresence>
-        {isCommentsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-end sm:p-0">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsCommentsOpen(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative z-50 flex h-[600px] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 text-white shadow-2xl sm:h-[70vh] sm:rounded-b-none sm:rounded-t-3xl sm:border-b-0"
-            >
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 bg-slate-900/90 p-4 backdrop-blur-sm">
-                <div>
-                  <h4 className="flex items-center gap-2 font-serif text-base font-bold">
-                    Verified Backer Comments
-                    <span className="rounded-full border border-blue-500/20 bg-blue-900/50 px-2 py-0.5 font-mono text-[11px] text-blue-400">
-                      {commentsList.length}
-                    </span>
-                  </h4>
-                  <p className="mt-0.5 font-mono text-[9px] uppercase tracking-widest text-slate-400">
-                    Audited for authenticity
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsCommentsOpen(false)}
-                  className="rounded-full border border-slate-800 p-2 text-slate-400 shadow-xs transition-colors hover:bg-slate-800 hover:text-white"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </button>
-              </div>
-
-              <div className="flex-1 space-y-4 overflow-y-auto bg-slate-950 p-4">
-                {commentsList.map(comm => (
-                  <motion.div
-                    key={comm.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex gap-3 rounded-2xl border border-slate-800/60 bg-slate-900 p-3.5"
-                  >
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${comm.avatarColor}`}
-                    >
-                      {comm.user[0]}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <span className="truncate text-xs font-bold text-slate-200">{comm.user}</span>
-                        <span className="font-mono text-[9px] uppercase text-slate-500">{comm.time}</span>
-                      </div>
-                      <p className="wrap-break-word text-xs font-light leading-relaxed text-slate-300">
-                        {comm.text}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-                {commentsList.length === 0 && (
-                  <div className="py-12 text-center text-slate-500">
-                    <MessageCircle className="mx-auto mb-2 h-10 w-10 text-slate-700" aria-hidden />
-                    <p className="font-mono text-xs uppercase">No comments yet</p>
-                  </div>
-                )}
-              </div>
-
-              <form
-                onSubmit={handleAddComment}
-                className="flex items-center gap-2.5 border-t border-slate-800 bg-slate-900 p-4"
-              >
-                <input
-                  type="text"
-                  value={newCommentText}
-                  onChange={e => setNewCommentText(e.target.value)}
-                  placeholder="Type an authentic comment..."
-                  className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 font-sans text-xs text-white placeholder-slate-500 transition-colors focus:border-blue-500 focus:outline-hidden"
-                />
-                <button
-                  type="submit"
-                  disabled={!newCommentText.trim()}
-                  className="flex items-center justify-center rounded-xl border border-blue-800/30 bg-blue-900 p-3 text-white transition-colors hover:bg-blue-950 disabled:opacity-40"
-                >
-                  <Send className="h-4 w-4" aria-hidden />
-                </button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Share drawer */}
-      <AnimatePresence>
-        {isShareOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-end sm:p-0">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsShareOpen(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative z-50 flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 text-white shadow-2xl sm:rounded-b-none sm:rounded-t-3xl sm:border-b-0"
-            >
-              <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 p-5">
-                <div>
-                  <h4 className="font-serif text-lg font-bold">Broadcast Impact</h4>
-                  <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-slate-400">
-                    Share directly to global networks
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsShareOpen(false)}
-                  className="rounded-full border border-slate-800 p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </button>
-              </div>
-
-              <div className="space-y-5 bg-slate-950 p-6">
-                <div className="space-y-2">
-                  <span className="block font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                    Copy Share URL
-                  </span>
-                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-2">
-                    <span className="max-w-[260px] truncate pl-2 font-mono text-xs text-slate-400 select-all">
-                      {shareUrl}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyLink}
-                      className={`flex items-center gap-1.5 rounded-lg px-4 py-2 font-mono text-xs font-bold transition-all ${
-                        copyFeedback
-                          ? 'border border-emerald-500 bg-emerald-500/25 text-emerald-400'
-                          : 'border border-blue-800/30 bg-blue-900 text-white hover:bg-blue-950'
-                      }`}
-                    >
-                      {copyFeedback ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 stroke-[3px]" aria-hidden />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3.5 w-3.5" aria-hidden />
-                          Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="block font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                    Share to Social Channels
-                  </span>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      {
-                        id: 'twitter',
-                        label: 'Twitter / X',
-                        sub: 'Post Update',
-                        icon: AtSign,
-                        iconWrap: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
-                      },
-                      {
-                        id: 'tiktok',
-                        label: 'TikTok',
-                        sub: 'Copy Link',
-                        icon: Video,
-                        iconWrap: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
-                      },
-                      {
-                        id: 'linkedin',
-                        label: 'LinkedIn',
-                        sub: 'Post Update',
-                        icon: Users,
-                        iconWrap: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-                      },
-                      {
-                        id: 'facebook',
-                        label: 'Facebook',
-                        sub: 'Feed Story',
-                        icon: Share2,
-                        iconWrap: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
-                      },
-                    ].map(platform => {
-                      const Icon = platform.icon;
-                      return (
-                        <button
-                          key={platform.id}
-                          type="button"
-                          onClick={() => handleSocialShare(platform.id)}
-                          className="group flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-3.5 text-left transition-all active:scale-95 hover:bg-slate-850"
-                        >
-                          <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-transform group-hover:scale-105 ${platform.iconWrap}`}
-                          >
-                            <Icon className="h-5 w-5" aria-hidden />
-                          </div>
-                          <div>
-                            <span className="block text-xs font-bold leading-none text-white">
-                              {platform.label}
-                            </span>
-                            <span className="font-mono text-[9px] font-semibold uppercase text-slate-500">
-                              {platform.sub}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-2 flex gap-2.5 rounded-xl border border-slate-800/80 bg-slate-900 p-3.5 text-[10px] font-light leading-relaxed text-slate-400">
-                  <HelpCircle className="h-4.5 w-4.5 shrink-0 text-blue-500" aria-hidden />
-                  <span>
-                    Your share link preserves direct-impact references. Anyone clicking can immediately
-                    pledge zero-leakage donations.
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
+  );
+}
+
+function ActionButtons({
+  r,
+  liked,
+  video,
+  muted,
+  copied,
+  charityHref,
+  onLike,
+  onShare,
+  onMute,
+}: {
+  r: ReelItem;
+  liked: boolean;
+  video: boolean;
+  muted: boolean;
+  copied: boolean;
+  charityHref: string | null;
+  onLike: () => void;
+  onShare: () => void;
+  onMute: () => void;
+}) {
+  const btn =
+    'flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur transition hover:bg-white/20 md:bg-black/35';
+  const views = compactCount(r.viewCount);
+  return (
+    <>
+      <div className="flex flex-col items-center gap-1">
+        <button
+          type="button"
+          onClick={onLike}
+          aria-pressed={liked}
+          aria-label={liked ? 'Unlike' : 'Like'}
+          className={btn}
+        >
+          <Heart
+            className={`h-6 w-6 transition ${liked ? 'scale-110 fill-[#FF4D7E] text-[#FF4D7E]' : ''}`}
+            aria-hidden
+          />
+        </button>
+        <span className="text-[11.5px] font-medium text-white/80">
+          {liked ? 'Liked' : 'Like'}
+        </span>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <button
+          type="button"
+          onClick={onShare}
+          aria-label="Share"
+          className={btn}
+        >
+          {copied ? (
+            <Check className="h-6 w-6" aria-hidden />
+          ) : (
+            <Share2 className="h-6 w-6" aria-hidden />
+          )}
+        </button>
+        <span className="text-[11.5px] font-medium text-white/80">
+          {copied ? 'Copied' : 'Share'}
+        </span>
+      </div>
+      {charityHref ? (
+        <div className="flex flex-col items-center gap-1">
+          <Link
+            href={charityHref}
+            aria-label={`Visit ${r.charityName || 'the charity'}`}
+            className={btn}
+          >
+            <Store className="h-6 w-6" aria-hidden />
+          </Link>
+          <span className="text-[11.5px] font-medium text-white/80">
+            Charity
+          </span>
+        </div>
+      ) : null}
+      {video ? (
+        <div className="flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={onMute}
+            aria-label={muted ? 'Unmute' : 'Mute'}
+            className={btn}
+          >
+            {muted ? (
+              <VolumeX className="h-6 w-6" aria-hidden />
+            ) : (
+              <Volume2 className="h-6 w-6" aria-hidden />
+            )}
+          </button>
+          <span className="text-[11.5px] font-medium text-white/80">
+            {muted ? 'Sound off' : 'Sound on'}
+          </span>
+        </div>
+      ) : null}
+      {views ? (
+        <div className="flex flex-col items-center gap-1 text-white/70">
+          <Eye className="h-5 w-5" aria-hidden />
+          <span className="text-[11.5px] font-medium">{views}</span>
+        </div>
+      ) : null}
+    </>
   );
 }

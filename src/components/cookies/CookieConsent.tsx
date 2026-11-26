@@ -56,7 +56,10 @@ function Toggle({
   );
 }
 
-export default function CookieConsent() {
+/** hideLauncher: no floating cookie button (full-screen pages like /reels); the banner still appears until a choice is made. */
+export default function CookieConsent({
+  hideLauncher = false,
+}: { hideLauncher?: boolean } = {}) {
   const { t } = useLocale();
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
@@ -107,7 +110,7 @@ export default function CookieConsent() {
           setOpen(value => !value);
           setSavedNote(false);
         }}
-        className="fixed bottom-20 left-5 z-[1000] flex h-14 w-14 items-center justify-center rounded-full bg-[#611192] text-white! shadow-[0_10px_24px_rgba(97,17,146,0.35)] hover:bg-[#3B055C] sm:bottom-24 sm:left-4"
+        className={`fixed bottom-20 left-5 z-[1000] ${hideLauncher ? 'hidden' : 'flex'} h-14 w-14 items-center justify-center rounded-full bg-[#611192] text-white! shadow-[0_10px_24px_rgba(97,17,146,0.35)] hover:bg-[#3B055C] sm:bottom-24 sm:left-4`}
       >
         <CookieIcon />
       </button>

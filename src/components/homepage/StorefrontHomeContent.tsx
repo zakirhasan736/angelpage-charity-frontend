@@ -4,6 +4,7 @@ import HomeMemberBanner from '@/components/banner/HomeMemberBanner';
 import HomeValueStrip from '@/components/homepage/HomeValueStrip';
 import IntHomeCtaSec from '@/components/homepage/IntHomeCtaSec';
 import JewelleryProductCtaSec from '@/components/homepage/JewelleryProductCtaSec';
+import HomeReelsStrip from '@/components/homepage/HomeReelsStrip';
 import LatestBlogsSection from '@/components/homepage/LatestBlogsSection';
 import HomeEventsSection from '@/components/homepage/HomeEventsSection';
 import BagsTopCategoryProducts from '@/components/product/BagsCategoryProducts';
@@ -20,14 +21,15 @@ const StorefrontHomeContent = () => {
     <div className="internal-homepage-main-wrapper">
       <HomeMemberBanner />
       <HomeValueStrip />
+      <HomeReelsStrip variant="member" />
       <PromotedProductsStrip />
       <TopCategoryProducts secClassName="" />
       <WomansCategoryProducts secClassName="" />
       <HomewareTopCategoryProducts />
       <JewelleryProductCtaSec />
       <ElectronicsTopCategoryProducts />
-      <BagsTopCategoryProducts secClassName="" />
       <HomeEventsSection />
+      <BagsTopCategoryProducts secClassName="" />
       <IntHomeCtaSec />
       <GiftFeaturedCategoryProducts secClassName="" />
       <LatestBlogsSection />
