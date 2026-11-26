@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { Button } from '../elements';
 import MobileViewOffcanvas from './mobileViewOffcanvas';
 import MiniCart from '../cart/miniCart';
+import PhotoSearchButton from '../search/PhotoSearchButton';
 import FavoritesAlert from './favoritesAlert';
 import GlobalSearch from '../elements/search/globalSearch';
 import BottomNavMegamenu from './bottomNavMegamenu';
@@ -64,7 +65,11 @@ const Header = () => {
               {/* left: burger (mobile) + logo */}
               <div className="flex shrink-0 items-center gap-3">
                 {!isCheckoutPage && <MobileViewOffcanvas />}
-                <Link href={homePath} className="site-brand-logo block" aria-label="Angelpage home">
+                <Link
+                  href={homePath}
+                  className="site-brand-logo block"
+                  aria-label="Angelpage home"
+                >
                   <Image
                     src={
                       isCheckoutPage
@@ -109,7 +114,10 @@ const Header = () => {
                         >
                           Sign in
                         </Link>
-                        <Link href="/auth/register?intent=sell" className="mr-1.5 max-[767px]:hidden">
+                        <Link
+                          href="/auth/register?intent=sell"
+                          className="mr-1.5 max-[767px]:hidden"
+                        >
                           <Button variant="primary" className="h-10! px-5!">
                             Start selling
                           </Button>
@@ -118,8 +126,14 @@ const Header = () => {
                     )}
 
                     {showMemberTools && (
-                      <Link href="/product/post-product/" className="mr-2 max-[767px]:hidden">
-                        <Button variant="primary" className="h-10! px-5! gap-1.5!">
+                      <Link
+                        href="/product/post-product/"
+                        className="mr-2 max-[767px]:hidden"
+                      >
+                        <Button
+                          variant="primary"
+                          className="h-10! px-5! gap-1.5!"
+                        >
                           <Plus className="h-4 w-4" aria-hidden />
                           {t('nav.sell')}
                         </Button>
@@ -146,11 +160,14 @@ const Header = () => {
                       </>
                     )}
 
+                    <PhotoSearchButton className="min-[768px]:hidden" />
                     <div className="ap-icon-btn relative">
                       <MiniCart />
                     </div>
 
-                    {(session || isTempLogin) && <UserAccountMenu className="max-[767px]:hidden" />}
+                    {(session || isTempLogin) && (
+                      <UserAccountMenu className="max-[767px]:hidden" />
+                    )}
                   </>
                 )}
 
