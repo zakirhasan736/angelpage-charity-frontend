@@ -25,7 +25,8 @@ const RelatedCategoryProducts = ({
   );
   const error = isError ? 'Failed to load related products.' : null;
 
-  if (error) return <p className="text-red-600">{error}</p>;
+  // Hide the whole band when there is nothing to suggest (or it failed to load).
+  if (error || (!loading && !productData.length)) return null;
 
   return (
     <section
