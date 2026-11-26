@@ -8,7 +8,8 @@ import { categoriesData } from '@/libs/categoriesData';
 import { fetchCategories, type Category } from '@/lib/categories';
 
 const MarketplaceCategorySidebar = () => {
-  const { category: activeCategory, subcategory: activeSubcategory } = useShopFilter();
+  const { category: activeCategory, subcategory: activeSubcategory } =
+    useShopFilter();
   const [categories, setCategories] = useState<Category[]>(
     categoriesData.categories as Category[]
   );

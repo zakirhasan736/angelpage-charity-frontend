@@ -1,10 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  getFulfillmentLabel,
-  type FulfillmentType,
-} from '@/lib/profitSplit';
+import { getFulfillmentLabel, type FulfillmentType } from '@/lib/profitSplit';
 
 type ProductFulfillmentBadgeProps = {
   fulfillmentType?: FulfillmentType | string;

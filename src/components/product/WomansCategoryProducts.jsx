@@ -5,7 +5,11 @@ import ProductRail from '../common/product-slider/ProductRail';
 import { useGetProductsByCategoryPathQuery } from '@/store/api/angelpageApi';
 
 const WomansCategoryProducts = ({ secClassName }) => {
-  const { data = [], isLoading, isError } = useGetProductsByCategoryPathQuery('women');
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useGetProductsByCategoryPathQuery('women');
 
   return (
     <ProductRail

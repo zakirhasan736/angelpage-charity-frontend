@@ -39,7 +39,11 @@ const homewareCategories = [
   },
 ];
 
-const tiles = homewareCategories.map(c => ({ title: c.productTitle, image: c.productImageSrc, href: c.productCategory }));
+const tiles = homewareCategories.map(c => ({
+  title: c.productTitle,
+  image: c.productImageSrc,
+  href: c.productCategory,
+}));
 
 const HomewareTopCategoryProducts: React.FC<Props> = ({ secClassName }) => (
   <CategoryTileRail

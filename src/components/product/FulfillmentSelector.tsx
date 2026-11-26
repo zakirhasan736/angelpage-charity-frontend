@@ -2,10 +2,7 @@
 
 import React from 'react';
 import { Input } from '@/components/elements';
-import {
-  FULFILLMENT_OPTIONS,
-  type FulfillmentType,
-} from '@/lib/profitSplit';
+import { FULFILLMENT_OPTIONS, type FulfillmentType } from '@/lib/profitSplit';
 
 type FulfillmentSelectorProps = {
   value: FulfillmentType | string;
@@ -21,15 +18,15 @@ export default function FulfillmentSelector({
   onSellAreasChange,
 }: FulfillmentSelectorProps) {
   const selected =
-    FULFILLMENT_OPTIONS.find(opt => opt.id === value) ||
-    FULFILLMENT_OPTIONS[0];
+    FULFILLMENT_OPTIONS.find(opt => opt.id === value) || FULFILLMENT_OPTIONS[0];
   const needsAreas = value === 'local_only';
 
   return (
     <div className="mb-6">
       <p className="body-bold-small mb-1">How will buyers get this item?</p>
       <p className="body-small mb-4 text-mono-70">
-        Choose delivery — package details are only needed for UK courier shipping.
+        Choose delivery — package details are only needed for UK courier
+        shipping.
       </p>
 
       <div className="flex flex-wrap gap-2">
