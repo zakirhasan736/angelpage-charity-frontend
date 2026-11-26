@@ -1,6 +1,20 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { pageMetadata } from '@/lib/siteSeo';
+import { COOKIE_TABLE } from '@/lib/cookieTable';
+import { GA_MEASUREMENT_ID, GTM_ID, pageMetadata } from '@/lib/siteSeo';
+
+const CATEGORY_ORDER = [
+  'necessary',
+  'preferences',
+  'analytics',
+  'marketing',
+] as const;
+const CATEGORY_LABEL = {
+  necessary: 'Strictly necessary',
+  preferences: 'Preferences',
+  analytics: 'Analytics',
+  marketing: 'Marketing',
+};
 
 export const metadata: Metadata = pageMetadata({
   title: 'Cookie policy',
@@ -22,8 +36,9 @@ export default function CookiePolicyPage() {
               Cookie policy
             </h1>
             <p className="font-secondary mx-auto mt-4 max-w-2xl text-center text-base leading-7 text-[#3B055C]">
-              Angelpage uses cookies to run the charity marketplace. Analytics
-              and marketing cookies stay off until you allow them.
+              Angelpage uses cookies to run the charity marketplace.
+              Preferences, analytics and marketing cookies stay off until you
+              allow them.
             </p>
           </div>
           <div className="terms-page-content-area pb-[66px]">
@@ -43,69 +58,49 @@ export default function CookiePolicyPage() {
                 The cookies we use
               </h2>
               <div className="mt-4 overflow-x-auto rounded-3xl border border-[#E4D0F0]">
-                <table className="w-full min-w-[640px] border-collapse text-left">
+                <table className="w-full min-w-[720px] border-collapse text-left">
                   <thead className="bg-[#FCF2FF]">
                     <tr>
-                      <th className="font-secondary px-4 py-3 text-sm text-[#0B0112]">
-                        Name
-                      </th>
-                      <th className="font-secondary px-4 py-3 text-sm text-[#0B0112]">
-                        Type
-                      </th>
-                      <th className="font-secondary px-4 py-3 text-sm text-[#0B0112]">
-                        Purpose
-                      </th>
+                      {['Name', 'Category', 'Set by', 'Purpose', 'Lasts'].map(
+                        h => (
+                          <th
+                            key={h}
+                            className="font-secondary px-4 py-3 text-sm text-[#0B0112]"
+                          >
+                            {h}
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
                   <tbody className="font-secondary text-sm text-[#3B055C]">
-                    <tr className="border-t border-[#F2E8F8]">
-                      <td className="px-4 py-3">angelpage-cookie-consent</td>
-                      <td className="px-4 py-3">Necessary</td>
-                      <td className="px-4 py-3">
-                        Remembers the cookie choice you make.
-                      </td>
-                    </tr>
-                    <tr className="border-t border-[#F2E8F8]">
-                      <td className="px-4 py-3">angelpage-locale</td>
-                      <td className="px-4 py-3">Necessary</td>
-                      <td className="px-4 py-3">
-                        Remembers English or French.
-                      </td>
-                    </tr>
-                    <tr className="border-t border-[#F2E8F8]">
-                      <td className="px-4 py-3">angelpage-country</td>
-                      <td className="px-4 py-3">Necessary</td>
-                      <td className="px-4 py-3">
-                        Remembers the United States, Canada, or the United
-                        Kingdom.
-                      </td>
-                    </tr>
-                    <tr className="border-t border-[#F2E8F8]">
-                      <td className="px-4 py-3">Sign-in session</td>
-                      <td className="px-4 py-3">Necessary</td>
-                      <td className="px-4 py-3">
-                        Keeps you signed in and protects checkout.
-                      </td>
-                    </tr>
-                    <tr className="border-t border-[#F2E8F8]">
-                      <td className="px-4 py-3">_ga, _ga_*</td>
-                      <td className="px-4 py-3">Analytics</td>
-                      <td className="px-4 py-3">
-                        Google Analytics 4, measurement ID G-Z789BPWQED, only
-                        after you allow analytics.
-                      </td>
-                    </tr>
-                    <tr className="border-t border-[#F2E8F8]">
-                      <td className="px-4 py-3">Google Tag Manager</td>
-                      <td className="px-4 py-3">Analytics</td>
-                      <td className="px-4 py-3">
-                        Container GTM-WP5JZ5K5. Tags that measure or advertise
-                        follow your analytics and marketing choices.
-                      </td>
-                    </tr>
+                    {CATEGORY_ORDER.flatMap(cat =>
+                      COOKIE_TABLE[cat].map(r => (
+                        <tr
+                          key={`${cat}-${r.name}`}
+                          className="border-t border-[#F2E8F8]"
+                        >
+                          <td className="px-4 py-3 font-mono text-[13px] text-[#0B0112]">
+                            {r.name}
+                          </td>
+                          <td className="px-4 py-3">{CATEGORY_LABEL[cat]}</td>
+                          <td className="px-4 py-3">{r.by}</td>
+                          <td className="px-4 py-3">{r.purpose}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {r.lasts}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
+              <p className="font-secondary mt-4 text-sm leading-6 text-[#3B055C]">
+                Google tags (Tag Manager container {GTM_ID}, Analytics{' '}
+                {GA_MEASUREMENT_ID}) use Google Consent Mode v2: until you allow
+                analytics or marketing they run without cookies and send no
+                identifiers.
+              </p>
             </section>
 
             <section className="term-info-item mt-10">
@@ -113,12 +108,27 @@ export default function CookiePolicyPage() {
                 Your choice
               </h2>
               <p className="font-secondary mt-3 text-base leading-7 text-[#3B055C]">
-                Necessary cookies are always on because the shop cannot run
-                without them. Analytics and marketing cookies start off. Use
-                Accept all, Reject optional, or Customize on the consent panel.
-                You can reopen that panel from the cookie button at the bottom
-                left of any page, or change the same choices on the cookie
-                settings page.
+                Strictly necessary cookies are always on because the shop cannot
+                run without them. Preferences, analytics and marketing start off
+                until you choose. Accept all and Reject all are given equal
+                weight on the banner, and Manage choices lets you pick each
+                kind. Reopen your choices any time from the cookie button at the
+                bottom left of every page, or on the cookie settings page.
+              </p>
+              <p className="font-secondary mt-3 text-base leading-7 text-[#3B055C]">
+                If your browser sends a Global Privacy Control signal, we treat
+                it as a refusal of marketing cookies and keep them off.
+              </p>
+              <h3 className="font-primary mt-8 text-[22px] text-[#0B0112]">
+                Partner links (eBay, Amazon)
+              </h3>
+              <p className="font-secondary mt-3 text-base leading-7 text-[#3B055C]">
+                Some items open on a partner site. When you tap one, Angelpage
+                counts the click on its own server without a cookie, then sends
+                you to the partner. The partner may set its own cookies on its
+                site to credit the referral; those follow the partner&apos;s
+                cookie policy. Partner links work whether or not you allow
+                marketing cookies.
               </p>
               <p className="font-secondary mt-4 flex flex-wrap gap-4 text-base">
                 <Link

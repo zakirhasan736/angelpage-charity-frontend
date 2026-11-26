@@ -85,25 +85,36 @@ const en = {
     continue: 'Continue',
   },
   cookies: {
-    title: 'Cookies',
-    body: 'Necessary cookies run the shop. Analytics and marketing cookies stay off until you allow them.',
+    title: 'We value your privacy',
+    body: 'We use cookies to run the shop, remember your settings and, with your OK, measure visits and ads. You choose what is on.',
+    gpc: 'Your browser sent a privacy signal, so marketing cookies stay off.',
     accept: 'Accept all',
-    reject: 'Reject optional',
-    customize: 'Customize',
-    save: 'Save choices',
-    necessary: 'Necessary',
+    reject: 'Reject all',
+    customize: 'Manage choices',
+    save: 'Save my choices',
+    necessary: 'Strictly necessary',
     necessaryBody:
-      'Required for sign-in, checkout, language, your market, and this choice.',
+      'Sign-in, basket, secure checkout, fraud checks, language, your market and this choice. The site cannot work without them.',
+    preferences: 'Preferences',
+    preferencesBody:
+      'Remembers things like recently viewed items and layout choices between visits.',
     analytics: 'Analytics',
     analyticsBody:
-      'Helps us see how the shop is used, including Google Analytics.',
+      'Google Analytics 4 tells us which pages help people find causes and items, using pseudonymous IDs.',
     marketing: 'Marketing',
-    marketingBody: 'Used to measure ads and show more relevant messages.',
+    marketingBody:
+      'Measures our ads (for example Google Ads) and shows Angelpage ads on other sites. Partner links to eBay or Amazon still work if this is off.',
     alwaysOn: 'Always on',
+    used: 'What we use',
     policy: 'Cookie policy',
     settings: 'Cookie settings',
     open: 'Cookie settings',
+    close: 'Close',
+    dialogTitle: 'Your cookie choices',
+    dialogBody:
+      'Turn each kind on or off. You can change this at any time from the cookie button in the corner of every page.',
     saved: 'Your cookie choices are saved.',
+    lastUpdated: 'Saved',
   },
 };
 
@@ -190,26 +201,36 @@ const fr: typeof en = {
     continue: 'Continuer',
   },
   cookies: {
-    title: 'Cookies',
-    body: 'Les cookies nécessaires font fonctionner la boutique. Les cookies d’analyse et de marketing restent désactivés tant que vous ne les autorisez pas.',
+    title: 'Votre vie privée compte',
+    body: 'Nous utilisons des cookies pour faire fonctionner la boutique, retenir vos réglages et, avec votre accord, mesurer les visites et les publicités. Vous choisissez.',
+    gpc: 'Votre navigateur a envoyé un signal de confidentialité : les cookies marketing restent désactivés.',
     accept: 'Tout accepter',
-    reject: 'Refuser les optionnels',
-    customize: 'Personnaliser',
-    save: 'Enregistrer',
-    necessary: 'Nécessaires',
+    reject: 'Tout refuser',
+    customize: 'Gérer mes choix',
+    save: 'Enregistrer mes choix',
+    necessary: 'Strictement nécessaires',
     necessaryBody:
-      'Requis pour la connexion, le paiement, la langue, votre marché et ce choix.',
+      'Connexion, panier, paiement sécurisé, lutte contre la fraude, langue, votre marché et ce choix. Le site ne fonctionne pas sans eux.',
+    preferences: 'Préférences',
+    preferencesBody:
+      'Retient par exemple les articles consultés récemment et vos choix d’affichage entre deux visites.',
     analytics: 'Analyse',
     analyticsBody:
-      'Nous aide à voir comment la boutique est utilisée, y compris Google Analytics.',
+      'Google Analytics 4 nous indique quelles pages aident à trouver des causes et des articles, avec des identifiants pseudonymes.',
     marketing: 'Marketing',
     marketingBody:
-      'Sert à mesurer les publicités et à proposer des messages plus pertinents.',
+      'Mesure nos publicités (par exemple Google Ads) et affiche des publicités Angelpage sur d’autres sites. Les liens partenaires eBay ou Amazon fonctionnent même si c’est désactivé.',
     alwaysOn: 'Toujours actifs',
+    used: 'Ce que nous utilisons',
     policy: 'Politique de cookies',
     settings: 'Réglages des cookies',
     open: 'Réglages des cookies',
+    close: 'Fermer',
+    dialogTitle: 'Vos choix de cookies',
+    dialogBody:
+      'Activez ou désactivez chaque type. Vous pouvez changer d’avis à tout moment avec le bouton cookie en bas de chaque page.',
     saved: 'Vos choix de cookies sont enregistrés.',
+    lastUpdated: 'Enregistré le',
   },
 };
 
