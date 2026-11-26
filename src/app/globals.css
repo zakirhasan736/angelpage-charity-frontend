@@ -489,373 +489,375 @@ layer(base);
 }
 
 @layer base {
-    :root {
-      --mono-100: #0B0112;
-      --mono-90: #474648;
-      --mono-80: #6B686E;
-      --mono-70: #8A888C;
-      --mono-50: #C9C8CA;
-      --mono-40: #E6E3E7;
-      --mono-0: #FFFFFF;
-      --mono-60: #AAA7AB;
-      --error: #E50035;
-      --success: #1FC430;
-      --secondary-color-100: #1B264F;
-      --primary-color-100: #611192;
-      --primary-color-50: #3B055C;
-      --primary-color-70: #F2E8F8;
-      --primary-font: "Lustria", serif;
-      --secondary-font: "Poppins", sans-serif;
-    }
+  :root {
+    --mono-100: #0b0112;
+    --mono-90: #474648;
+    --mono-80: #6b686e;
+    --mono-70: #8a888c;
+    --mono-50: #c9c8ca;
+    --mono-40: #e6e3e7;
+    --mono-0: #ffffff;
+    --mono-60: #aaa7ab;
+    --error: #e50035;
+    --success: #1fc430;
+    --secondary-color-100: #1b264f;
+    --primary-color-100: #611192;
+    --primary-color-50: #3b055c;
+    --primary-color-70: #f2e8f8;
+    --primary-font: 'Lustria', serif;
+    --secondary-font: 'Poppins', sans-serif;
+  }
 
-    * {
-      box-sizing: border-box;
-      border: 0;
-      padding: 0;
+  * {
+    box-sizing: border-box;
+    border: 0;
+    padding: 0;
+  }
 
-    }
+  input:focus-visible,
+  input:focus-within,
+  input:focus {
+    border-radius: 0 !important;
+    outline: none !important;
+  }
 
-    input:focus-visible,
-    input:focus-within,
-    input:focus {
-      border-radius: 0 !important;
-      outline: none !important;
-    }
+  *,
+  html,
+  body {
+    box-sizing: border-box;
+  }
 
-    *,
-    html,
-    body {
-      box-sizing: border-box;
-      color: var(--mono-100);
-    }
+  /* Colour is set once on html and inherited. Setting it on every element (*)
+       stopped children inheriting, so labels inside white-text buttons and tabs
+       rendered black. */
+  html {
+    color: var(--mono-100);
+  }
 
-    body {
-      background-color: #fff;
-    }
+  body {
+    background-color: #fff;
+  }
 
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      color: var(--mono-100);
-      font-family: var(--primary-font);
-      font-size: inherit;
-      font-weight: inherit;
-      line-height: 1.1;
-      color: inherit;
-    }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--mono-100);
+    font-family: var(--primary-font);
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: 1.1;
+    color: inherit;
+  }
 
+  h1,
+  .h1 {
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 125%;
+    letter-spacing: 0.48px;
+  }
+
+  h2,
+  .h2 {
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 125%;
+    letter-spacing: 0.4px;
+  }
+
+  h3,
+  .h3 {
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 155%;
+    letter-spacing: 0.32px;
+  }
+
+  h4,
+  .h4 {
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 125%;
+    letter-spacing: 0.24px;
+  }
+
+  h5,
+  .h5 {
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 135%;
+    letter-spacing: 0.2px;
+  }
+
+  h6,
+  .h6 {
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 135%;
+    letter-spacing: 0.18px;
+  }
+
+  @media screen and (max-width: 991px) {
     h1,
     .h1 {
-      font-size: 48px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 125%;
-      letter-spacing: 0.48px;
+      font-size: 42px;
     }
 
     h2,
     .h2 {
-      font-size: 40px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 125%;
-      letter-spacing: 0.4px;
+      font-size: 36px;
     }
 
     h3,
     .h3 {
-      font-size: 32px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 155%;
-      letter-spacing: 0.32px;
+      font-size: 28px;
     }
 
     h4,
     .h4 {
-      font-size: 24px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 125%;
-      letter-spacing: 0.24px;
-    }
-
-    h5,
-    .h5 {
-      font-size: 20px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 135%;
-      letter-spacing: 0.2px;
-    }
-
-    h6,
-    .h6 {
-      font-size: 18px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 135%;
-      letter-spacing: 0.18px;
-    }
-
-    @media screen and (max-width:991px) {
-
-      h1,
-      .h1 {
-        font-size: 42px;
-      }
-
-      h2,
-      .h2 {
-        font-size: 36px;
-      }
-
-      h3,
-      .h3 {
-        font-size: 28px;
-      }
-
-      h4,
-      .h4 {
-        font-size: 22px;
-      }
-    }
-
-    @media screen and (max-width:767px) {
-
-      h1,
-      .h1 {
-        font-size: 40px;
-      }
-
-      h2,
-      .h2 {
-        font-size: 32px;
-      }
-
-      h3,
-      .h3 {
-        font-size: 24px;
-      }
-
-      h4,
-      .h4 {
-        font-size: 20px;
-      }
-    }
-
-    p {
-      font-family: var(--secondary-font);
-      font-size: 16px;
-      font-style: normal;
-      /* font-weight: 300; */
-      line-height: 150%;
-      letter-spacing: 0.8px;
-      font-kerning: none;
-    }
-
-    body {
-      color: var(--mono-100);
-      background: var(--mono-0);
-      font-family: var(--secondary-font);
-      font-kerning: none;
-    }
-
-    .body-large {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 20px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-    }
-
-    .body-medium {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 18px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-    }
-
-    .body-regular {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 16px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-    }
-
-    .body-small {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 14px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-    }
-
-    .caption {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 12px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-    }
-
-    .forms {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 11px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-    }
-
-    .body-bold-large {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
       font-size: 22px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 150%;
-      /* 33px */
-    }
-
-    .body-bold-medium {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 18px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 150%;
-      /* 27px */
-    }
-
-    .body-bold-regular {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 16px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 150%;
-      /* 24px */
-    }
-
-    .body-bold-small {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 14px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 150%;
-      /* 21px */
-    }
-
-    .caption-bold {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 12px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 150%;
-    }
-
-    .forms-bold {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 11px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 150%;
-    }
-
-    .eyebrow-large {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 14px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 150%;
-      letter-spacing: 0.7px;
-      text-transform: uppercase;
-    }
-
-    .eyebrow-medium {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 12px;
-      font-style: normal;
-      font-weight: 700;
-      line-height: 150%;
-      text-transform: uppercase;
-    }
-
-    .eyebrow-small {
-      color: inherit;
-      font-kerning: none;
-      font-family: var(--secondary-font);
-      font-size: 10px;
-      font-style: normal;
-      font-weight: 700;
-      line-height: 150%;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-
-    @media screen and (max-width:767px) {
-      .caption-bold {
-        font-size: 11px;
-      }
-
-      .body-small {
-        font-size: 12px;
-      }
-
-      .eyebrow-medium {
-        font-size: 11px;
-      }
-
-      h6.product-brand-title.eyebrow-medium {
-        height: 30px;
-        margin-bottom: 4px;
-      }
-
-      p.product-title.caption-bold {
-        height: 33px;
-      }
     }
   }
 
-  @layer utilities {
+  @media screen and (max-width: 767px) {
+    h1,
+    .h1 {
+      font-size: 40px;
+    }
+
+    h2,
+    .h2 {
+      font-size: 32px;
+    }
+
+    h3,
+    .h3 {
+      font-size: 24px;
+    }
+
+    h4,
+    .h4 {
+      font-size: 20px;
+    }
+  }
+
+  p {
+    font-family: var(--secondary-font);
+    font-size: 16px;
+    font-style: normal;
+    /* font-weight: 300; */
+    line-height: 150%;
+    letter-spacing: 0.8px;
+    font-kerning: none;
+  }
+
+  body {
+    color: var(--mono-100);
+    background: var(--mono-0);
+    font-family: var(--secondary-font);
+    font-kerning: none;
+  }
+
+  .body-large {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+  }
+
+  .body-medium {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+  }
+
+  .body-regular {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+  }
+
+  .body-small {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+  }
+
+  .caption {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+  }
+
+  .forms {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+  }
+
+  .body-bold-large {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+    /* 33px */
+  }
+
+  .body-bold-medium {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+    /* 27px */
+  }
+
+  .body-bold-regular {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+    /* 24px */
+  }
+
+  .body-bold-small {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+    /* 21px */
+  }
+
+  .caption-bold {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+  }
+
+  .forms-bold {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 150%;
+  }
+
+  .eyebrow-large {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+  }
+
+  .eyebrow-medium {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 150%;
+    text-transform: uppercase;
+  }
+
+  .eyebrow-small {
+    color: inherit;
+    font-kerning: none;
+    font-family: var(--secondary-font);
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 150%;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  @media screen and (max-width: 767px) {
+    .caption-bold {
+      font-size: 11px;
+    }
+
+    .body-small {
+      font-size: 12px;
+    }
+
+    .eyebrow-medium {
+      font-size: 11px;
+    }
+
+    h6.product-brand-title.eyebrow-medium {
+      height: 30px;
+      margin-bottom: 4px;
+    }
+
+    p.product-title.caption-bold {
+      height: 33px;
+    }
+  }
+}
+
+@layer utilities {
   .search-border {
     border-bottom: 1px solid #c9c8ca !important;
   }
 }
 
-  @layer components {
-    th {
-      white-space: nowrap;
-    }
+@layer components {
+  th {
+    white-space: nowrap;
   }
+}

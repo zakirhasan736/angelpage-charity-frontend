@@ -12,13 +12,16 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   useSyncApiAuth();
   const pathname = usePathname();
   const isReelsPage = pathname === '/reels';
-  const isAppScreen = /^\/(user\/account|charity\/account|admin|favourite|messaging|auth|charity\/complete-registrations)/.test(pathname || '');
+  const isAppScreen =
+    /^\/(user\/account|charity\/account|admin|favourite|messaging|auth|charity\/complete-registrations)/.test(
+      pathname || ''
+    );
 
   if (isReelsPage) {
     return (
       <>
         {children}
-        <CookieConsent />
+        <CookieConsent hideLauncher />
       </>
     );
   }
