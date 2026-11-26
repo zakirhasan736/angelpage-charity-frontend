@@ -25,7 +25,13 @@ import {
   StatusPill,
 } from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
-import SocialImportPanel from './SocialImportPanel';
+import SocialImportPanel, {
+  ProductSelect,
+  PurposeSwitch,
+  type Listing,
+  type Purpose,
+} from './SocialImportPanel';
+import CrossPostToggles, { type CrossPostPrefs } from './CrossPostToggles';
 import ProviderIcon from './ProviderIcon';
 import { PROVIDER_META, isExternal } from '@/lib/socialVideo';
 import SocialPostingToggles, {
@@ -66,6 +72,9 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [crossPost, setCrossPost] = useState<CrossPostPrefs>({});
+  const [purpose, setPurpose] = useState<Purpose>('story');
+  const [taggedProduct, setTaggedProduct] = useState<Listing | null>(null);
   const [socialPosting, setSocialPosting] = useState<SocialPostingPrefs>(
     defaultSocialPostingPrefs()
   );
@@ -206,6 +215,12 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
       ToastService.error('Add or capture media first.');
       return;
     }
+    if (purpose === 'product' && !taggedProduct) {
+      ToastService.error(
+        'Pick the product this shows, or choose "Charity story".'
+      );
+      return;
+    }
     setUploading(true);
     try {
       const body = new FormData();
@@ -232,6 +247,9 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
             : 'photo'
       );
       body.append('socialPosting', JSON.stringify(socialPosting));
+      body.append('crossPost', JSON.stringify(crossPost));
+      if (purpose === 'product' && taggedProduct)
+        body.append('productId', taggedProduct._id);
       if (allowModeration && publishNow) body.append('publishNow', 'true');
 
       await axios.post(`${api}/gallery`, body, {
@@ -439,12 +457,37 @@ const GalleryPanel = ({ allowModeration = false }: GalleryPanelProps) => {
             hint="Separate with commas. Use “impact” for thank-you stories donors can find on Reels."
           />
 
-          <div className="rounded-2xl bg-[#FAF8FB] p-4">
-            <SocialPostingToggles
-              value={socialPosting}
-              onChange={setSocialPosting}
-            />
+          <div className="space-y-3 rounded-2xl bg-[#FAF8FB] p-4">
+            <p className="text-[13px] font-semibold text-[#0B0112]">
+              What does it show?
+            </p>
+            <PurposeSwitch value={purpose} onChange={setPurpose} />
+            {purpose === 'product' ? (
+              <ProductSelect
+                api={api || ''}
+                headers={headers}
+                value={taggedProduct}
+                onChange={setTaggedProduct}
+              />
+            ) : null}
           </div>
+
+          {mode === 'reel' || mode === 'record' ? (
+            <CrossPostToggles
+              kind="reel"
+              value={crossPost}
+              onChange={setCrossPost}
+            />
+          ) : null}
+
+          {allowModeration ? (
+            <div className="rounded-2xl bg-[#FAF8FB] p-4">
+              <SocialPostingToggles
+                value={socialPosting}
+                onChange={setSocialPosting}
+              />
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap justify-end gap-2 border-t border-[#F3EFF5] pt-4 sm:flex-col-reverse">
             {allowModeration ? (

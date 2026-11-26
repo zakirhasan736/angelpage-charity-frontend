@@ -73,7 +73,7 @@ const DetailsForm = ({
   const [sellAreas, setSellAreas] = useState(
     Array.isArray(formData.sellAreas)
       ? formData.sellAreas.join(', ')
-      : formData.sellAreas || '',
+      : formData.sellAreas || ''
   );
 
   const needsPackageInfo = fulfillmentType === 'uk_shipping';
@@ -132,13 +132,14 @@ const DetailsForm = ({
           subcategory: selectedSubCategory,
           additionalInfo,
         },
-        session.token,
+        session.token
       );
       applyListingAi(result);
       ToastService.success('AI improved your title and description.');
     } catch (err) {
       ToastService.error(
-        err?.response?.data?.error || 'AI assist is unavailable. Check GEMINI_API_KEY.',
+        err?.response?.data?.error ||
+          'AI assist is unavailable. Check GEMINI_API_KEY.'
       );
     } finally {
       setAiLoading(false);
@@ -156,7 +157,10 @@ const DetailsForm = ({
     if (formData.selectedCategory && formData.selectedCategory !== 'Select') {
       setSelectedCategory(formData.selectedCategory);
     }
-    if (formData.selectedSubCategory && formData.selectedSubCategory !== 'Select') {
+    if (
+      formData.selectedSubCategory &&
+      formData.selectedSubCategory !== 'Select'
+    ) {
       setSelectedSubCategory(formData.selectedSubCategory);
     }
   }, [formData]);
@@ -184,7 +188,7 @@ const DetailsForm = ({
       (!weight || !dimensions.height || !dimensions.width)
     ) {
       ToastService.error(
-        'Weight and package dimensions are required for shipping.',
+        'Weight and package dimensions are required for shipping.'
       );
       return;
     }
@@ -211,7 +215,8 @@ const DetailsForm = ({
         : [],
       dimensions: needsPackageInfo
         ? {
-            height: dimensions.height !== '' ? `${dimensions.height}${unit}` : '',
+            height:
+              dimensions.height !== '' ? `${dimensions.height}${unit}` : '',
             width: dimensions.width !== '' ? `${dimensions.width}${unit}` : '',
             depth: dimensions.depth !== '' ? `${dimensions.depth}${unit}` : '',
           }
@@ -347,7 +352,9 @@ const DetailsForm = ({
       </p>
       {PLATFORM_LISTING_POLICY.tangibleProductsOnly && (
         <p className="body-small mb-4 rounded-2xl bg-[#FCF2FF] px-4 py-3 text-[#5C5560]">
-          Only physical products can be listed. Angelpage reviews each listing before it goes live. We started in the United States and also ship to Canada and the United Kingdom.
+          Only physical products can be listed. Angelpage reviews each listing
+          before it goes live. We started in the United States and also ship to
+          Canada and the United Kingdom.
         </p>
       )}
       <form className="flex flex-col w-full space-y-4" onSubmit={handleSubmit}>
@@ -547,66 +554,68 @@ const DetailsForm = ({
         />
 
         {needsPackageInfo && (
-        <>
-          <p className="text-body-small">Package info (required for shipping)</p>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-2">
-              <Input
-                label="Weight"
-                name="weight"
-                id="weight"
-                type="number"
-                value={weight}
-                onChange={e => setWeight(e.target.value)}
-                placeholder="Set weight (ounces)..."
-                className="flex-col w-full"
-              />
-            </div>
+          <>
+            <p className="text-body-small">
+              Package info (required for shipping)
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex gap-2">
+                <Input
+                  label="Weight"
+                  name="weight"
+                  id="weight"
+                  type="number"
+                  value={weight}
+                  onChange={e => setWeight(e.target.value)}
+                  placeholder="Set weight (ounces)..."
+                  className="flex-col w-full"
+                />
+              </div>
 
-            <div className="flex gap-2">
-              <Input
-                label="Height"
-                name="height"
-                placeholder={`Enter height (${unit})`}
-                id="height"
-                type="number"
-                value={dimensions.height || ''}
-                onChange={e => handleDimensionChange(e, 'height')}
-                className="flex-col w-full"
-              />
-              <UnitButton unit={unit} handleUnitChange={setUnit} />
+              <div className="flex gap-2">
+                <Input
+                  label="Height"
+                  name="height"
+                  placeholder={`Enter height (${unit})`}
+                  id="height"
+                  type="number"
+                  value={dimensions.height || ''}
+                  onChange={e => handleDimensionChange(e, 'height')}
+                  className="flex-col w-full"
+                />
+                <UnitButton unit={unit} handleUnitChange={setUnit} />
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-2">
-              <Input
-                label="Width"
-                name="width"
-                placeholder={`Enter width (${unit})`}
-                id="width"
-                type="number"
-                value={dimensions.width || ''}
-                onChange={e => handleDimensionChange(e, 'width')}
-                className="flex-col w-full"
-              />
-              {/* <UnitButton unit={unit} handleUnitChange={setUnit} /> */}
-            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex gap-2">
+                <Input
+                  label="Width"
+                  name="width"
+                  placeholder={`Enter width (${unit})`}
+                  id="width"
+                  type="number"
+                  value={dimensions.width || ''}
+                  onChange={e => handleDimensionChange(e, 'width')}
+                  className="flex-col w-full"
+                />
+                {/* <UnitButton unit={unit} handleUnitChange={setUnit} /> */}
+              </div>
 
-            <div className="flex gap-2">
-              <Input
-                label="Depth (optional)"
-                name="depth"
-                placeholder={`Enter depth (${unit})`}
-                id="depth"
-                type="number"
-                value={dimensions.depth || ''}
-                onChange={e => handleDimensionChange(e, 'depth')}
-                className="flex-col w-full"
-              />
-              <UnitButton unit={unit} handleUnitChange={setUnit} />
+              <div className="flex gap-2">
+                <Input
+                  label="Depth (optional)"
+                  name="depth"
+                  placeholder={`Enter depth (${unit})`}
+                  id="depth"
+                  type="number"
+                  value={dimensions.depth || ''}
+                  onChange={e => handleDimensionChange(e, 'depth')}
+                  className="flex-col w-full"
+                />
+                <UnitButton unit={unit} handleUnitChange={setUnit} />
+              </div>
             </div>
-          </div>
-        </>
+          </>
         )}
         <Textarea
           label="Additional Information"

@@ -1,8 +1,12 @@
-export type VideoSource = 'upload' | 'tiktok' | 'instagram' | 'youtube';
+export type VideoSource =
+  'upload' | 'tiktok' | 'instagram' | 'youtube' | 'facebook';
+/** Platforms a reel can be imported from (and embedded). */
 export type SocialProvider = Exclude<VideoSource, 'upload'>;
+/** Every platform a creator can link. */
+export type ConnectProvider = SocialProvider | 'linkedin' | 'twitter';
 
 export const PROVIDER_META: Record<
-  SocialProvider,
+  ConnectProvider,
   { label: string; short: string; bg: string; fg: string }
 > = {
   tiktok: { label: 'TikTok', short: 'TikTok', bg: '#000000', fg: '#FFFFFF' },
@@ -18,6 +22,55 @@ export const PROVIDER_META: Record<
     bg: '#FF0000',
     fg: '#FFFFFF',
   },
+  facebook: {
+    label: 'Facebook',
+    short: 'Facebook',
+    bg: '#1877F2',
+    fg: '#FFFFFF',
+  },
+  linkedin: {
+    label: 'LinkedIn',
+    short: 'LinkedIn',
+    bg: '#0A66C2',
+    fg: '#FFFFFF',
+  },
+  twitter: { label: 'X (Twitter)', short: 'X', bg: '#000000', fg: '#FFFFFF' },
+};
+
+export const ALL_PROVIDERS: ConnectProvider[] = [
+  'tiktok',
+  'instagram',
+  'youtube',
+  'facebook',
+  'linkedin',
+  'twitter',
+];
+export const REEL_TARGETS: ConnectProvider[] = [
+  'tiktok',
+  'instagram',
+  'youtube',
+  'facebook',
+];
+export const PRODUCT_TARGETS: ConnectProvider[] = [
+  'facebook',
+  'instagram',
+  'tiktok',
+  'linkedin',
+  'twitter',
+];
+
+export type Capabilities = {
+  importReels: boolean;
+  postReels: boolean;
+  postProducts: boolean;
+};
+export type ProviderStatus = {
+  provider: ConnectProvider;
+  configured: boolean;
+  connected: boolean;
+  accountName?: string;
+  accountAvatar?: string;
+  capabilities?: Capabilities;
 };
 
 type MediaLike =
@@ -35,15 +88,13 @@ export const isExternal = (
   Boolean(
     m &&
     m.embedUrl &&
-    (m.source === 'tiktok' ||
-      m.source === 'instagram' ||
-      m.source === 'youtube')
+    ['tiktok', 'instagram', 'youtube', 'facebook'].includes(m.source || '')
   );
 
 const ALLOWED_EMBED =
-  /^https:\/\/(www\.youtube\.com\/embed\/|www\.tiktok\.com\/player\/v1\/|www\.instagram\.com\/(reel|p|tv)\/)/;
+  /^https:\/\/(www\.youtube\.com\/embed\/|www\.tiktok\.com\/player\/v1\/|www\.instagram\.com\/(reel|p|tv)\/|www\.facebook\.com\/plugins\/video\.php\?)/;
 
-/** Player URL for the reels feed. Only the three platforms' own players are allowed. */
+/** Player URL for the reels feed. Only the platforms' own players are allowed. */
 export function playerUrl(
   m: MediaLike,
   { autoplay = true, muted = true } = {}
@@ -62,6 +113,9 @@ export function playerUrl(
       rel: '0',
       modestbranding: '1',
     }).toString();
+  } else if (m.source === 'facebook') {
+    u.searchParams.set('autoplay', autoplay ? 'true' : 'false');
+    u.searchParams.set('mute', muted ? '1' : '0');
   } else if (m.source === 'tiktok') {
     u.search = new URLSearchParams({
       autoplay: autoplay ? '1' : '0',

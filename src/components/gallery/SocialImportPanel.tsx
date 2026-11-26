@@ -3,21 +3,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { useSession } from 'next-auth/react';
-import { Check, Link2, Loader2, LogOut, RefreshCw, X } from 'lucide-react';
+import {
+  Check,
+  Heart,
+  Link2,
+  Loader2,
+  LogOut,
+  RefreshCw,
+  Search,
+  ShoppingBag,
+  X,
+} from 'lucide-react';
 import Image from '@/components/common/SafeImage';
 import { Btn, SectionCard } from '@/components/dashboard/DashKit';
 import { ToastService } from '@/components/elements/notifications/ToastService';
-import { PROVIDER_META, type SocialProvider } from '@/lib/socialVideo';
+import {
+  ALL_PROVIDERS,
+  PROVIDER_META,
+  type ConnectProvider,
+  type SocialProvider,
+} from '@/lib/socialVideo';
 import ProviderIcon from './ProviderIcon';
+import { useSocialConnections } from './useSocialConnections';
 
-type ProviderStatus = {
-  provider: SocialProvider;
-  configured: boolean;
-  connected: boolean;
-  accountName?: string;
-  accountAvatar?: string;
-};
 type RemoteVideo = {
   id: string;
   title: string;
@@ -26,18 +34,34 @@ type RemoteVideo = {
   permalink?: string;
   publishedAt?: string;
 };
-
-const ORDER: SocialProvider[] = ['tiktok', 'instagram', 'youtube'];
+export type Listing = {
+  _id: string;
+  name: string;
+  price?: number;
+  image?: string;
+  status?: string;
+};
+export type Purpose = 'product' | 'story';
 
 const errMsg = (e: unknown, fallback: string) =>
   axios.isAxiosError(e) && e.response?.data?.message
     ? String(e.response.data.message)
     : fallback;
 
+const CAP_LABELS: {
+  key: 'importReels' | 'postReels' | 'postProducts';
+  label: string;
+}[] = [
+  { key: 'importReels', label: 'Import reels' },
+  { key: 'postReels', label: 'Auto-post reels' },
+  { key: 'postProducts', label: 'Auto-post products' },
+];
+
 /**
- * "Import from your socials": link TikTok / Instagram / YouTube, pick past
- * videos, or paste a single link. Imported reels play in the platform's own
- * player on Angelpage. Shown inside every creator dashboard's gallery tab.
+ * Connected accounts for creators (sellers, charity storefronts, admins):
+ * TikTok, Instagram, YouTube, Facebook, LinkedIn, X. Linked accounts are used
+ * to import past reels (as product showcases or charity stories) and to
+ * auto-post new reels and listings.
  */
 export default function SocialImportPanel({
   isAdmin = false,
@@ -46,48 +70,32 @@ export default function SocialImportPanel({
   isAdmin?: boolean;
   onImported?: () => void;
 }) {
-  const { data: session } = useSession() || {};
-  const token = session?.token;
-  const api = process.env.NEXT_PUBLIC_API_URL;
-  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-
-  const [status, setStatus] = useState<ProviderStatus[] | null>(null);
+  const { providers, reload, api, headers } = useSocialConnections();
   const [busy, setBusy] = useState<string | null>(null);
   const [link, setLink] = useState('');
+  const [linkPurpose, setLinkPurpose] = useState<Purpose>('product');
+  const [linkProduct, setLinkProduct] = useState<Listing | null>(null);
   const [picker, setPicker] = useState<SocialProvider | null>(null);
-
-  const load = useCallback(async () => {
-    if (!token) return;
-    try {
-      const r = await axios.get(`${api}/social-connect`, { headers });
-      setStatus(r.data.providers || []);
-    } catch {
-      setStatus(
-        ORDER.map(provider => ({
-          provider,
-          configured: false,
-          connected: false,
-        }))
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, token]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   // back from the platform's sign-in page
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
-    const connected = q.get('connected') as SocialProvider | null;
+    const connected = q.get('connected') as ConnectProvider | null;
     const error = q.get('connect_error');
     if (!connected && !error) return;
-    if (connected && ORDER.includes(connected)) {
+    if (connected && ALL_PROVIDERS.includes(connected)) {
+      const importable = [
+        'tiktok',
+        'instagram',
+        'youtube',
+        'facebook',
+      ].includes(connected);
       ToastService.success(
-        `${PROVIDER_META[connected].label} connected. Pick the videos to bring in.`
+        importable
+          ? `${PROVIDER_META[connected].label} connected. Pick the videos to bring in.`
+          : `${PROVIDER_META[connected].label} connected. New listings will be posted there.`
       );
-      setPicker(connected);
+      if (importable) setPicker(connected as SocialProvider);
     } else if (error) ToastService.error(error);
     q.delete('connected');
     q.delete('connect_error');
@@ -98,7 +106,7 @@ export default function SocialImportPanel({
     );
   }, []);
 
-  const connect = async (p: SocialProvider) => {
+  const connect = async (p: ConnectProvider) => {
     setBusy(p);
     try {
       const q = new URLSearchParams(window.location.search);
@@ -114,17 +122,17 @@ export default function SocialImportPanel({
     }
   };
 
-  const disconnect = async (p: SocialProvider) => {
+  const disconnect = async (p: ConnectProvider) => {
     if (
       !confirm(
-        `Disconnect ${PROVIDER_META[p].label}? Reels you already imported stay up.`
+        `Disconnect ${PROVIDER_META[p].label}? Reels you already imported stay up; nothing new will be posted there.`
       )
     )
       return;
     setBusy(p);
     try {
       await axios.delete(`${api}/social-connect/${p}`, { headers });
-      await load();
+      await reload();
     } finally {
       setBusy(null);
     }
@@ -132,11 +140,20 @@ export default function SocialImportPanel({
 
   const importLink = async () => {
     if (!link.trim()) return;
+    if (linkPurpose === 'product' && !linkProduct) {
+      ToastService.error('Pick the product this video shows.');
+      return;
+    }
     setBusy('link');
     try {
       const r = await axios.post(
         `${api}/gallery/import`,
-        { url: link.trim(), publishNow: isAdmin },
+        {
+          url: link.trim(),
+          publishNow: isAdmin,
+          productId: linkPurpose === 'product' ? linkProduct?._id : undefined,
+          tags: linkPurpose === 'product' ? ['product'] : ['impact'],
+        },
         { headers }
       );
       ToastService.success(r.data.message || 'Imported.');
@@ -152,13 +169,14 @@ export default function SocialImportPanel({
   return (
     <SectionCard
       icon={Link2}
-      title="Bring in videos you've already made"
-      description="Connect TikTok, Instagram or YouTube and pick the charity videos you posted there. They play on Angelpage with the original player; nothing is re-uploaded."
+      title="Connected accounts"
+      description="Link your socials once. Bring in reels you've already made, and every new reel or listing you post here goes out to them automatically."
     >
-      <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">
-        {ORDER.map(p => {
-          const s = status?.find(x => x.provider === p);
+      <div className="grid grid-cols-3 gap-3 laptop-m:grid-cols-2 sm:grid-cols-1">
+        {ALL_PROVIDERS.map(p => {
+          const s = providers?.find(x => x.provider === p);
           const m = PROVIDER_META[p];
+          const caps = s?.capabilities;
           return (
             <div
               key={p}
@@ -192,16 +210,34 @@ export default function SocialImportPanel({
                   />
                 ) : null}
               </div>
-              <div className="mt-4 flex gap-2">
+              {caps ? (
+                <ul className="mt-3 flex flex-wrap gap-1">
+                  {CAP_LABELS.filter(c => caps[c.key]).map(c => (
+                    <li
+                      key={c.key}
+                      className="rounded-full bg-[#F4F1F6] px-2 py-0.5 text-[11px] font-medium text-[#474648]"
+                    >
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className="mt-auto flex gap-2 pt-4">
                 {s?.connected ? (
                   <>
-                    <Btn
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setPicker(p)}
-                    >
-                      Choose videos
-                    </Btn>
+                    {caps?.importReels ? (
+                      <Btn
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setPicker(p as SocialProvider)}
+                      >
+                        Choose reels
+                      </Btn>
+                    ) : (
+                      <span className="flex flex-1 items-center text-[12.5px] text-[#00775F]">
+                        Auto-posting on
+                      </span>
+                    )}
                     <Btn
                       size="sm"
                       variant="ghost"
@@ -233,14 +269,23 @@ export default function SocialImportPanel({
         })}
       </div>
 
-      <div className="mt-4 rounded-2xl bg-[#FAF8FB] p-4">
+      <div className="mt-4 space-y-3 rounded-2xl bg-[#FAF8FB] p-4">
         <label
           htmlFor="import-link"
           className="text-[13px] font-semibold text-[#0B0112]"
         >
-          Or paste a link to one video
+          Or paste a link to one reel
         </label>
-        <div className="mt-2 flex gap-2 sm:flex-col">
+        <PurposeSwitch value={linkPurpose} onChange={setLinkPurpose} />
+        {linkPurpose === 'product' ? (
+          <ProductSelect
+            api={api || ''}
+            headers={headers}
+            value={linkProduct}
+            onChange={setLinkProduct}
+          />
+        ) : null}
+        <div className="flex gap-2 sm:flex-col">
           <input
             id="import-link"
             type="url"
@@ -248,7 +293,7 @@ export default function SocialImportPanel({
             value={link}
             onChange={e => setLink(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && importLink()}
-            placeholder="https://www.tiktok.com/@you/video/…  ·  instagram.com/reel/…  ·  youtube.com/shorts/…"
+            placeholder="tiktok.com/@you/video/…  ·  instagram.com/reel/…  ·  facebook.com/reel/…  ·  youtube.com/shorts/…"
             className="h-11 min-w-0 flex-1 rounded-full! bg-white px-4 text-[14px] ring-1 ring-[#E2DCE6] outline-none focus:ring-2 focus:ring-[#611192]/30"
           />
           <Btn
@@ -260,8 +305,8 @@ export default function SocialImportPanel({
           </Btn>
         </div>
         {!isAdmin ? (
-          <p className="mt-2 text-[12px] text-[#8A888C]">
-            Imported videos are checked by our team before they appear on Reels.
+          <p className="text-[12px] text-[#8A888C]">
+            Imported reels are checked by our team before they appear on Reels.
           </p>
         ) : null}
       </div>
@@ -280,6 +325,199 @@ export default function SocialImportPanel({
         />
       ) : null}
     </SectionCard>
+  );
+}
+
+export function PurposeSwitch({
+  value,
+  onChange,
+}: {
+  value: Purpose;
+  onChange: (p: Purpose) => void;
+}) {
+  const opts: {
+    id: Purpose;
+    label: string;
+    hint: string;
+    icon: typeof ShoppingBag;
+  }[] = [
+    {
+      id: 'product',
+      label: 'Product showcase',
+      hint: 'Shows an item you sell',
+      icon: ShoppingBag,
+    },
+    {
+      id: 'story',
+      label: 'Charity story',
+      hint: 'Impact, thank-yous, events',
+      icon: Heart,
+    },
+  ];
+  return (
+    <div
+      role="radiogroup"
+      aria-label="What is this video?"
+      className="grid grid-cols-2 gap-2"
+    >
+      {opts.map(o => (
+        <button
+          key={o.id}
+          type="button"
+          role="radio"
+          aria-checked={value === o.id}
+          onClick={() => onChange(o.id)}
+          className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition ${value === o.id ? 'bg-white ring-2 ring-[#611192]' : 'bg-white/60 ring-1 ring-[#E2DCE6] hover:ring-[#611192]/40'}`}
+        >
+          <o.icon
+            className={`h-4 w-4 shrink-0 ${value === o.id ? 'text-[#611192]' : 'text-[#8A888C]'}`}
+            aria-hidden
+          />
+          <span className="min-w-0">
+            <span className="block text-[13px] font-semibold text-[#0B0112]">
+              {o.label}
+            </span>
+            <span className="block truncate text-[11.5px] text-[#8A888C]">
+              {o.hint}
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Pick one of your own listings to tag on a reel. */
+export function ProductSelect({
+  api,
+  headers,
+  value,
+  onChange,
+}: {
+  api: string;
+  headers?: Record<string, string>;
+  value: Listing | null;
+  onChange: (l: Listing | null) => void;
+}) {
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState<Listing[] | null>(null);
+  const [open, setOpen] = useState(!value);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      axios
+        .get(`${api}/social-connect/my-products`, {
+          headers,
+          params: q ? { q } : {},
+        })
+        .then(r => setItems(r.data.items || []))
+        .catch(() => setItems([]));
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, q, open]);
+
+  if (value && !open) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl bg-white p-2.5 ring-1 ring-[#E2DCE6]">
+        <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-[#F4F1F6]">
+          {value.image ? (
+            <Image
+              src={value.image}
+              alt=""
+              fill
+              sizes="44px"
+              className="object-cover"
+            />
+          ) : null}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13.5px] font-semibold text-[#0B0112]">
+            {value.name}
+          </span>
+          <span className="block text-[12px] text-[#8A888C]">
+            Shoppers can buy it straight from the reel
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-[12.5px] font-semibold text-[#611192] hover:underline"
+        >
+          Change
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl bg-white p-2.5 ring-1 ring-[#E2DCE6]">
+      <label className="relative block">
+        <span className="sr-only">Search your listings</span>
+        <Search
+          className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#8A888C]"
+          aria-hidden
+        />
+        <input
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="Which product does it show? Search your listings"
+          className="h-10 w-full rounded-lg! bg-[#FAF8FB] pr-3 pl-9 text-[13.5px] outline-none"
+        />
+      </label>
+      <ul className="mt-2 max-h-56 space-y-1 overflow-y-auto">
+        {items === null ? (
+          <li className="px-2 py-3 text-[13px] text-[#8A888C]">
+            Loading your listings…
+          </li>
+        ) : items.length === 0 ? (
+          <li className="px-2 py-3 text-[13px] text-[#8A888C]">
+            {q
+              ? 'No listings match.'
+              : 'You have no listings yet. List an item first, or choose "Charity story".'}
+          </li>
+        ) : (
+          items.map(l => (
+            <li key={l._id}>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange(l);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[#F6EEFA] ${value?._id === l._id ? 'bg-[#F6EEFA]' : ''}`}
+              >
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[#F4F1F6]">
+                  {l.image ? (
+                    <Image
+                      src={l.image}
+                      alt=""
+                      fill
+                      sizes="40px"
+                      className="object-cover"
+                    />
+                  ) : null}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[13.5px] text-[#0B0112]">
+                  {l.name}
+                </span>
+                {l.price ? (
+                  <span className="text-[12.5px] font-medium text-[#6B686E] tabular-nums">
+                    ${Number(l.price).toFixed(2).replace(/\.00$/, '')}
+                  </span>
+                ) : null}
+                {l.status && l.status !== 'LIVE' ? (
+                  <span className="rounded-full bg-[#FFF4E5] px-1.5 text-[10.5px] font-semibold text-[#8A4B00]">
+                    {l.status === 'DRAFT' ? 'Draft' : 'In review'}
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
   );
 }
 
@@ -304,6 +542,8 @@ function VideoPicker({
   const [error, setError] = useState('');
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [purpose, setPurpose] = useState<Purpose>('product');
+  const [product, setProduct] = useState<Listing | null>(null);
   const m = PROVIDER_META[provider];
 
   const fetchPage = useCallback(
@@ -320,7 +560,7 @@ function VideoPicker({
         );
         setCursor(r.data.nextCursor || null);
       } catch (e) {
-        setError(errMsg(e, `Could not load your ${m.label} videos.`));
+        setError(errMsg(e, `Could not load your ${m.label} reels.`));
       } finally {
         setLoading(false);
       }
@@ -347,12 +587,24 @@ function VideoPicker({
       return n;
     });
 
+  const needsProduct = purpose === 'product' && !product;
+
   const save = async () => {
+    if (needsProduct) {
+      ToastService.error('Pick the product these reels show.');
+      return;
+    }
     setSaving(true);
     try {
       const r = await axios.post(
         `${api}/gallery/import`,
-        { provider, videoIds: [...picked], publishNow: isAdmin },
+        {
+          provider,
+          videoIds: [...picked],
+          publishNow: isAdmin,
+          productId: purpose === 'product' ? product?._id : undefined,
+          tags: purpose === 'product' ? ['product'] : ['impact'],
+        },
         { headers }
       );
       ToastService.success(r.data.message || 'Imported.');
@@ -371,7 +623,7 @@ function VideoPicker({
       aria-modal="true"
       aria-labelledby="picker-title"
     >
-      <div className="flex max-h-[88vh] w-full max-w-[860px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:max-h-[92vh] sm:rounded-b-none">
+      <div className="flex max-h-[90vh] w-full max-w-[920px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:max-h-[94vh] sm:rounded-b-none">
         <header className="flex items-center gap-3 border-b border-[#F0EBF2] px-6 py-4 sm:px-4">
           <span
             className="flex h-9 w-9 items-center justify-center rounded-xl"
@@ -384,10 +636,11 @@ function VideoPicker({
               id="picker-title"
               className="font-primary text-[20px] text-[#0B0112]"
             >
-              Choose {m.label} videos
+              Choose {m.short} reels
             </h2>
             <p className="text-[12.5px] text-[#8A888C]">
-              Pick the ones about charity work. Up to 20 at a time.
+              Pick up to 20. Tag the product they show so shoppers can buy from
+              the reel.
             </p>
           </div>
           <button
@@ -409,16 +662,33 @@ function VideoPicker({
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-4">
+          <div className="mb-5 space-y-3 rounded-2xl bg-[#FAF8FB] p-4">
+            <p className="text-[13px] font-semibold text-[#0B0112]">
+              What do these reels show?
+            </p>
+            <PurposeSwitch value={purpose} onChange={setPurpose} />
+            {purpose === 'product' ? (
+              <ProductSelect
+                api={api}
+                headers={headers}
+                value={product}
+                onChange={setProduct}
+              />
+            ) : null}
+          </div>
+
           {error ? (
             <p className="rounded-2xl bg-[#FFF1F4] px-4 py-6 text-center text-[14px] text-[#B0002A]">
               {error}
             </p>
           ) : !loading && videos.length === 0 ? (
             <p className="rounded-2xl bg-[#FAF8FB] px-4 py-10 text-center text-[14px] text-[#6B686E]">
-              No videos found on this account
+              No reels found on this account
               {provider === 'instagram'
                 ? ' (Instagram only shares videos from professional accounts)'
-                : ''}
+                : provider === 'facebook'
+                  ? ' (reels are read from the Facebook Page you connected)'
+                  : ''}
               .
             </p>
           ) : (
@@ -485,10 +755,17 @@ function VideoPicker({
         </div>
 
         <footer className="flex items-center justify-between gap-3 border-t border-[#F0EBF2] px-6 py-4 sm:px-4">
-          <p className="text-[13px] text-[#6B686E]">
+          <p className="min-w-0 truncate text-[13px] text-[#6B686E]">
             {picked.size ? `${picked.size} selected` : 'Nothing selected'}
+            {picked.size && purpose === 'product' && product
+              ? ` · tagged with ${product.name}`
+              : ''}
           </p>
-          <Btn loading={saving} disabled={!picked.size} onClick={save}>
+          <Btn
+            loading={saving}
+            disabled={!picked.size || needsProduct}
+            onClick={save}
+          >
             {isAdmin ? 'Import & publish' : 'Import for review'}
           </Btn>
         </footer>

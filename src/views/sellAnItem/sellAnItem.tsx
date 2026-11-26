@@ -13,13 +13,8 @@ import {
   defaultSocialPostingPrefs,
   type SocialPostingPrefs,
 } from '@/components/product/SocialPostingToggles';
-import {
-  resolveCategoryId,
-  resolveSubcategoryId,
-} from '@/lib/aiApi';
-import {
-  ToastService,
-} from '@/components/elements/notifications/ToastService';
+import { resolveCategoryId, resolveSubcategoryId } from '@/lib/aiApi';
+import { ToastService } from '@/components/elements/notifications/ToastService';
 import PreLoader from '@/components/common/pre-loader/PreLoader';
 import { calculateProfitSplit } from '@/lib/profitSplit';
 import { getAccountPathForRole } from '@/utils/navigationPaths';
@@ -32,9 +27,11 @@ const stripDimensionValue = (value?: string | null) => {
 const emptyFilePlaceholder = () =>
   new File([new Blob([''])], 'existing-image.jpg', { type: 'image/jpeg' });
 
-const listingsAccountPath = (session: {
-  user?: { id?: string; role?: string; charityId?: string };
-} | null) => {
+const listingsAccountPath = (
+  session: {
+    user?: { id?: string; role?: string; charityId?: string };
+  } | null
+) => {
   const base = getAccountPathForRole(
     session?.user?.role,
     session?.user?.id,
@@ -83,7 +80,8 @@ interface SellItemFormData {
   charityProfit: string;
   sellerSharePercent: number;
   sellerProfit: string;
-  fulfillmentType: 'uk_shipping' | 'personal_delivery' | 'self_collect' | 'local_only';
+  fulfillmentType:
+    'uk_shipping' | 'personal_delivery' | 'self_collect' | 'local_only';
   sellAreas: string[];
   socialPosting: SocialPostingPrefs;
   stepCompletion: {
@@ -106,7 +104,8 @@ interface DetailsData {
   color?: string;
   selectedCategory?: string;
   selectedSubCategory?: string;
-  fulfillmentType?: 'uk_shipping' | 'personal_delivery' | 'self_collect' | 'local_only';
+  fulfillmentType?:
+    'uk_shipping' | 'personal_delivery' | 'self_collect' | 'local_only';
   sellAreas?: string[];
   dimensions?: Dimensions;
 }
@@ -169,7 +168,7 @@ const SellAnItem: React.FC = () => {
       try {
         const { data } = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/products/details/${editProductId}`,
-          { headers: { Authorization: `Bearer ${session.token}` } },
+          { headers: { Authorization: `Bearer ${session.token}` } }
         );
         const product = data?.product;
         if (!product) {
@@ -187,7 +186,7 @@ const SellAnItem: React.FC = () => {
             src: img.url,
             file: emptyFilePlaceholder(),
             isFeatured: Boolean(img.isFeatured) || index === 0,
-          }),
+          })
         );
 
         formDataRef.current = {
@@ -211,15 +210,23 @@ const SellAnItem: React.FC = () => {
           },
           additionalInfo: product.additionalInfo || '',
           images: mappedImages,
-          featuredImage: mappedImages.find(img => img.isFeatured) || mappedImages[0] || null,
+          featuredImage:
+            mappedImages.find(img => img.isFeatured) || mappedImages[0] || null,
           price: priceNum ? `$${priceNum.toFixed(2)}` : '',
           charityProfit: `$${split.charityProfit.toFixed(2)}`,
           sellerSharePercent: sharePct,
           sellerProfit: `$${split.sellerProfit.toFixed(2)}`,
           fulfillmentType: product.fulfillmentType || 'uk_shipping',
           sellAreas: product.sellAreas || [],
-          socialPosting: product.socialPosting || defaultSocialPostingPrefs(),
-          stepCompletion: { details: true, photos: mappedImages.length > 0, price: priceNum > 0 },
+          socialPosting: {
+            ...(product.socialPosting || defaultSocialPostingPrefs()),
+            crossPost: product.crossPost || {},
+          },
+          stepCompletion: {
+            details: true,
+            photos: mappedImages.length > 0,
+            price: priceNum > 0,
+          },
         };
         bumpFormVersion(v => v + 1);
       } catch (error) {
@@ -270,17 +277,31 @@ const SellAnItem: React.FC = () => {
     updateSellItemFormData({ socialPosting });
   };
 
-  const appendSocialPosting = (uploadForm: globalThis.FormData, data: SellItemFormData) => {
-    const videoUrl = data.videos?.[0]?.src || data.socialPosting.tiktokVideoUrl || '';
+  const appendSocialPosting = (
+    uploadForm: globalThis.FormData,
+    data: SellItemFormData
+  ) => {
+    const videoUrl =
+      data.videos?.[0]?.src || data.socialPosting.tiktokVideoUrl || '';
     const socialPayload = {
       ...data.socialPosting,
       tiktokVideoUrl: data.socialPosting.tiktokVideoUrl || videoUrl,
     };
     uploadForm.append('socialPosting', JSON.stringify(socialPayload));
+    uploadForm.append(
+      'crossPost',
+      JSON.stringify(data.socialPosting.crossPost || {})
+    );
   };
 
-  const appendListingMeta = (uploadForm: globalThis.FormData, data: SellItemFormData) => {
-    uploadForm.append('sellerSharePercent', String(data.sellerSharePercent ?? 0));
+  const appendListingMeta = (
+    uploadForm: globalThis.FormData,
+    data: SellItemFormData
+  ) => {
+    uploadForm.append(
+      'sellerSharePercent',
+      String(data.sellerSharePercent ?? 0)
+    );
     uploadForm.append('fulfillmentType', data.fulfillmentType || 'uk_shipping');
     uploadForm.append('sellAreas', JSON.stringify(data.sellAreas || []));
   };
@@ -311,6 +332,7 @@ const SellAnItem: React.FC = () => {
           finalData.videos?.[0]?.src ||
           '',
       },
+      crossPost: finalData.socialPosting.crossPost || {},
     };
     if (status) payload.status = status;
     if (session?.user?.role === 'USER' && finalData.charityId) {
@@ -338,7 +360,7 @@ const SellAnItem: React.FC = () => {
             Authorization: `Bearer ${session.token}`,
             'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
       if (response.status === 200) {
@@ -372,7 +394,7 @@ const SellAnItem: React.FC = () => {
               Authorization: `Bearer ${session.token}`,
               'Content-Type': 'application/json',
             },
-          },
+          }
         );
         ToastService.success('Draft saved!');
       } catch (error) {
@@ -528,8 +550,8 @@ const SellAnItem: React.FC = () => {
     } catch (error) {
       console.error('Error creating product:', error);
       ToastService.error('An error occurred while creating the product.');
-    } finally{
-       setIsSubmitting(false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -570,7 +592,7 @@ const SellAnItem: React.FC = () => {
   };
 
   const applyAiToDetails = (
-    data: Partial<DetailsData> & { category?: string; subcategory?: string },
+    data: Partial<DetailsData> & { category?: string; subcategory?: string }
   ) => {
     const catId =
       (data.selectedCategory && data.selectedCategory !== 'Select'
@@ -607,25 +629,26 @@ const SellAnItem: React.FC = () => {
           {isEditMode ? 'Edit your listing' : 'List an item'}
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-[#5C5560]">
-          Three steps. Add the item, show it clearly, then choose how much of the sale supports a charity.
+          Three steps. Add the item, show it clearly, then choose how much of
+          the sale supports a charity.
         </p>
       </div>
       <div className="custom-container mt-8 grid grid-cols-12 items-start gap-6 sm:grid-cols-1">
         <div className="col-span-4 sm:col-span-full">
           <div className="rounded-3xl border border-[#E6E3E7] bg-white p-3">
-          <TabNavigation
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            stepCompletion={formDataRef.current.stepCompletion}
-          />
-          {!isEditMode && (
-          <Link
-            href="/product/bulk-list"
-            className="mt-3 block px-3 pb-2 text-sm text-[#611192]"
-          >
-            List many items at once
-          </Link>
-          )}
+            <TabNavigation
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              stepCompletion={formDataRef.current.stepCompletion}
+            />
+            {!isEditMode && (
+              <Link
+                href="/product/bulk-list"
+                className="mt-3 block px-3 pb-2 text-sm text-[#611192]"
+              >
+                List many items at once
+              </Link>
+            )}
           </div>
         </div>
         <div className="col-span-8 rounded-3xl border border-[#E6E3E7] bg-white p-6 sm:col-span-full sm:p-5">
@@ -672,13 +695,12 @@ const SellAnItem: React.FC = () => {
       </div>
 
       {!isEditMode && (
-      <ConfirmationModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onConfirm={confirmAnotherPost}
-      />
+        <ConfirmationModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onConfirm={confirmAnotherPost}
+        />
       )}
-     
     </div>
   );
 };

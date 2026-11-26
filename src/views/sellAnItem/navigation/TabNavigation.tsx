@@ -16,7 +16,12 @@ const STEPS: Array<{
   title: string;
   hint: string;
 }> = [
-  { id: 'details', index: '01', title: 'Details', hint: 'Item, charity, and shipping' },
+  {
+    id: 'details',
+    index: '01',
+    title: 'Details',
+    hint: 'Item, charity, and shipping',
+  },
   { id: 'photos', index: '02', title: 'Photos', hint: 'Show the item clearly' },
   { id: 'price', index: '03', title: 'Price', hint: 'Set the gift split' },
 ];
@@ -29,7 +34,12 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
 }) => {
   const canOpen = (id: 'details' | 'photos' | 'price') => {
     if (id === 'details') return true;
-    if (id === 'photos') return stepCompletion.details || activeTab === 'photos' || activeTab === 'price';
+    if (id === 'photos')
+      return (
+        stepCompletion.details ||
+        activeTab === 'photos' ||
+        activeTab === 'price'
+      );
     return stepCompletion.photos || activeTab === 'price';
   };
 
@@ -66,7 +76,9 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
               </span>
               <span>
                 <span className="block text-sm font-medium">{step.title}</span>
-                <span className={`mt-0.5 block text-xs sm:hidden ${active ? 'text-white/80' : 'text-[#8B888C]'}`}>
+                <span
+                  className={`mt-0.5 block text-xs sm:hidden ${active ? 'text-white/80' : 'text-[#8B888C]'}`}
+                >
                   {step.hint}
                 </span>
               </span>
